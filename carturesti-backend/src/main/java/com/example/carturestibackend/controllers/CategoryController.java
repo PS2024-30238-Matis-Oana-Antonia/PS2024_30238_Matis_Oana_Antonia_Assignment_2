@@ -1,12 +1,16 @@
 package com.example.carturestibackend.controllers;
 
-import com.example.carturestibackend.services.CategoryService;
+import com.example.carturestibackend.constants.CategoryLogger;
 import com.example.carturestibackend.dtos.CategoryDTO;
+import com.example.carturestibackend.services.CategoryService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
@@ -16,6 +20,8 @@ import java.util.List;
 @CrossOrigin
 @RequestMapping(value = "/category")
 public class CategoryController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CategoryController.class);
 
     private final CategoryService categoryService;
 
@@ -36,6 +42,7 @@ public class CategoryController {
      */
     @GetMapping()
     public ResponseEntity<List<CategoryDTO>> getCategories() {
+        LOGGER.info(CategoryLogger.ALL_CATEGORIES_RETRIEVED);
         List<CategoryDTO> dtos = categoryService.findCategories();
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
@@ -49,6 +56,7 @@ public class CategoryController {
     @PostMapping()
     public ResponseEntity<String> insertCategory(@Valid @RequestBody CategoryDTO categoryDTO) {
         String categoryID = categoryService.insert(categoryDTO);
+        LOGGER.debug(CategoryLogger.CATEGORY_INSERTED, categoryID);
         return new ResponseEntity<>(categoryID, HttpStatus.CREATED);
     }
 
@@ -60,6 +68,7 @@ public class CategoryController {
      */
     @GetMapping(value = "/{id_category}")
     public ResponseEntity<CategoryDTO> getCategory(@PathVariable("id_category") String categoryID) {
+        LOGGER.info(CategoryLogger.CATEGORY_RETRIEVED_BY_ID, categoryID);
         CategoryDTO dto = categoryService.findCategoryById(categoryID);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -72,6 +81,7 @@ public class CategoryController {
      */
     @DeleteMapping(value = "/{id_category}")
     public ResponseEntity<String> deleteCategory(@PathVariable("id_category") String categoryID) {
+        LOGGER.debug(CategoryLogger.CATEGORY_DELETED, categoryID);
         categoryService.deleteCategoryById(categoryID);
         return new ResponseEntity<>("Category with ID " + categoryID + " deleted successfully", HttpStatus.OK);
     }
@@ -85,6 +95,7 @@ public class CategoryController {
      */
     @PutMapping(value = "/{id_category}")
     public ResponseEntity<CategoryDTO> updateCategory(@PathVariable("id_category") String categoryID, @Valid @RequestBody CategoryDTO categoryDTO) {
+        LOGGER.debug(CategoryLogger.CATEGORY_UPDATED, categoryID);
         CategoryDTO updatedCategory = categoryService.updateCategory(categoryID, categoryDTO);
         return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
     }

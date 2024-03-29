@@ -1,9 +1,13 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.OrderItemLogger;
+import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
 import com.example.carturestibackend.entities.OrderItem;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.OrderItemRepository;
+import com.example.carturestibackend.repositories.ProductRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +26,18 @@ public class OrderItemService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemService.class);
     private final OrderItemRepository orderItemRepository;
+    private ProductService productService;
 
     /**
      * Constructs a new OrderItemService with the specified OrderItemRepository.
      *
      * @param orderItemRepository The OrderItemRepository used to interact with order item data in the database.
+     * @param productRepository
      */
     @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository) {
+    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository) {
         this.orderItemRepository = orderItemRepository;
+
     }
 
     /**
@@ -39,6 +46,7 @@ public class OrderItemService {
      * @return A list of OrderItemDTO objects representing the order items.
      */
     public List<OrderItemDTO> findOrderItems() {
+        LOGGER.error(OrderItemLogger.ALL_ORDER_ITEMS_RETRIEVED);
         List<OrderItem> orderItemList = orderItemRepository.findAll();
         return orderItemList.stream()
                 .map(OrderItemMapper::toOrderItemDTO)
@@ -55,7 +63,7 @@ public class OrderItemService {
     public OrderItemDTO findOrderItemById(String id) {
         Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
         if (!orderItemOptional.isPresent()) {
-            LOGGER.error("Order item with id {} was not found in the database", id);
+            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + id);
         }
         return OrderItemMapper.toOrderItemDTO(orderItemOptional.get());
@@ -70,7 +78,7 @@ public class OrderItemService {
     public String insert(OrderItemDTO orderItemDTO) {
         OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
         orderItem = (OrderItem) orderItemRepository.save(orderItem);
-        LOGGER.debug("Order item with id {} was inserted into the database", orderItem.getId_order_item());
+        LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItem.getId_order_item());
         return orderItem.getId_order_item();
     }
 
@@ -84,9 +92,9 @@ public class OrderItemService {
         Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
         if (orderItemOptional.isPresent()) {
             orderItemRepository.delete(orderItemOptional.get());
-            LOGGER.debug("Order item with id {} was deleted from the database", id);
+            LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, id);
         } else {
-            LOGGER.error("Order item with id {} was not found in the database", id);
+            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + id);
         }
     }
@@ -102,7 +110,7 @@ public class OrderItemService {
     public OrderItemDTO updateOrderItem(String id, OrderItemDTO orderItemDTO) {
         Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
         if (!orderItemOptional.isPresent()) {
-            LOGGER.error("Order item with id {} was not found in the database", id);
+            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + id);
         }
 
@@ -110,10 +118,27 @@ public class OrderItemService {
         existingOrderItem.setQuantity(orderItemDTO.getQuantity());
         existingOrderItem.setPrice_per_unit(orderItemDTO.getPrice_per_unit());
 
-
-        OrderItem updatedOrderItem = (OrderItem) orderItemRepository.save(existingOrderItem);
-        LOGGER.debug("Order item with id {} was updated in the database", updatedOrderItem.getId_order_item());
+        OrderItem updatedOrderItem = orderItemRepository.save(existingOrderItem);
+        LOGGER.debug(OrderItemLogger.ORDER_ITEM_UPDATED, updatedOrderItem.getId_order_item());
 
         return OrderItemMapper.toOrderItemDTO(updatedOrderItem);
+    }
+
+    public void addProductToOrderItem(OrderItem orderItem, Product product, long quantity) {
+        LOGGER.info("Adding {} units of product {} to order item {}", quantity, product.getName(), orderItem.getId_order_item());
+        orderItem.getProducts().add(product);
+        orderItem.setQuantity(orderItem.getQuantity() + quantity);
+        productService.decreaseProductStock(product.getId_product(), quantity);
+        LOGGER.info(ProductLogger.STOCK_DECREASED, product.getName(), quantity, product.getStock());
+        LOGGER.info("Product {} added successfully to order item {}", product.getName(), orderItem.getId_order_item());
+    }
+
+    public void removeProductFromOrderItem(OrderItem orderItem, Product product, long quantity) {
+        LOGGER.info("Removing {} units of product {} from order item {}", quantity, product.getName(), orderItem.getId_order_item());
+        orderItem.getProducts().remove(product);
+        orderItem.setQuantity(orderItem.getQuantity() - quantity);
+        productService.increaseProductStock(product.getId_product(), quantity);
+        LOGGER.info(ProductLogger.STOCK_INCREASED, product.getName(), quantity, product.getStock());
+        LOGGER.info("Product {} removed successfully from order item {}", product.getName(), orderItem.getId_order_item());
     }
 }

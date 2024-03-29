@@ -1,12 +1,16 @@
 package com.example.carturestibackend.controllers;
 
-import com.example.carturestibackend.services.ProductService;
+import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.ProductDTO;
-import jakarta.validation.Valid;
+import com.example.carturestibackend.services.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.validation.Valid;
 import java.util.List;
 
 /**
@@ -16,6 +20,8 @@ import java.util.List;
 @CrossOrigin
 @RequestMapping(value = "/product")
 public class ProductController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
 
@@ -36,6 +42,7 @@ public class ProductController {
      */
     @GetMapping()
     public ResponseEntity<List<ProductDTO>> getProducts() {
+        LOGGER.info(ProductLogger.ALL_PRODUCTS_RETRIEVED);
         List<ProductDTO> dtos = productService.findProducts();
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
@@ -49,6 +56,7 @@ public class ProductController {
     @PostMapping()
     public ResponseEntity<String> insertProduct(@Valid @RequestBody ProductDTO productDTO) {
         String productID = productService.insert(productDTO);
+        LOGGER.debug(ProductLogger.PRODUCT_INSERTED, productID);
         return new ResponseEntity<>(productID, HttpStatus.CREATED);
     }
 
@@ -60,6 +68,7 @@ public class ProductController {
      */
     @GetMapping(value = "/{id_product}")
     public ResponseEntity<ProductDTO> getProduct(@PathVariable("id_product") String productID) {
+        LOGGER.info(ProductLogger.PRODUCT_RETRIEVED_BY_ID, productID);
         ProductDTO dto = productService.findProductById(productID);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -72,6 +81,7 @@ public class ProductController {
      */
     @DeleteMapping(value = "/{id_product}")
     public ResponseEntity<String> deleteProduct(@PathVariable("id_product") String productID) {
+        LOGGER.debug(ProductLogger.PRODUCT_DELETED, productID);
         productService.deleteProductById(productID);
         return new ResponseEntity<>("Product with ID " + productID + " deleted successfully", HttpStatus.OK);
     }
@@ -85,6 +95,7 @@ public class ProductController {
      */
     @PutMapping(value = "/{id_product}")
     public ResponseEntity<ProductDTO> updateProduct(@PathVariable("id_product") String productID, @Valid @RequestBody ProductDTO productDTO) {
+        LOGGER.debug(ProductLogger.PRODUCT_UPDATED, productID);
         ProductDTO updatedProduct = productService.updateProduct(productID, productDTO);
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }

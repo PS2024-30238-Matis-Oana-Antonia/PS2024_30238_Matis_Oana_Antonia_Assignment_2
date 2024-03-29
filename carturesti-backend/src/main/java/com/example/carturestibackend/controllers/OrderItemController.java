@@ -1,8 +1,11 @@
 package com.example.carturestibackend.controllers;
 
+import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.services.OrderItemService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,8 @@ import java.util.List;
 @CrossOrigin
 @RequestMapping(value = "/order-items")
 public class OrderItemController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemController.class);
 
     private final OrderItemService orderItemService;
 
@@ -37,6 +42,7 @@ public class OrderItemController {
      */
     @GetMapping()
     public ResponseEntity<List<OrderItemDTO>> getOrderItems() {
+        LOGGER.info(OrderItemLogger.ALL_ORDER_ITEMS_RETRIEVED);
         List<OrderItemDTO> dtos = orderItemService.findOrderItems();
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
@@ -50,6 +56,7 @@ public class OrderItemController {
     @PostMapping()
     public ResponseEntity<String> insertOrderItem(@Valid @RequestBody OrderItemDTO orderItemDTO) {
         String orderItemID = orderItemService.insert(orderItemDTO);
+        LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItemID);
         return new ResponseEntity<>(orderItemID, HttpStatus.CREATED);
     }
 
@@ -61,6 +68,7 @@ public class OrderItemController {
      */
     @GetMapping(value = "/{id_order_item}")
     public ResponseEntity<OrderItemDTO> getOrderItem(@PathVariable("id_order_item") String orderItemID) {
+        LOGGER.info(OrderItemLogger.ORDER_ITEM_RETRIEVED_BY_ID, orderItemID);
         OrderItemDTO dto = orderItemService.findOrderItemById(orderItemID);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -73,6 +81,7 @@ public class OrderItemController {
      */
     @DeleteMapping(value = "/{id_order_item}")
     public ResponseEntity<String> deleteOrderItem(@PathVariable("id_order_item") String orderItemID) {
+        LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderItemID);
         orderItemService.deleteOrderItemById(orderItemID);
         return new ResponseEntity<>("Order item with ID " + orderItemID + " deleted successfully", HttpStatus.OK);
     }
@@ -86,6 +95,7 @@ public class OrderItemController {
      */
     @PutMapping(value = "/{id_order_item}")
     public ResponseEntity<OrderItemDTO> updateOrderItem(@PathVariable("id_order_item") String orderItemID, @Valid @RequestBody OrderItemDTO orderItemDTO) {
+        LOGGER.debug(OrderItemLogger.ORDER_ITEM_UPDATED, orderItemID);
         OrderItemDTO updatedOrderItem = orderItemService.updateOrderItem(orderItemID, orderItemDTO);
         return new ResponseEntity<>(updatedOrderItem, HttpStatus.OK);
     }

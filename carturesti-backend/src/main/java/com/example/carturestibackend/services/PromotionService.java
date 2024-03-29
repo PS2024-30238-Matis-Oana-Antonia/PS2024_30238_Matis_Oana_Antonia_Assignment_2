@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.PromotionLogger;
 import com.example.carturestibackend.dtos.PromotionDTO;
 import com.example.carturestibackend.dtos.mappers.PromotionMapper;
 import com.example.carturestibackend.entities.Promotion;
@@ -39,6 +40,7 @@ public class PromotionService {
      * @return A list of PromotionDTO objects representing the promotions.
      */
     public List<PromotionDTO> findPromotions() {
+        LOGGER.error(PromotionLogger.ALL_PROMOTIONS_RETRIEVED);
         List<Promotion> promotionList = promotionRepository.findAll();
         return promotionList.stream()
                 .map(PromotionMapper::toPromotionDTO)
@@ -55,7 +57,7 @@ public class PromotionService {
     public PromotionDTO findPromotionById(String id) {
         Optional<Promotion> promotionOptional = promotionRepository.findById(id);
         if (!promotionOptional.isPresent()) {
-            LOGGER.error("Promotion with id {} was not found in db", id);
+            LOGGER.error(PromotionLogger.PROMOTION_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Promotion.class.getSimpleName() + " with id: " + id);
         }
         return PromotionMapper.toPromotionDTO(promotionOptional.get());
@@ -70,7 +72,7 @@ public class PromotionService {
     public String insert(PromotionDTO promotionDTO) {
         Promotion promotion = PromotionMapper.fromPromotionDTO(promotionDTO);
         promotion = (Promotion) promotionRepository.save(promotion);
-        LOGGER.debug("Promotion with id {} was inserted in db", promotion.getId_promotion());
+        LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotion.getId_promotion());
         return promotion.getId_promotion();
     }
 
@@ -84,9 +86,9 @@ public class PromotionService {
         Optional<Promotion> promotionOptional = promotionRepository.findById(id);
         if (promotionOptional.isPresent()) {
             promotionRepository.delete(promotionOptional.get());
-            LOGGER.debug("Promotion with id {} was deleted from db", id);
+            LOGGER.debug(PromotionLogger.PROMOTION_DELETED, id);
         } else {
-            LOGGER.error("Promotion with id {} was not found in db", id);
+            LOGGER.error(PromotionLogger.PROMOTION_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Promotion.class.getSimpleName() + " with id: " + id);
         }
     }
@@ -102,7 +104,7 @@ public class PromotionService {
     public PromotionDTO updatePromotion(String id, PromotionDTO promotionDTO) {
         Optional<Promotion> promotionOptional = promotionRepository.findById(id);
         if (!promotionOptional.isPresent()) {
-            LOGGER.error("Promotion with id {} was not found in db", id);
+            LOGGER.error(PromotionLogger.PROMOTION_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Promotion.class.getSimpleName() + " with id: " + id);
         }
 
@@ -112,7 +114,7 @@ public class PromotionService {
         existingPromotion.setPercentage(promotionDTO.getPercentage());
 
         Promotion updatedPromotion = (Promotion) promotionRepository.save(existingPromotion);
-        LOGGER.debug("Promotion with id {} was updated in db", updatedPromotion.getId_promotion());
+        LOGGER.debug(PromotionLogger.PROMOTION_UPDATED, updatedPromotion.getId_promotion());
 
         return PromotionMapper.toPromotionDTO(updatedPromotion);
     }

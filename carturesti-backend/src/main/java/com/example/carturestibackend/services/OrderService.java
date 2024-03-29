@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.OrderDTO;
 import com.example.carturestibackend.dtos.mappers.OrderMapper;
 import com.example.carturestibackend.entities.Order;
@@ -47,6 +48,7 @@ public class OrderService {
      * @return A list of OrderDTO objects representing the orders.
      */
     public List<OrderDTO> findOrders() {
+        LOGGER.error(OrderLogger.ALL_ORDERS_RETRIEVED);
         List<Order> orderList = orderRepository.findAll();
         return orderList.stream()
                 .map(OrderMapper::toOrderDTO)
@@ -63,7 +65,7 @@ public class OrderService {
     public OrderDTO findOrderById(String id) {
         Optional<Order> orderOptional = orderRepository.findById(id);
         if (!orderOptional.isPresent()) {
-            LOGGER.error("Order with id {} was not found in db", id);
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
         }
         return OrderMapper.toOrderDTO(orderOptional.get());
@@ -77,12 +79,8 @@ public class OrderService {
      */
     public String insert(OrderDTO orderDTO) {
         Order order = OrderMapper.fromOrderDTO(orderDTO);
-      //  Optional<User> user = userRepository.findById(orderDTO.getUser());
-      //  Optional<Product> product = productRepository.findById(orderDTO.getNbOfProducts());
-      //  order.setUsers(user.get());
-      //  order.setProducts((List<Product>) product.get());
         order = orderRepository.save(order);
-        LOGGER.debug("Order with id {} was inserted in db", order.getId_order());
+        LOGGER.debug(OrderLogger.ORDER_INSERTED, order.getId_order());
         return order.getId_order();
     }
 
@@ -97,9 +95,9 @@ public class OrderService {
         Optional<Order> orderOptional = orderRepository.findById(id);
         if (orderOptional.isPresent()) {
             orderRepository.delete(orderOptional.get());
-            LOGGER.debug("Order with id {} was deleted from db", id);
+            LOGGER.debug(OrderLogger.ORDER_DELETED, id);
         } else {
-            LOGGER.error("Order with id {} was not found in db", id);
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
         }
     }
@@ -116,7 +114,7 @@ public class OrderService {
     public OrderDTO updateOrder(String id, OrderDTO orderDTO) {
         Optional<Order> orderOptional = orderRepository.findById(id);
         if (!orderOptional.isPresent()) {
-            LOGGER.error("Order with id {} was not found in db", id);
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
         }
 
@@ -125,7 +123,7 @@ public class OrderService {
         existingOrder.setTotal_price(orderDTO.getTotal_price());
 
         Order updatedOrder = orderRepository.save(existingOrder);
-        LOGGER.debug("Order with id {} was updated in db", updatedOrder.getId_order());
+        LOGGER.debug(OrderLogger.ORDER_UPDATED, updatedOrder.getId_order());
 
         return OrderMapper.toOrderDTO(updatedOrder);
     }

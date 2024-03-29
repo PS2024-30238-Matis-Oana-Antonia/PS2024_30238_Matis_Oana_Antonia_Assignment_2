@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.ReviewLogger;
 import com.example.carturestibackend.dtos.ReviewDTO;
 import com.example.carturestibackend.dtos.mappers.ReviewMapper;
 import com.example.carturestibackend.entities.Review;
@@ -45,6 +46,7 @@ public class ReviewService {
      * @return A list of ReviewDTO objects representing the reviews.
      */
     public List<ReviewDTO> findReviews() {
+        LOGGER.error(ReviewLogger.ALL_REVIEWS_RETRIEVED);
         List<Review> reviewList = reviewRepository.findAll();
         return reviewList.stream()
                 .map(ReviewMapper::toReviewDTO)
@@ -61,7 +63,7 @@ public class ReviewService {
     public ReviewDTO findReviewById(String id) {
         Optional<Review> reviewOptional = reviewRepository.findById(id);
         if (!reviewOptional.isPresent()) {
-            LOGGER.error("Review with id {} was not found in db", id);
+            LOGGER.error(ReviewLogger.REVIEW_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
         return ReviewMapper.toReviewDTO(reviewOptional.get());
@@ -76,7 +78,7 @@ public class ReviewService {
     public String insert(ReviewDTO reviewDTO) {
         Review review = ReviewMapper.fromReviewDTO(reviewDTO);
         review = reviewRepository.save(review);
-        LOGGER.debug("Review with id {} was inserted in db", review.getId());
+        LOGGER.debug(ReviewLogger.REVIEW_INSERTED, review.getId());
         return review.getId();
     }
 
@@ -91,9 +93,9 @@ public class ReviewService {
         Optional<Review> reviewOptional = reviewRepository.findById(id);
         if (reviewOptional.isPresent()) {
             reviewRepository.delete(reviewOptional.get());
-            LOGGER.debug("Review with id {} was deleted from db", id);
+            LOGGER.debug(ReviewLogger.REVIEW_DELETED, id);
         } else {
-            LOGGER.error("Review with id {} was not found in db", id);
+            LOGGER.error(ReviewLogger.REVIEW_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
     }
@@ -110,7 +112,7 @@ public class ReviewService {
     public ReviewDTO updateReview(String id, ReviewDTO reviewDTO) {
         Optional<Review> reviewOptional = reviewRepository.findById(id);
         if (!reviewOptional.isPresent()) {
-            LOGGER.error("Review with id {} was not found in db", id);
+            LOGGER.error(ReviewLogger.REVIEW_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
 
@@ -119,7 +121,7 @@ public class ReviewService {
         existingReview.setComment(reviewDTO.getComment());
 
         Review updatedReview = reviewRepository.save(existingReview);
-        LOGGER.debug("Review with id {} was updated in db", updatedReview.getId());
+        LOGGER.debug(ReviewLogger.REVIEW_UPDATED, updatedReview.getId());
 
         return ReviewMapper.toReviewDTO(updatedReview);
     }

@@ -1,8 +1,11 @@
 package com.example.carturestibackend.controllers;
 
+import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.services.UserService;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,9 @@ import java.util.List;
 @CrossOrigin
 @RequestMapping(value = "/user")
 public class UserController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
+
     private final UserService userService;
 
     /**
@@ -36,6 +42,7 @@ public class UserController {
      */
     @GetMapping()
     public ResponseEntity<List<UserDTO>> getUsers() {
+        LOGGER.info(UserLogger.ALL_USERS_RETRIEVED);
         List<UserDTO> dtos = userService.findUsers();
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
@@ -49,6 +56,7 @@ public class UserController {
     @PostMapping()
     public ResponseEntity<String> insertUser(@Valid @RequestBody UserDTO userDTO) {
         String userID = userService.insert(userDTO);
+        LOGGER.debug(UserLogger.USER_INSERTED, userID);
         return new ResponseEntity<>(userID, HttpStatus.CREATED);
     }
 
@@ -60,6 +68,7 @@ public class UserController {
      */
     @GetMapping(value = "/{id_user}")
     public ResponseEntity<UserDTO> getUser(@PathVariable("id_user") String userID) {
+        LOGGER.info(UserLogger.USER_RETRIEVED_BY_ID, userID);
         UserDTO dto = userService.findUserById(userID);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -72,6 +81,7 @@ public class UserController {
      */
     @GetMapping("/name/{name}")
     public ResponseEntity<UserDTO> getUserByName(@PathVariable("name") String name) {
+        LOGGER.info(UserLogger.USER_NOT_FOUND_BY_NAME, name);
         UserDTO dto = userService.findUserByName(name);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -84,6 +94,7 @@ public class UserController {
      */
     @GetMapping("/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable("email") String email) {
+        LOGGER.info(UserLogger.USER_NOT_FOUND_BY_EMAIL, email);
         UserDTO dto = userService.findUserByEmail(email);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -97,6 +108,7 @@ public class UserController {
     @DeleteMapping(value = "/{id_user}")
     public ResponseEntity<String> deleteUser(@PathVariable("id_user") String userID) {
         userService.deleteUserById(userID);
+        LOGGER.debug(UserLogger.USER_DELETED, userID);
         return new ResponseEntity<>("User with ID " + userID + " deleted successfully", HttpStatus.OK);
     }
 
@@ -109,6 +121,7 @@ public class UserController {
      */
     @PutMapping(value = "/{id_user}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable("id_user") String userID, @Valid @RequestBody UserDTO userDTO) {
+        LOGGER.debug(UserLogger.USER_UPDATED, userID);
         UserDTO updatedUser = userService.updateUser(userID, userDTO);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }

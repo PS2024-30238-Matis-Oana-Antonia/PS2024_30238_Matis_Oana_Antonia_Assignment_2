@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.CategoryLogger;
 import com.example.carturestibackend.dtos.CategoryDTO;
 import com.example.carturestibackend.dtos.mappers.CategoryMapper;
 import com.example.carturestibackend.entities.Category;
@@ -38,6 +39,7 @@ public class CategoryService {
      * @return A list of CategoryDTO objects representing the categories.
      */
     public List<CategoryDTO> findCategories() {
+        LOGGER.error(CategoryLogger.ALL_CATEGORIES_RETRIEVED);
         List<Category> categoryList = categoryRepository.findAll();
         return categoryList.stream()
                 .map(CategoryMapper::toCategoryDTO)
@@ -54,7 +56,7 @@ public class CategoryService {
     public CategoryDTO findCategoryById(String id_category) {
         Optional<Category> categoryOptional = categoryRepository.findById(id_category);
         if (!categoryOptional.isPresent()) {
-            LOGGER.error("Category with id {} was not found in db", id_category);
+            LOGGER.error(CategoryLogger.CATEGORY_NOT_FOUND_BY_ID, id_category);
             throw new ResourceNotFoundException(Category.class.getSimpleName() + " with id: " + id_category);
         }
         return CategoryMapper.toCategoryDTO(categoryOptional.get());
@@ -69,7 +71,7 @@ public class CategoryService {
     public String insert(CategoryDTO categoryDTO) {
         Category category = CategoryMapper.fromCategoryDTO(categoryDTO);
         category = categoryRepository.save(category);
-        LOGGER.debug("Category with id {} was inserted in db", category.getId_category());
+        LOGGER.debug(CategoryLogger.CATEGORY_INSERTED, category.getId_category());
         return category.getId_category();
     }
 
@@ -83,9 +85,9 @@ public class CategoryService {
         Optional<Category> categoryOptional = categoryRepository.findById(id_category);
         if (categoryOptional.isPresent()) {
             categoryRepository.delete(categoryOptional.get());
-            LOGGER.debug("Category with id {} was deleted from db", id_category);
+            LOGGER.debug(CategoryLogger.CATEGORY_DELETED, id_category);
         } else {
-            LOGGER.error("Category with id {} was not found in db", id_category);
+            LOGGER.error(CategoryLogger.CATEGORY_NOT_FOUND_BY_ID, id_category);
             throw new ResourceNotFoundException(Category.class.getSimpleName() + " with id: " + id_category);
         }
     }
@@ -101,7 +103,7 @@ public class CategoryService {
     public CategoryDTO updateCategory(String id_category, CategoryDTO categoryDTO) {
         Optional<Category> categoryOptional = categoryRepository.findById(id_category);
         if (!categoryOptional.isPresent()) {
-            LOGGER.error("Category with id {} was not found in db", id_category);
+            LOGGER.error(CategoryLogger.CATEGORY_NOT_FOUND_BY_ID, id_category);
             throw new ResourceNotFoundException(Category.class.getSimpleName() + " with id: " + id_category);
         }
 
@@ -110,7 +112,7 @@ public class CategoryService {
         existingCategory.setDescription(categoryDTO.getDescription());
 
         Category updatedCategory = categoryRepository.save(existingCategory);
-        LOGGER.debug("Category with id {} was updated in db", updatedCategory.getId_category());
+        LOGGER.debug(CategoryLogger.CATEGORY_UPDATED, updatedCategory.getId_category());
 
         return CategoryMapper.toCategoryDTO(updatedCategory);
     }

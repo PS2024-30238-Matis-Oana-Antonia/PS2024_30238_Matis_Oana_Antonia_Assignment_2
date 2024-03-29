@@ -1,5 +1,7 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.SaleLogger;
+import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.SaleDTO;
 import com.example.carturestibackend.dtos.mappers.SaleMapper;
 import com.example.carturestibackend.entities.Product;
@@ -29,6 +31,7 @@ public class SaleService {
     }
 
     public List<SaleDTO> findAllSales() {
+        LOGGER.info(SaleLogger.ALL_SALES_RETRIEVED);
         List<Sale> sales = saleRepository.findAll();
         return sales.stream()
                 .map(SaleMapper::toSaleDTO)
@@ -40,7 +43,7 @@ public class SaleService {
         if (saleOptional.isPresent()) {
             return SaleMapper.toSaleDTO(saleOptional.get());
         } else {
-            LOGGER.error("Sale with id {} was not found in the database", id_sale);
+            LOGGER.error(SaleLogger.SALE_NOT_FOUND_BY_ID, id_sale);
             throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id_sale);
         }
     }
@@ -48,7 +51,7 @@ public class SaleService {
     public String insertSale(SaleDTO saleDTO) {
         Sale sale = SaleMapper.fromSaleDTO(saleDTO);
         sale = saleRepository.save(sale);
-        LOGGER.debug("Sale with id {} was inserted into the database", sale.getId_sale());
+        LOGGER.debug(SaleLogger.SALE_INSERTED, sale.getId_sale());
         return sale.getId_sale();
     }
 
@@ -56,9 +59,9 @@ public class SaleService {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
         if (saleOptional.isPresent()) {
             saleRepository.delete(saleOptional.get());
-            LOGGER.debug("Sale with id {} was deleted from the database", id_sale);
+            LOGGER.debug(SaleLogger.SALE_DELETED, id_sale);
         } else {
-            LOGGER.error("Sale with id {} was not found in the database", id_sale);
+            LOGGER.error(SaleLogger.SALE_NOT_FOUND_BY_ID, id_sale);
             throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id_sale);
         }
     }
@@ -71,11 +74,11 @@ public class SaleService {
             existingSale.setPrice_after_discount(saleDTO.getPrice_after_discount());
 
             Sale updatedSale = saleRepository.save(existingSale);
-            LOGGER.debug("Sale with id {} was updated in the database", id_sale);
+            LOGGER.debug(SaleLogger.SALE_UPDATED, id_sale);
 
             return SaleMapper.toSaleDTO(updatedSale);
         } else {
-            LOGGER.error("Sale with id {} was not found in the database", id_sale);
+            LOGGER.error(SaleLogger.SALE_NOT_FOUND_BY_ID, id_sale);
             throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id_sale);
         }
     }

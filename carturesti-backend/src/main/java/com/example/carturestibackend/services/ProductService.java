@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.ProductMapper;
 import com.example.carturestibackend.entities.Product;
@@ -43,6 +44,7 @@ public class ProductService {
      * @return A list of ProductDTO objects representing the products.
      */
     public List<ProductDTO> findProducts() {
+        LOGGER.error(ProductLogger.ALL_PRODUCTS_RETRIEVED);
         List<Product> productList = productRepository.findAll();
         return productList.stream()
                 .map(ProductMapper::toProductDTO)
@@ -59,7 +61,7 @@ public class ProductService {
     public ProductDTO findProductById(String id_product) {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (!productOptional.isPresent()) {
-            LOGGER.error("Product with id {} was not found in db", id_product);
+            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
             throw new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + id_product);
         }
         return ProductMapper.toProductDTO(productOptional.get());
@@ -74,7 +76,7 @@ public class ProductService {
     public String insert(ProductDTO productDTO) {
         Product product = ProductMapper.fromProductDTO(productDTO);
         product = productRepository.save(product);
-        LOGGER.debug("Product with id {} was inserted in db", product.getId_product());
+        LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
         return product.getId_product();
     }
 
@@ -89,9 +91,9 @@ public class ProductService {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (productOptional.isPresent()) {
             productRepository.delete(productOptional.get());
-            LOGGER.debug("Product with id {} was deleted from db", id_product);
+            LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);
         } else {
-            LOGGER.error("Product with id {} was not found in db", id_product);
+            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
             throw new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + id_product);
         }
     }
@@ -107,7 +109,7 @@ public class ProductService {
     public ProductDTO updateProduct(String id_product, ProductDTO productDTO) {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (!productOptional.isPresent()) {
-            LOGGER.error("Product with id {} was not found in db", id_product);
+            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
             throw new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + id_product);
         }
 
@@ -119,8 +121,43 @@ public class ProductService {
         existingProduct.setStock(productDTO.getStock());
 
         Product updatedProduct = productRepository.save(existingProduct);
-        LOGGER.debug("Product with id {} was updated in db", updatedProduct.getId_product());
+        LOGGER.debug(ProductLogger.PRODUCT_UPDATED, updatedProduct.getId_product());
 
         return ProductMapper.toProductDTO(updatedProduct);
     }
+
+    public void decreaseProductStock(String productId, long quantity) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            long newStock = product.getStock() - quantity;
+            if (newStock >= 0) {
+                product.setStock(newStock);
+                productRepository.save(product);
+                LOGGER.info(ProductLogger.STOCK_DECREASED, product.getName(), quantity, newStock);
+            } else {
+                LOGGER.error(ProductLogger.INSUFFICIENT_STOCK_TO_DECREASE, product.getName(), quantity, product.getStock());
+                throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
+            }
+        } else {
+            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, productId);
+            throw new ResourceNotFoundException("Product not found with ID: " + productId);
+        }
+    }
+
+    public void increaseProductStock(String productId, long quantity) {
+        Optional<Product> productOptional = productRepository.findById(productId);
+        if (productOptional.isPresent()) {
+            Product product = productOptional.get();
+            long newStock = product.getStock() + quantity;
+            product.setStock(newStock);
+            productRepository.save(product);
+            LOGGER.info(ProductLogger.STOCK_INCREASED, product.getName(), quantity, newStock);
+        } else {
+            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, productId);
+            throw new ResourceNotFoundException("Product not found with ID: " + productId);
+        }
+    }
+
+
 }

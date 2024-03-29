@@ -1,5 +1,7 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.CartLogger;
+import com.example.carturestibackend.constants.CategoryLogger;
 import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.dtos.mappers.CartMapper;
 import com.example.carturestibackend.entities.Cart;
@@ -26,6 +28,7 @@ public class CartService {
     }
 
     public List<CartDTO> findAllCarts() {
+        LOGGER.error(CartLogger.ALL_CARTS_RETRIEVED);
         List<Cart> carts = cartRepository.findAll();
         return carts.stream()
                 .map(CartMapper::toCartDTO)
@@ -37,7 +40,7 @@ public class CartService {
         if (cartOptional.isPresent()) {
             return CartMapper.toCartDTO(cartOptional.get());
         } else {
-            LOGGER.error("Cart with id {} was not found in the database", id_cart);
+            LOGGER.error(CartLogger.CART_NOT_FOUND_BY_ID, id_cart);
             throw new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + id_cart);
         }
     }
@@ -45,7 +48,7 @@ public class CartService {
     public String insertCart(CartDTO cartDTO) {
         Cart cart = CartMapper.fromCartDTO(cartDTO);
         cart = cartRepository.save(cart);
-        LOGGER.debug("Cart with id {} was inserted into the database", cart.getId_cart());
+        LOGGER.debug(CategoryLogger.CATEGORY_INSERTED, cart.getId_cart());
         return cart.getId_cart();
     }
 
@@ -53,9 +56,9 @@ public class CartService {
         Optional<Cart> cartOptional = cartRepository.findById(id_cart);
         if (cartOptional.isPresent()) {
             cartRepository.delete(cartOptional.get());
-            LOGGER.debug("Cart with id {} was deleted from the database", id_cart);
+            LOGGER.debug(CategoryLogger.CATEGORY_DELETED, id_cart);
         } else {
-            LOGGER.error("Cart with id {} was not found in the database", id_cart);
+            LOGGER.error(CategoryLogger.CATEGORY_NOT_FOUND_BY_ID, id_cart);
             throw new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + id_cart);
         }
     }
@@ -64,14 +67,13 @@ public class CartService {
         Optional<Cart> cartOptional = cartRepository.findById(id_cart);
         if (cartOptional.isPresent()) {
             Cart existingCart = cartOptional.get();
-            // Update cart fields here based on DTO
 
             Cart updatedCart = cartRepository.save(existingCart);
-            LOGGER.debug("Cart with id {} was updated in the database", id_cart);
+            LOGGER.debug(CategoryLogger.CATEGORY_UPDATED, id_cart);
 
             return CartMapper.toCartDTO(updatedCart);
         } else {
-            LOGGER.error("Cart with id {} was not found in the database", id_cart);
+            LOGGER.error(CategoryLogger.CATEGORY_NOT_FOUND_BY_ID, id_cart);
             throw new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + id_cart);
         }
     }

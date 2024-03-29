@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.dtos.mappers.UserMapper;
 import com.example.carturestibackend.entities.User;
@@ -43,6 +44,7 @@ public class UserService {
      * @return A list of UserDTO objects representing the users.
      */
     public List<UserDTO> findUsers() {
+        LOGGER.info(UserLogger.ALL_USERS_RETRIEVED);
         List<User> userList = userRepository.findAll();
         return userList.stream()
                 .map(UserMapper::toUserDTO)
@@ -59,7 +61,7 @@ public class UserService {
     public UserDTO findUserById(String id_user) {
         Optional<User> userOptional = userRepository.findById(id_user);
         if (!userOptional.isPresent()) {
-            LOGGER.error("User with id {} was not found in db", id_user);
+            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_ID, id_user);
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
         }
         return UserMapper.toUserDTO(userOptional.get());
@@ -75,7 +77,7 @@ public class UserService {
     public UserDTO findUserByName(String name) {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByName(name));
         if (!userOptional.isPresent()) {
-            LOGGER.error("User with name {} was not found in db", name);
+            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_NAME, name);
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with name: " + name);
         }
         return UserMapper.toUserDTO(userOptional.get());
@@ -91,7 +93,7 @@ public class UserService {
     public UserDTO findUserByEmail(String email) {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
         if (!userOptional.isPresent()) {
-            LOGGER.error("User with email {} was not found in db", email);
+            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_EMAIL, email);
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with email: " + email);
         }
         return UserMapper.toUserDTO(userOptional.get());
@@ -106,7 +108,7 @@ public class UserService {
     public String insert(UserDTO userDTO) {
         User user = UserMapper.fromUserDTO(userDTO);
         user = userRepository.save(user);
-        LOGGER.debug("User with id {} was inserted in db", user.getId_user());
+        LOGGER.debug(UserLogger.USER_INSERTED, user.getId_user());
         return user.getId_user();
     }
 
@@ -121,9 +123,9 @@ public class UserService {
         Optional<User> userOptional = userRepository.findById(id_user);
         if (userOptional.isPresent()) {
             userRepository.delete(userOptional.get());
-            LOGGER.debug("User with id {} was deleted from db", id_user);
+            LOGGER.debug(UserLogger.USER_DELETED, id_user);
         } else {
-            LOGGER.error("User with id {} was not found in db", id_user);
+            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_ID, id_user);
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
         }
     }
@@ -139,7 +141,7 @@ public class UserService {
     public UserDTO updateUser(String id_user, UserDTO userDTO) {
         Optional<User> userOptional = userRepository.findById(id_user);
         if (!userOptional.isPresent()) {
-            LOGGER.error("User with id {} was not found in db", id_user);
+            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_ID, id_user);
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
         }
 
@@ -152,7 +154,7 @@ public class UserService {
         existingUser.setRole(userDTO.getRole());
 
         User updatedUser = userRepository.save(existingUser);
-        LOGGER.debug("User with id {} was updated in db", updatedUser.getId_user());
+        LOGGER.debug(UserLogger.USER_UPDATED, updatedUser.getId_user());
 
         return UserMapper.toUserDTO(updatedUser);
     }

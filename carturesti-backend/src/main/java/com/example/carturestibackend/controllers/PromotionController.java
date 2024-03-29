@@ -1,7 +1,10 @@
 package com.example.carturestibackend.controllers;
 
+import com.example.carturestibackend.constants.PromotionLogger;
 import com.example.carturestibackend.dtos.PromotionDTO;
 import com.example.carturestibackend.services.PromotionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,8 @@ import java.util.List;
 @CrossOrigin
 @RequestMapping(value = "/promotion")
 public class PromotionController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PromotionController.class);
 
     private final PromotionService promotionService;
 
@@ -37,6 +42,7 @@ public class PromotionController {
      */
     @GetMapping()
     public ResponseEntity<List<PromotionDTO>> getPromotions() {
+        LOGGER.info(PromotionLogger.ALL_PROMOTIONS_RETRIEVED);
         List<PromotionDTO> dtos = promotionService.findPromotions();
         return new ResponseEntity<>(dtos, HttpStatus.OK);
     }
@@ -50,6 +56,7 @@ public class PromotionController {
     @PostMapping()
     public ResponseEntity<String> insert(@Valid @RequestBody PromotionDTO promotionDTO) {
         String promotionID = promotionService.insert(promotionDTO);
+        LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotionID);
         return new ResponseEntity<>(promotionID, HttpStatus.CREATED);
     }
 
@@ -61,6 +68,7 @@ public class PromotionController {
      */
     @GetMapping(value = "/{id_promotion}")
     public ResponseEntity<PromotionDTO> getPromotion(@PathVariable("id_promotion") String promotionID) {
+        LOGGER.info(PromotionLogger.PROMOTION_RETRIEVED_BY_ID, promotionID);
         PromotionDTO dto = promotionService.findPromotionById(promotionID);
         return new ResponseEntity<>(dto, HttpStatus.OK);
     }
@@ -73,6 +81,7 @@ public class PromotionController {
      */
     @DeleteMapping(value = "/{id_promotion}")
     public ResponseEntity<String> deletePromotion(@PathVariable("id_promotion") String promotionID) {
+        LOGGER.debug(PromotionLogger.PROMOTION_DELETED, promotionID);
         promotionService.deletePromotionById(promotionID);
         return new ResponseEntity<>("Promotion with ID " + promotionID + " deleted successfully", HttpStatus.OK);
     }
@@ -86,6 +95,7 @@ public class PromotionController {
      */
     @PutMapping(value = "/{id_promotion}")
     public ResponseEntity<PromotionDTO> updatePromotion(@PathVariable("id_promotion") String promotionID, @Valid @RequestBody PromotionDTO promotionDTO) {
+        LOGGER.debug(PromotionLogger.PROMOTION_UPDATED, promotionID);
         PromotionDTO updatedPromotion = promotionService.updatePromotion(promotionID, promotionDTO);
         return new ResponseEntity<>(updatedPromotion, HttpStatus.OK);
     }
