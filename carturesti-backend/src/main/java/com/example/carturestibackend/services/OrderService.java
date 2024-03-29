@@ -7,6 +7,7 @@ import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.repositories.OrderRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.validators.OrderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final OrderValidator orderValidator;
 
     /**
      * Constructs a new OrderService with the specified OrderRepository.
@@ -34,12 +36,14 @@ public class OrderService {
      * @param orderRepository   The OrderRepository used to interact with order data in the database.
      * @param userRepository
      * @param productRepository
+     * @param orderValidator
      */
     @Autowired
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.orderValidator = orderValidator;
     }
 
     /**
@@ -79,6 +83,7 @@ public class OrderService {
      */
     public String insert(OrderDTO orderDTO) {
         Order order = OrderMapper.fromOrderDTO(orderDTO);
+        OrderValidator.validateOrder(order);
         order = orderRepository.save(order);
         LOGGER.debug(OrderLogger.ORDER_INSERTED, order.getId_order());
         return order.getId_order();

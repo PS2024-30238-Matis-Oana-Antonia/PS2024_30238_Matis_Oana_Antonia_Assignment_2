@@ -8,6 +8,8 @@ import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
+import com.example.carturestibackend.validators.OrderItemValidator;
+import com.example.carturestibackend.validators.ProductValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ public class OrderItemService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemService.class);
     private final OrderItemRepository orderItemRepository;
     private ProductService productService;
+    private OrderItemValidator orderItemValidator;
 
     /**
      * Constructs a new OrderItemService with the specified OrderItemRepository.
@@ -35,8 +38,9 @@ public class OrderItemService {
      * @param productRepository
      */
     @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository) {
+    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, OrderItemValidator orderItemValidator) {
         this.orderItemRepository = orderItemRepository;
+        this.orderItemValidator = orderItemValidator;
 
     }
 
@@ -77,6 +81,7 @@ public class OrderItemService {
      */
     public String insert(OrderItemDTO orderItemDTO) {
         OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
+        OrderItemValidator.validateOrderItem(orderItem);
         orderItem = (OrderItem) orderItemRepository.save(orderItem);
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItem.getId_order_item());
         return orderItem.getId_order_item();

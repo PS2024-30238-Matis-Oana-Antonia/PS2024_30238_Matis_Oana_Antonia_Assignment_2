@@ -7,4 +7,5 @@ public class SaleLogger {
     public static final String SALE_DELETED = "Sale with id {} was deleted from the database";
     public static final String SALE_UPDATED = "Sale with id {} was updated in the database";
     public static final String ALL_SALES_RETRIEVED = "All sales retrieved successfully";
+    public static final String SALE_INSERT_FAILED_INVALID_DATA = "Failed to insert sale due to invalid data";
 }

@@ -6,6 +6,7 @@ import com.example.carturestibackend.dtos.mappers.ProductMapper;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.CategoryRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
+import com.example.carturestibackend.validators.ProductValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,17 +26,20 @@ public class ProductService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductService.class);
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductValidator productValidator;
 
     /**
      * Constructs a new ProductService with the specified ProductRepository.
      *
      * @param productRepository  The ProductRepository used to interact with product data in the database.
      * @param categoryRepository
+     * @param productValidator
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.productValidator = productValidator;
     }
 
     /**
@@ -75,6 +79,7 @@ public class ProductService {
      */
     public String insert(ProductDTO productDTO) {
         Product product = ProductMapper.fromProductDTO(productDTO);
+        ProductValidator.validateProduct(product);
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
         return product.getId_product();

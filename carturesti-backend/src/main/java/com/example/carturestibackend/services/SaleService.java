@@ -1,13 +1,13 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.SaleLogger;
-import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.SaleDTO;
 import com.example.carturestibackend.dtos.mappers.SaleMapper;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.Sale;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.SaleRepository;
+import com.example.carturestibackend.validators.SaleValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +24,12 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
+    private final SaleValidator saleValidator;
     @Autowired
-    public SaleService(SaleRepository saleRepository,  ProductRepository productRepository) {
+    public SaleService(SaleRepository saleRepository, ProductRepository productRepository, SaleValidator saleValidator) {
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
+        this.saleValidator = saleValidator;
     }
 
     public List<SaleDTO> findAllSales() {
@@ -50,10 +52,16 @@ public class SaleService {
 
     public String insertSale(SaleDTO saleDTO) {
         Sale sale = SaleMapper.fromSaleDTO(saleDTO);
-        sale = saleRepository.save(sale);
-        LOGGER.debug(SaleLogger.SALE_INSERTED, sale.getId_sale());
-        return sale.getId_sale();
+        if (saleValidator.isValid(sale)) {
+            sale = saleRepository.save(sale);
+            LOGGER.debug(SaleLogger.SALE_INSERTED, sale.getId_sale());
+            return sale.getId_sale();
+        } else {
+            LOGGER.error(SaleLogger.SALE_INSERT_FAILED_INVALID_DATA);
+            throw new IllegalArgumentException("Invalid sale data");
+        }
     }
+
 
     public void deleteSaleById(String id_sale) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);

@@ -7,6 +7,7 @@ import com.example.carturestibackend.entities.Review;
 import com.example.carturestibackend.repositories.ReviewRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.validators.ReviewValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,18 +27,21 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final ReviewValidator reviewValidator;
     /**
      * Constructs a new ReviewService with the specified ReviewRepository.
      *
      * @param reviewRepository  The ReviewRepository used to interact with review data in the database.
      * @param userRepository
      * @param productRepository
+     * @param reviewValidator
      */
     @Autowired
-    public ReviewService(ReviewRepository reviewRepository, UserRepository userRepository, ProductRepository productRepository) {
+    public ReviewService(ReviewRepository reviewRepository, UserRepository userRepository, ProductRepository productRepository, ReviewValidator reviewValidator) {
         this.reviewRepository = reviewRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
+        this.reviewValidator = reviewValidator;
     }
 
     /**
@@ -77,6 +81,7 @@ public class ReviewService {
      */
     public String insert(ReviewDTO reviewDTO) {
         Review review = ReviewMapper.fromReviewDTO(reviewDTO);
+        ReviewValidator.validateReview(review);
         review = reviewRepository.save(review);
         LOGGER.debug(ReviewLogger.REVIEW_INSERTED, review.getId());
         return review.getId();

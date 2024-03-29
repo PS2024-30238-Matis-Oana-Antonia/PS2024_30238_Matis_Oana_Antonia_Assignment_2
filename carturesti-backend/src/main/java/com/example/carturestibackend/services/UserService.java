@@ -6,6 +6,7 @@ import com.example.carturestibackend.dtos.mappers.UserMapper;
 import com.example.carturestibackend.entities.User;
 import com.example.carturestibackend.repositories.OrderRepository;
 import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.validators.UserValidator;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -25,17 +26,13 @@ public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final UserValidator userValidator;
 
-    /**
-     * Constructs a new UserService with the specified UserRepository.
-     *
-     * @param userRepository  The UserRepository used to interact with user data in the database.
-     * @param orderRepository
-     */
     @Autowired
-    public UserService(UserRepository userRepository, OrderRepository orderRepository) {
+    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
         this.orderRepository = orderRepository;
+        this.userValidator = userValidator;
     }
 
     /**
@@ -107,6 +104,7 @@ public class UserService {
      */
     public String insert(UserDTO userDTO) {
         User user = UserMapper.fromUserDTO(userDTO);
+        UserValidator.isValid(user);
         user = userRepository.save(user);
         LOGGER.debug(UserLogger.USER_INSERTED, user.getId_user());
         return user.getId_user();

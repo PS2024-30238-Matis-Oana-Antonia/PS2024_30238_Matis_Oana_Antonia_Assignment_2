@@ -5,6 +5,7 @@ import com.example.carturestibackend.dtos.CategoryDTO;
 import com.example.carturestibackend.dtos.mappers.CategoryMapper;
 import com.example.carturestibackend.entities.Category;
 import com.example.carturestibackend.repositories.CategoryRepository;
+import com.example.carturestibackend.validators.CategoryValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +23,18 @@ import java.util.stream.Collectors;
 public class CategoryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryService.class);
     private final CategoryRepository categoryRepository;
+    private final CategoryValidator categoryValidator;
 
     /**
      * Constructs a new CategoryService with the specified CategoryRepository.
      *
      * @param categoryRepository The CategoryRepository used to interact with category data in the database.
+     * @param categoryValidator
      */
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, CategoryValidator categoryValidator) {
         this.categoryRepository = categoryRepository;
+        this.categoryValidator = categoryValidator;
     }
 
     /**
@@ -70,6 +74,7 @@ public class CategoryService {
      */
     public String insert(CategoryDTO categoryDTO) {
         Category category = CategoryMapper.fromCategoryDTO(categoryDTO);
+        CategoryValidator.validateCategory(category);
         category = categoryRepository.save(category);
         LOGGER.debug(CategoryLogger.CATEGORY_INSERTED, category.getId_category());
         return category.getId_category();

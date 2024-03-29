@@ -6,6 +6,7 @@ import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.dtos.mappers.CartMapper;
 import com.example.carturestibackend.entities.Cart;
 import com.example.carturestibackend.repositories.CartRepository;
+import com.example.carturestibackend.validators.CartValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,12 @@ public class CartService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
+    private final CartValidator cartValidator;
 
     @Autowired
-    public CartService(CartRepository cartRepository) {
+    public CartService(CartRepository cartRepository, CartValidator cartValidator) {
         this.cartRepository = cartRepository;
+        this.cartValidator = cartValidator;
     }
 
     public List<CartDTO> findAllCarts() {
@@ -47,6 +50,7 @@ public class CartService {
 
     public String insertCart(CartDTO cartDTO) {
         Cart cart = CartMapper.fromCartDTO(cartDTO);
+        CartValidator.validateCart(cart);
         cart = cartRepository.save(cart);
         LOGGER.debug(CategoryLogger.CATEGORY_INSERTED, cart.getId_cart());
         return cart.getId_cart();

@@ -5,6 +5,8 @@ import com.example.carturestibackend.dtos.PromotionDTO;
 import com.example.carturestibackend.dtos.mappers.PromotionMapper;
 import com.example.carturestibackend.entities.Promotion;
 import com.example.carturestibackend.repositories.PromotionRepository;
+import com.example.carturestibackend.validators.PromotionValidator;
+import com.example.carturestibackend.validators.ReviewValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,15 +25,18 @@ public class PromotionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PromotionService.class);
     private final PromotionRepository promotionRepository;
+    private final PromotionValidator promotionValidator;
 
     /**
      * Constructs a new PromotionService with the specified PromotionRepository.
      *
      * @param promotionRepository The PromotionRepository used to interact with promotion data in the database.
+     * @param promotionValidator
      */
     @Autowired
-    public PromotionService(PromotionRepository promotionRepository) {
+    public PromotionService(PromotionRepository promotionRepository, PromotionValidator promotionValidator) {
         this.promotionRepository = promotionRepository;
+        this.promotionValidator = promotionValidator;
     }
 
     /**
@@ -71,6 +76,7 @@ public class PromotionService {
      */
     public String insert(PromotionDTO promotionDTO) {
         Promotion promotion = PromotionMapper.fromPromotionDTO(promotionDTO);
+        PromotionValidator.validatePromotion(promotion);
         promotion = (Promotion) promotionRepository.save(promotion);
         LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotion.getId_promotion());
         return promotion.getId_promotion();
