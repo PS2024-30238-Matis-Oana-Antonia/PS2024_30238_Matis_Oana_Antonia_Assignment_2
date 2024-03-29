@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column; /* Align containers vertically */
+            align-items: center; /* Center containers horizontally */
+            background-image: url("/images/background.jpg"); /* Replace 'path/to/your/image.jpg' with the actual path to your image */
+            background-size: cover; /* Cover the entire background */
+            background-repeat: no-repeat; /* Do not repeat the background image */
+            background-position: center; /* Center the background image */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: rgba(245, 222, 179, 0.8); /* Added background color with opacity */
+        }
+
+        .title-container {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid #a52a2a;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f5deb3;
+        }
+
+        h1 {
+            color: #555;
+            margin: 0;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .section td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #000;
+        }
+
+        .section button {
+            display: block;
+            width: 100px;
+            margin: 0 auto;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="title-container">
+    <h1>Welcome to the Admin page!</h1>
+</div>
+
+<!-- Sections -->
+<div class="container">
+    <div id="users" class="section">
+        <h2>Users</h2>
+        <table>
+            <tr>
+                <td><form action="add_user_endpoint" method="POST"><button type="submit">Add User</button></form></td>
+                <td><form action="view_user_endpoint" method="GET"><button type="submit">See Users</button></form></td>
+                <td><form action="update_user_endpoint" method="PUT"><button type="submit">Update User</button></form></td>
+                <td><form action="delete_user_endpoint" method="DELETE"><button type="submit">Delete User</button></form></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <div id="products" class="section">
+        <h2>Products</h2>
+        <table>
+            <tr>
+                <td><form action="add_product_endpoint" method="POST"><button type="submit">Add Product</button></form></td>
+                <td><form action="view_product_endpoint" method="GET"><button type="submit">See Products</button></form></td>
+                <td><form action="update_product_endpoint" method="PUT"><button type="submit">Update Product</button></form></td>
+                <td><form action="delete_product_endpoint" method="DELETE"><button type="submit">Delete Product</button></form></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <div id="promotions" class="section">
+        <h2>Promotions</h2>
+        <table>
+            <tr>
+                <td><form action="add_promotion_endpoint" method="POST"><button type="submit">Add Promotion</button></form></td>
+                <td><form action="view_promotion_endpoint" method="GET"><button type="submit">See Promotions</button></form></td>
+                <td><form action="update_promotion_endpoint" method="PUT"><button type="submit">Update Promotion</button></form></td>
+                <td><form action="delete_promotion_endpoint" method="DELETE"><button type="submit">Delete Promotion</button></form></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <div id="reviews" class="section">
+        <h2>Reviews</h2>
+        <table>
+            <tr>
+                <td><form action="add_review_endpoint" method="POST"><button type="submit">Add Review</button></form></td>
+                <td><form action="view_review_endpoint" method="GET"><button type="submit">See Reviews</button></form></td>
+                <td><form action="update_review_endpoint" method="PUT"><button type="submit">Update Review</button></form></td>
+                <td><form action="delete_review_endpoint" method="DELETE"><button type="submit">Delete Review</button></form></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="container">
+    <div id="orders" class="section">
+        <h2>Orders</h2>
+        <table>
+            <tr>
+                <td><form action="add_order_endpoint" method="POST"><button type="submit">Add Order</button></form></td>
+                <td><form action="view_order_endpoint" method="GET"><button type="submit">See Orders</button></form></td>
+                <td><form action="update_order_endpoint" method="PUT"><button type="submit">Update Order</button></form></td>
+                <td><form action="delete_order_endpoint" method="DELETE"><button type="submit">Delete Order</button></form></td>
+            </tr>
+        </table>
+    </div>
+</div>
+</div>
+</div>
+
+</body>
+</html>

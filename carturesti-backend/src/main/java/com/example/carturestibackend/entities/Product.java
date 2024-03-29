@@ -27,7 +27,7 @@ public class Product {
     private String name;
 
     @Column(name = "price", nullable = false)
-    private long price;
+    private double price;
 
     @Column(name = "description", nullable = false)
     private String description;
@@ -52,4 +52,7 @@ public class Product {
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sale_id") // Coloana care va reține ID-ul reducerii
+    private Sale sale;
 }

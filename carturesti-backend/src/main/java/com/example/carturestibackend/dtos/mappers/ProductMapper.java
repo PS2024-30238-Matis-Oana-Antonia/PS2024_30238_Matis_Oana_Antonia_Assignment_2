@@ -26,6 +26,7 @@ public class ProductMapper {
                 .category(product.getCategory())
                 .orderItems(product.getOrderItems())
                 .promotion(product.getPromotion())
+                .sale(product.getSale())
                 .build();
     }
 
@@ -40,6 +41,7 @@ public class ProductMapper {
                 .category(productDTO.getCategory())
                 .orderItems(productDTO.getOrderItems())
                 .promotion(productDTO.getPromotion())
+                .sale(productDTO.getSale())
                 .build();
     }
 }

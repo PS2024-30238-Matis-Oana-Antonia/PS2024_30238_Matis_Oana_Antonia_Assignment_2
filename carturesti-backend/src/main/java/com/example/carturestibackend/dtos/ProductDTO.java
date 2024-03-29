@@ -14,7 +14,7 @@ public class ProductDTO {
 
     private String id_product;
     private String name;
-    private long price;
+    private double price;
     private String description;
     private String author;
     private long stock;
@@ -22,5 +22,5 @@ public class ProductDTO {
     private Category category;
     private List<OrderItem> orderItems;
     private Promotion promotion;
-
+    private Sale sale;
 }

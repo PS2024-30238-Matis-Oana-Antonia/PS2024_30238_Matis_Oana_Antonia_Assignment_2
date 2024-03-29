@@ -6,7 +6,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: beige; /* Added beige background color */
+            background-image: url("/images/background2.jpg"); /* Replace 'path/to/your/image.jpg' with the actual path to your image */
+            background-size: cover; /* Cover the entire background */
+            background-repeat: no-repeat; /* Do not repeat the background image */
             color: #333;
             margin: 0;
             padding: 0;
@@ -143,8 +145,6 @@
             text-decoration: none; /* Remove underline */
             margin: 0 10px; /* Add spacing between icons */
         }
-
-
     </style>
 </head>
 <body>
@@ -180,14 +180,23 @@
     </div>
 
     <div class = "center-container">
-    <div class="container">
-        <p>Hello! Please select whether you are a client or an admin:</p>
-        <select>
-            <option value="Client">&#128100; Client</option>
-            <option value="Admin">&#128101; Admin</option>
-        </select>
-        <button>Submit</button>
-    </div>
+        <div class="container">
+            <p>Hello! Please select whether you are a client or an admin:</p>
+
+            <form method="GET" action="/client">
+                <div class="container">
+                    <button type="submit">&#128100; Client</button>
+                </div>
+            </form>
+
+            <!-- Form for redirection to admin page -->
+            <form method="GET" action="/admin">
+                <div class="container">
+                    <button type="submit">&#128101; Admin</button>
+                </div>
+            </form>
+
+        </div>
     </div>
     <div class="center-container">
         <img src="/images/bookshop.jpg" alt="Books" class="books-image">
