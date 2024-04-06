@@ -17,5 +17,5 @@ public class PromotionDTO {
     private String name;
     private String description;
     private double percentage;
-    private List<Product> products;
+    private List<String> id_products;
 }

@@ -30,16 +30,19 @@ import java.util.Set;
         @Column(name = "order_date", nullable = false)
         private LocalDate order_date;
 
+        @Column(name = "total_quantity", nullable = false)
+        private long total_quantity;
+
         @Column(name = "total_price", nullable = false)
-        private long total_price;
+        private double total_price;
 
         @ManyToOne
         @JoinColumn(name = "id_user")
         private User user;
 
-        @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
+        @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
         @JsonIgnore
-        private List<OrderItem> orderItem;
+        private List<OrderItem> orderItems;
 
 
     }

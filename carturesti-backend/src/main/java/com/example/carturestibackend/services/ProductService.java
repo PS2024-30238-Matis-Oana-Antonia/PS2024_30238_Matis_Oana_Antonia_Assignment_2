@@ -27,6 +27,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductValidator productValidator;
+    private SaleService saleService;
 
     /**
      * Constructs a new ProductService with the specified ProductRepository.
@@ -36,10 +37,11 @@ public class ProductService {
      * @param productValidator
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator) {
+    public ProductService(ProductRepository productRepository, SaleService saleService, CategoryRepository categoryRepository, ProductValidator productValidator) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
+        this.saleService =  saleService;
     }
 
     /**
@@ -164,5 +166,17 @@ public class ProductService {
         }
     }
 
+    public void applyDiscountToProduct(String productId, double discountPercentage) {
+        ProductDTO productDTO = findProductById(productId);
+        Product product = ProductMapper.fromProductDTO(productDTO);
+
+        // Apply the discount to the product
+        saleService.applyDiscount(product, discountPercentage);
+
+        // Update the product in the database
+        updateProduct(productId, ProductMapper.toProductDTO(product));
+
+        LOGGER.debug("Discount of {}% applied to product with ID: {}", discountPercentage, productId);
+    }
 
 }

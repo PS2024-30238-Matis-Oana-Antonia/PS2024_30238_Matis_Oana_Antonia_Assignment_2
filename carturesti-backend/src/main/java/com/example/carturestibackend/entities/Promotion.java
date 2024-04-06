@@ -34,8 +34,9 @@ public class Promotion{
     @Column(name = "percentage", nullable = false, length = 1000)
     private double percentage;
 
-    @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "promotion", fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Product> products;
+
 
 }

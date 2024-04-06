@@ -1,5 +1,6 @@
 package com.example.carturestibackend.dtos;
 
+import com.example.carturestibackend.entities.Cart;
 import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.entities.Review;
 import lombok.*;
@@ -21,7 +22,8 @@ public class UserDTO {
     private String password;
     private int age;
     private String role;
-    private List<Review> reviews;
-    private List<Order> orders;
+    private List<String> id_reviews;
+    private List<String> id_orders;
+    private String id_cart;
 
 }

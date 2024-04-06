@@ -1,5 +1,6 @@
 package com.example.carturestibackend.dtos;
 
+import com.example.carturestibackend.entities.Cart;
 import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.entities.Product;
 import lombok.*;
@@ -16,8 +17,9 @@ public class OrderItemDTO {
 
     private String id_order_item;
     private long quantity;
-    private long price_per_unit;
-    private Order order;
-    private List<Product> products;
+    private double price_per_unit;
+    private String id_order;
+    private List<String> id_products;
+    private Cart cart;
 
 }

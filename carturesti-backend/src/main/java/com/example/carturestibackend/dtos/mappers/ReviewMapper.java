@@ -18,8 +18,8 @@ public class ReviewMapper {
                 .id(review.getId())
                 .rating(review.getRating())
                 .comment(review.getComment())
-                .user(review.getUser())
-                .product(review.getProduct())
+                .id_user(review.getUser().getId_user())
+                .id_product(review.getProduct().getId_product())
                 .build();
     }
 
@@ -27,8 +27,12 @@ public class ReviewMapper {
         return Review.builder()
                 .rating(reviewDTO.getRating())
                 .comment(reviewDTO.getComment())
-                .user(reviewDTO.getUser())
-                .product(reviewDTO.getProduct())
+                .user(User.builder()
+                        .id_user(reviewDTO.getId_user())
+                        .build())
+                .product(Product.builder()
+                        .id_product(reviewDTO.getId_product())
+                        .build())
                 .build();
     }
 }

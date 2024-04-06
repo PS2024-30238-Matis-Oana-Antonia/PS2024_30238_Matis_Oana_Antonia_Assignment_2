@@ -26,7 +26,7 @@ public class OrderValidator {
         }
     }
 
-    private static void validateTotalPrice(long totalPrice) {
+    private static void validateTotalPrice(double totalPrice) {
         if (totalPrice <= 0) {
             throw new IllegalArgumentException("Total price must be greater than 0");
         }

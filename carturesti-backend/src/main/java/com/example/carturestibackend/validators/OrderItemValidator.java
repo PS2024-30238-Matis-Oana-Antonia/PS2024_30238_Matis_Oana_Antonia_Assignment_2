@@ -18,7 +18,7 @@ public class OrderItemValidator {
         }
     }
 
-    private static void validatePricePerUnit(long pricePerUnit) {
+    private static void validatePricePerUnit(double pricePerUnit) {
         if (pricePerUnit <= 0) {
             throw new IllegalArgumentException("Price per unit must be greater than 0");
         }

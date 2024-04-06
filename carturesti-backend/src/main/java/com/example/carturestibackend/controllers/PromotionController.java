@@ -7,8 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 /**
  * Controller class to handle HTTP requests related to promotions.
  */
-@RestController
+@Controller
 @CrossOrigin
 @RequestMapping(value = "/promotion")
 public class PromotionController {
@@ -38,52 +39,60 @@ public class PromotionController {
     /**
      * Retrieves all promotions.
      *
-     * @return A ResponseEntity containing a list of PromotionDTO objects representing the promotions.
+     * @return A ModelAndView containing a list of PromotionDTO objects representing the promotions.
      */
     @GetMapping()
-    public ResponseEntity<List<PromotionDTO>> getPromotions() {
+    public ModelAndView getPromotions() {
         LOGGER.info(PromotionLogger.ALL_PROMOTIONS_RETRIEVED);
         List<PromotionDTO> dtos = promotionService.findPromotions();
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/promotion");
+        modelAndView.addObject("promotions", dtos);
+        return modelAndView;
     }
 
     /**
      * Inserts a new promotion.
      *
      * @param promotionDTO The PromotionDTO object representing the promotion to insert.
-     * @return A ResponseEntity containing the ID of the newly inserted promotion.
+     * @return A ModelAndView containing the ID of the newly inserted promotion.
      */
     @PostMapping()
-    public ResponseEntity<String> insert(@Valid @RequestBody PromotionDTO promotionDTO) {
+    public ModelAndView insert(@Valid @RequestBody PromotionDTO promotionDTO) {
         String promotionID = promotionService.insert(promotionDTO);
         LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotionID);
-        return new ResponseEntity<>(promotionID, HttpStatus.CREATED);
+        ModelAndView modelAndView = new ModelAndView("/promotion");
+        modelAndView.addObject("promotionID", promotionID);
+        return modelAndView;
     }
 
     /**
      * Retrieves a promotion by its ID.
      *
      * @param promotionID The ID of the promotion to retrieve.
-     * @return A ResponseEntity containing the PromotionDTO object representing the retrieved promotion.
+     * @return A ModelAndView containing the PromotionDTO object representing the retrieved promotion.
      */
     @GetMapping(value = "/{id_promotion}")
-    public ResponseEntity<PromotionDTO> getPromotion(@PathVariable("id_promotion") String promotionID) {
+    public ModelAndView getPromotion(@PathVariable("id_promotion") String promotionID) {
         LOGGER.info(PromotionLogger.PROMOTION_RETRIEVED_BY_ID, promotionID);
         PromotionDTO dto = promotionService.findPromotionById(promotionID);
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/promotion");
+        modelAndView.addObject("promotion", dto);
+        return modelAndView;
     }
 
     /**
      * Deletes a promotion by its ID.
      *
      * @param promotionID The ID of the promotion to delete.
-     * @return A ResponseEntity indicating the success of the operation.
+     * @return A ModelAndView indicating the success of the operation.
      */
     @DeleteMapping(value = "/{id_promotion}")
-    public ResponseEntity<String> deletePromotion(@PathVariable("id_promotion") String promotionID) {
+    public ModelAndView deletePromotion(@PathVariable("id_promotion") String promotionID) {
         LOGGER.debug(PromotionLogger.PROMOTION_DELETED, promotionID);
         promotionService.deletePromotionById(promotionID);
-        return new ResponseEntity<>("Promotion with ID " + promotionID + " deleted successfully", HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/promotion");
+        modelAndView.addObject("message", "Promotion with ID " + promotionID + " deleted successfully");
+        return modelAndView;
     }
 
     /**
@@ -91,12 +100,14 @@ public class PromotionController {
      *
      * @param promotionID    The ID of the promotion to update.
      * @param promotionDTO   The updated PromotionDTO object representing the new state of the promotion.
-     * @return A ResponseEntity containing the updated PromotionDTO object.
+     * @return A ModelAndView containing the updated PromotionDTO object.
      */
     @PutMapping(value = "/{id_promotion}")
-    public ResponseEntity<PromotionDTO> updatePromotion(@PathVariable("id_promotion") String promotionID, @Valid @RequestBody PromotionDTO promotionDTO) {
+    public ModelAndView updatePromotion(@PathVariable("id_promotion") String promotionID, @Valid @RequestBody PromotionDTO promotionDTO) {
         LOGGER.debug(PromotionLogger.PROMOTION_UPDATED, promotionID);
         PromotionDTO updatedPromotion = promotionService.updatePromotion(promotionID, promotionDTO);
-        return new ResponseEntity<>(updatedPromotion, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/promotion");
+        modelAndView.addObject("promotion", updatedPromotion);
+        return modelAndView;
     }
 }

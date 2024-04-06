@@ -1,7 +1,9 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.SaleLogger;
+import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.SaleDTO;
+import com.example.carturestibackend.dtos.mappers.ProductMapper;
 import com.example.carturestibackend.dtos.mappers.SaleMapper;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.Sale;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,10 +38,33 @@ public class SaleService {
     public List<SaleDTO> findAllSales() {
         LOGGER.info(SaleLogger.ALL_SALES_RETRIEVED);
         List<Sale> sales = saleRepository.findAll();
-        return sales.stream()
-                .map(SaleMapper::toSaleDTO)
-                .collect(Collectors.toList());
+        List<SaleDTO> saleDTOs = new ArrayList<>();
+
+        for (Sale sale : sales) {
+            SaleDTO saleDTO = SaleMapper.toSaleDTO(sale);
+            List<String> productIdsWithDiscount = new ArrayList<>();
+
+            for (Product product : sale.getProducts()) {
+                String productId = product.getId_product();
+                double discountPercentage = sale.getDiscount_percentage();
+                double originalPrice = product.getPrice();
+                double discountedPrice = originalPrice;
+
+                if (discountPercentage > 0) {
+                    discountedPrice = originalPrice * (1 - discountPercentage / 100);
+                }
+                productIdsWithDiscount.add(productId);
+            }
+
+            // Set the list of product IDs with discounts in the SaleDTO
+            saleDTO.setId_products(productIdsWithDiscount);
+            saleDTOs.add(saleDTO);
+        }
+
+        return saleDTOs;
     }
+
+
 
     public SaleDTO findSaleById(String id_sale) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
@@ -66,13 +92,27 @@ public class SaleService {
     public void deleteSaleById(String id_sale) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
         if (saleOptional.isPresent()) {
-            saleRepository.delete(saleOptional.get());
+            Sale sale = saleOptional.get();
+
+            // Remove associated products
+            for (Product product : sale.getProducts()) {
+                product.setSale(null);
+            }
+            sale.setProducts(new ArrayList<>()); // Clear the products list
+
+            // Save the changes to update associations in the database
+            saleRepository.save(sale);
+
+            // Now delete the sale entity
+            saleRepository.delete(sale);
+
             LOGGER.debug(SaleLogger.SALE_DELETED, id_sale);
         } else {
             LOGGER.error(SaleLogger.SALE_NOT_FOUND_BY_ID, id_sale);
             throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id_sale);
         }
     }
+
 
     public SaleDTO updateSale(String id_sale, SaleDTO saleDTO) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
@@ -90,9 +130,18 @@ public class SaleService {
             throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id_sale);
         }
     }
+
+    /**
+     * Applies discount to a product based on the provided discount percentage.
+     *
+     * @param product            The product to which discount is to be applied.
+     * @param discountPercentage The percentage of discount to be applied.
+     */
     public void applyDiscount(Product product, double discountPercentage) {
         double discountedPrice = product.getPrice() * (1 - discountPercentage / 100);
         product.setPrice(discountedPrice);
         productRepository.save(product);
+        LOGGER.info("Discount of {}% applied to product {} (ID: {}). New price: ${}", discountPercentage,
+                product.getName(), product.getId_product(), discountedPrice);
     }
 }

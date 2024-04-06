@@ -3,6 +3,7 @@ package com.example.carturestibackend.services;
 import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
+import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
 import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
@@ -10,12 +11,14 @@ import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.OrderItemValidator;
 import com.example.carturestibackend.validators.ProductValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,6 +33,7 @@ public class OrderItemService {
     private final OrderItemRepository orderItemRepository;
     private ProductService productService;
     private OrderItemValidator orderItemValidator;
+    private ProductRepository productRepository;
 
     /**
      * Constructs a new OrderItemService with the specified OrderItemRepository.
@@ -38,11 +42,13 @@ public class OrderItemService {
      * @param productRepository
      */
     @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, OrderItemValidator orderItemValidator) {
+    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, ProductService productService, OrderItemValidator orderItemValidator) {
         this.orderItemRepository = orderItemRepository;
+        this.productRepository = productRepository;
+        this.productService = productService; // Assign productService here
         this.orderItemValidator = orderItemValidator;
-
     }
+
 
     /**
      * Retrieves all order items from the database.
@@ -79,10 +85,39 @@ public class OrderItemService {
      * @param orderItemDTO The OrderItemDTO object representing the order item to insert.
      * @return The ID of the newly inserted order item.
      */
+
+    @Transactional
     public String insert(OrderItemDTO orderItemDTO) {
         OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
-        OrderItemValidator.validateOrderItem(orderItem);
-        orderItem = (OrderItem) orderItemRepository.save(orderItem);
+
+        // Initialize the list of products if null
+        if (orderItem.getProducts() == null) {
+            orderItem.setProducts(new ArrayList<>());
+        }
+
+        // Initialize total price and quantity
+        double totalPrice = 0;
+        long totalQuantity = 0;
+
+        // Update product prices and calculate total price and quantity
+        for (Product product : orderItem.getProducts()) {
+            // Update the product price from the database
+            ProductDTO updatedProduct = productService.findProductById(product.getId_product());
+            product.setPrice(updatedProduct.getPrice()); // Update the product price
+
+            totalPrice += product.getPrice(); // Accumulate individual product prices to total price
+            totalQuantity++; // Increment total quantity by 1 for each product
+
+            // Decrease the stock of the product
+            productService.decreaseProductStock(product.getId_product(), 1); // Decrease stock by 1
+        }
+
+        // Calculate average price per unit
+        orderItem.setQuantity(totalQuantity);
+        double pricePerUnit = totalQuantity != 0 ? totalPrice / totalQuantity : 0.0;
+        orderItem.setPrice_per_unit(pricePerUnit);
+
+        orderItem = orderItemRepository.save(orderItem);
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItem.getId_order_item());
         return orderItem.getId_order_item();
     }
@@ -93,21 +128,12 @@ public class OrderItemService {
      * @param id The ID of the order item to delete.
      * @throws ResourceNotFoundException if the order item with the specified ID is not found.
      */
-    public void deleteOrderItemById(String id) {
-        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
-        if (orderItemOptional.isPresent()) {
-            orderItemRepository.delete(orderItemOptional.get());
-            LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, id);
-        } else {
-            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, id);
-            throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + id);
-        }
-    }
+
 
     /**
      * Updates an existing order item in the database.
      *
-     * @param id          The ID of the order item to update.
+     * @param id           The ID of the order item to update.
      * @param orderItemDTO The updated OrderItemDTO object representing the new state of the order item.
      * @return The updated OrderItemDTO object.
      * @throws ResourceNotFoundException if the order item with the specified ID is not found.
@@ -129,21 +155,25 @@ public class OrderItemService {
         return OrderItemMapper.toOrderItemDTO(updatedOrderItem);
     }
 
-    public void addProductToOrderItem(OrderItem orderItem, Product product, long quantity) {
-        LOGGER.info("Adding {} units of product {} to order item {}", quantity, product.getName(), orderItem.getId_order_item());
-        orderItem.getProducts().add(product);
-        orderItem.setQuantity(orderItem.getQuantity() + quantity);
-        productService.decreaseProductStock(product.getId_product(), quantity);
-        LOGGER.info(ProductLogger.STOCK_DECREASED, product.getName(), quantity, product.getStock());
-        LOGGER.info("Product {} added successfully to order item {}", product.getName(), orderItem.getId_order_item());
+
+    @Transactional
+    public void deleteOrderItemById(String orderId) {
+        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(orderId);
+        if (orderItemOptional.isPresent()) {
+            OrderItem orderItem = orderItemOptional.get();
+
+            // Remove products from stock
+            for (Product product : orderItem.getProducts()) {
+                productService.increaseProductStock(product.getId_product(), orderItem.getQuantity());
+            }
+
+            // Delete order item from repository
+            orderItemRepository.delete(orderItem);
+            LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderId);
+        } else {
+            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, orderId);
+            throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + orderId);
+        }
     }
 
-    public void removeProductFromOrderItem(OrderItem orderItem, Product product, long quantity) {
-        LOGGER.info("Removing {} units of product {} from order item {}", quantity, product.getName(), orderItem.getId_order_item());
-        orderItem.getProducts().remove(product);
-        orderItem.setQuantity(orderItem.getQuantity() - quantity);
-        productService.increaseProductStock(product.getId_product(), quantity);
-        LOGGER.info(ProductLogger.STOCK_INCREASED, product.getName(), quantity, product.getStock());
-        LOGGER.info("Product {} removed successfully from order item {}", product.getName(), orderItem.getId_order_item());
-    }
 }

@@ -7,12 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
-@RestController
+@Controller
 @CrossOrigin
 @RequestMapping(value = "/sale")
 public class SaleController {
@@ -27,37 +28,47 @@ public class SaleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SaleDTO>> getAllSales() {
+    public ModelAndView getAllSales() {
         LOGGER.info(SaleLogger.ALL_SALES_RETRIEVED);
         List<SaleDTO> dtos = saleService.findAllSales();
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/sale");
+        modelAndView.addObject("sales", dtos);
+        return modelAndView;
     }
 
     @GetMapping("/{id_sale}")
-    public ResponseEntity<SaleDTO> getSaleById(@PathVariable("id_sale") String id_sale) {
+    public ModelAndView getSaleById(@PathVariable("id_sale") String id_sale) {
         LOGGER.info(SaleLogger.SALE_RETRIEVED_BY_ID, id_sale);
         SaleDTO dto = saleService.findSaleById(id_sale);
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/sale");
+        modelAndView.addObject("sale", dto);
+        return modelAndView;
     }
 
     @PostMapping
-    public ResponseEntity<String> insertSale(@RequestBody SaleDTO saleDTO) {
+    public ModelAndView insertSale(@RequestBody SaleDTO saleDTO) {
         String saleID = saleService.insertSale(saleDTO);
         LOGGER.debug(SaleLogger.SALE_INSERTED, saleID);
-        return new ResponseEntity<>(saleID, HttpStatus.CREATED);
+        ModelAndView modelAndView = new ModelAndView("/sale");
+        modelAndView.addObject("saleID", saleID);
+        return modelAndView;
     }
 
     @DeleteMapping("/{id_sale}")
-    public ResponseEntity<String> deleteSale(@PathVariable("id_sale") String id_sale) {
+    public ModelAndView deleteSale(@PathVariable("id_sale") String id_sale) {
         saleService.deleteSaleById(id_sale);
         LOGGER.debug(SaleLogger.SALE_DELETED, id_sale);
-        return new ResponseEntity<>("Sale with ID " + id_sale + " deleted successfully", HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/sale");
+        modelAndView.addObject("message", "Sale with ID " + id_sale + " deleted successfully");
+        return modelAndView;
     }
 
     @PutMapping("/{id_sale}")
-    public ResponseEntity<SaleDTO> updateSale(@PathVariable("id_sale") String id_sale, @RequestBody SaleDTO saleDTO) {
+    public ModelAndView updateSale(@PathVariable("id_sale") String id_sale, @RequestBody SaleDTO saleDTO) {
         LOGGER.debug(SaleLogger.SALE_UPDATED, id_sale);
         SaleDTO updatedSale = saleService.updateSale(id_sale, saleDTO);
-        return new ResponseEntity<>(updatedSale, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/sale");
+        modelAndView.addObject("sale", updatedSale);
+        return modelAndView;
     }
 }

@@ -15,6 +15,6 @@ public class CategoryDTO {
     private String id_category;
     private String name;
     private String description;
-    private List<Product> products;
+    private List<String> id_products;
 
 }

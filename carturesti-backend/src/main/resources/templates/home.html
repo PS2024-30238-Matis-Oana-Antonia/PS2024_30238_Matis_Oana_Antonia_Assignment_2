@@ -6,13 +6,13 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-image: url("/images/background2.jpg"); /* Replace 'path/to/your/image.jpg' with the actual path to your image */
-            background-size: cover; /* Cover the entire background */
-            background-repeat: no-repeat; /* Do not repeat the background image */
+            background-image: url("/images/background2.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
             color: #333;
             margin: 0;
             padding: 0;
-            display: flex; /* Use flexbox for layout */
+            display: flex;
         }
 
         .left-container,
@@ -26,27 +26,27 @@
 
         .left-container,
         .right-container {
-            flex: 1; /* Both left and right containers will take equal space */
-            background-color: #f5deb3; /* Very light brown background color */
+            flex: 1;
+            background-color: #f5deb3;
         }
 
         .center-container {
-            flex: 3; /* Center container will take more space */
-            background-color: #fff; /* White background color */
-            display: flex; /* Use flexbox for center content alignment */
-            flex-direction: column; /* Align content vertically */
-            justify-content: center; /* Center content vertically */
-            align-items: center; /* Center content horizontally */
+            flex: 3;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
         .title-container {
-            width: 100%; /* Set width to 100% */
+            width: 100%;
             text-align: center;
             margin-bottom: 20px;
-            border: 2px solid #a52a2a; /* Added light brown border color */
-            padding: 10px; /* Added padding */
-            border-radius: 5px; /* Added border radius */
-            background-color: #f5deb3; /* Very light brown background color */
+            border: 2px solid #a52a2a;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f5deb3;
         }
 
         h1 {
@@ -55,8 +55,8 @@
         }
 
         .navbar {
-            width: 100%; /* Set width to 100% */
-            background-color: #8B4513; /* Brown background color for the navbar */
+            width: 100%;
+            background-color: #8B4513;
             padding: 10px 0;
             text-align: center;
         }
@@ -68,17 +68,16 @@
         }
 
         .navbar .menu {
-            /* Added separate class for the dropdown menu */
             display: none;
             position: absolute;
-            background-color: #8B4513; /* Brown background color */
+            background-color: #8B4513;
             border-radius: 5px;
             padding: 10px;
         }
 
         .navbar li {
             display: inline;
-            position: relative; /* Added relative positioning for dropdown menu */
+            position: relative;
             margin-right: 20px;
         }
 
@@ -99,7 +98,7 @@
             border: 1px solid #ccc;
             margin-top: 20px;
             width: 100%;
-            box-sizing: border-box; /* Include padding in width */
+            box-sizing: border-box;
         }
 
         button {
@@ -116,22 +115,22 @@
 
         .books-image {
             margin-top: 20px;
-            width: 100%; /* Adjusted image width */
-            height: auto; /* Maintain aspect ratio */
+            width: 100%;
+            height: auto;
         }
 
         .left-image, .right-image {
-            width: 100%; /* Adjusted image width */
-            height: auto; /* Maintain aspect ratio */
+            width: 100%;
+            height: auto;
         }
         .top-container {
-            position: absolute; /* or position: absolute; depending on your preference */
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            background-color: #333; /* Dark background color for the container */
-            padding: 3px 0; /* Added padding */
-            z-index: 1000; /* Ensure it's on top of other elements */
+            background-color: #333;
+            padding: 3px 0;
+            z-index: 1000;
         }
 
         .social-container {
@@ -141,9 +140,9 @@
         }
 
         .social-icon {
-            color: white; /* Set icon color */
-            text-decoration: none; /* Remove underline */
-            margin: 0 10px; /* Add spacing between icons */
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
         }
     </style>
 </head>
@@ -166,8 +165,6 @@
         <ul>
             <li><a href="#">&#128269; Search</a></li>
             <li><a href="#">&#x1F496; Favorite</a></li>
-            <li><a href="#">&#128722; Cart</a></li>
-            <li><a href="#">&#128274; Login</a></li>
             <li class="dropdown">
                 <a href="#" class="dropbtn">&#9776; Menu</a>
                 <div class="menu">
@@ -183,16 +180,15 @@
         <div class="container">
             <p>Hello! Please select whether you are a client or an admin:</p>
 
-            <form method="GET" action="/client">
+            <form method="GET" action="/login">
                 <div class="container">
-                    <button type="submit">&#128100; Client</button>
+                    <button type="submit" name="role" value="client">&#128100; Client</button>
                 </div>
             </form>
 
-            <!-- Form for redirection to admin page -->
-            <form method="GET" action="/admin">
+            <form method="GET" action="/login">
                 <div class="container">
-                    <button type="submit">&#128101; Admin</button>
+                    <button type="submit" name="role" value="admin">&#128101; Admin</button>
                 </div>
             </form>
 

@@ -17,6 +17,6 @@ public class ReviewDTO {
     private String id;
     private int rating;
     private String comment;
-    private User user;
-    private Product product;
+    private String id_user;
+    private String id_product;
 }

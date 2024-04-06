@@ -1,13 +1,13 @@
 package com.example.carturestibackend.dtos.mappers;
 
 import com.example.carturestibackend.dtos.OrderDTO;
-import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.entities.Order;
-import com.example.carturestibackend.entities.Product;
-import com.example.carturestibackend.entities.User;
+import com.example.carturestibackend.entities.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class OrderMapper {
     private OrderMapper() {
@@ -16,9 +16,12 @@ public class OrderMapper {
         return OrderDTO.builder()
                 .id_order(order.getId_order())
                 .order_date(order.getOrder_date())
+                .total_quantity(order.getTotal_quantity())
                 .total_price(order.getTotal_price())
                 .id_user(order.getUser().getId_user())
-                .orderItems(order.getOrderItem())
+                .id_orderItems(Optional.ofNullable(order.getOrderItems())
+                        .map(items -> items.stream().map(OrderItem::getId_order_item).collect(Collectors.toList()))
+                        .orElse(null)) // Map only IDs if order items not null
                 .build();
     }
 
@@ -26,10 +29,13 @@ public class OrderMapper {
         return Order.builder()
                 .order_date(orderDTO.getOrder_date())
                 .total_price(orderDTO.getTotal_price())
+                .total_quantity(orderDTO.getTotal_quantity())
                 .user(User.builder()
                         .id_user(orderDTO.getId_user())
                         .build())
-                .orderItem(orderDTO.getOrderItems())
+                .orderItems(Optional.ofNullable(orderDTO.getId_orderItems())
+                        .map(ids -> ids.stream().map(id -> OrderItem.builder().id_order_item(id).build()).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
     }
 }

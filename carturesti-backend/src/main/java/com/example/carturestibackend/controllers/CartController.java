@@ -3,17 +3,20 @@ package com.example.carturestibackend.controllers;
 import com.example.carturestibackend.constants.CartLogger;
 import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.services.CartService;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
-@RestController
+/**
+ * Controller class to handle HTTP requests related to carts.
+ */
+@Controller
 @CrossOrigin
 @RequestMapping(value = "/cart")
 public class CartController {
@@ -28,37 +31,47 @@ public class CartController {
     }
 
     @GetMapping()
-    public ResponseEntity<List<CartDTO>> getCarts() {
+    public ModelAndView getCarts() {
         LOGGER.info(CartLogger.ALL_CARTS_RETRIEVED);
         List<CartDTO> dtos = cartService.findAllCarts();
-        return new ResponseEntity<>(dtos, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/carts");
+        modelAndView.addObject("carts", dtos);
+        return modelAndView;
     }
 
     @PostMapping()
-    public ResponseEntity<String> insertCart(@Valid @RequestBody CartDTO cartDTO) {
+    public ModelAndView insertCart(@Valid @RequestBody CartDTO cartDTO) {
         String cartID = cartService.insertCart(cartDTO);
         LOGGER.debug(CartLogger.CART_INSERTED, cartID);
-        return new ResponseEntity<>(cartID, HttpStatus.CREATED);
+        ModelAndView modelAndView = new ModelAndView("/carts");
+        modelAndView.addObject("cartID", cartID);
+        return modelAndView;
     }
 
     @GetMapping(value = "/{id_cart}")
-    public ResponseEntity<CartDTO> getCart(@PathVariable("id_cart") String cartID) {
+    public ModelAndView getCart(@PathVariable("id_cart") String cartID) {
         LOGGER.info(CartLogger.CART_RETRIEVED_BY_ID, cartID);
         CartDTO dto = cartService.findCartById(cartID);
-        return new ResponseEntity<>(dto, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/carts");
+        modelAndView.addObject("cart", dto);
+        return modelAndView;
     }
 
     @DeleteMapping(value = "/{id_cart}")
-    public ResponseEntity<String> deleteCart(@PathVariable("id_cart") String cartID) {
+    public ModelAndView deleteCart(@PathVariable("id_cart") String cartID) {
         LOGGER.debug(CartLogger.CART_DELETED, cartID);
         cartService.deleteCartById(cartID);
-        return new ResponseEntity<>("Cart with ID " + cartID + " deleted successfully", HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/carts");
+        modelAndView.addObject("message", "Cart with ID " + cartID + " deleted successfully");
+        return modelAndView;
     }
 
     @PutMapping(value = "/{id_cart}")
-    public ResponseEntity<CartDTO> updateCart(@PathVariable("id_cart") String cartID, @Valid @RequestBody CartDTO cartDTO) {
+    public ModelAndView updateCart(@PathVariable("id_cart") String cartID, @Valid @RequestBody CartDTO cartDTO) {
         LOGGER.debug(CartLogger.CART_UPDATED, cartID);
         CartDTO updatedCart = cartService.updateCart(cartID, cartDTO);
-        return new ResponseEntity<>(updatedCart, HttpStatus.OK);
+        ModelAndView modelAndView = new ModelAndView("/carts");
+        modelAndView.addObject("cart", updatedCart);
+        return modelAndView;
     }
 }

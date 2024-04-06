@@ -29,18 +29,23 @@ public class OrderItem {
     private long quantity;
 
     @Column(name = "price_per_unit", nullable = false)
-    private long price_per_unit;
+    private double price_per_unit;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "order_item_product",
             joinColumns = @JoinColumn(name = "id_order_item"),
             inverseJoinColumns = @JoinColumn(name = "id_product"))
     @JsonIgnore
     private List<Product> products;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
 }
 

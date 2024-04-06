@@ -5,17 +5,17 @@
     <title>Client Page</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
             margin: 0;
             padding: 0;
             display: flex;
-            flex-direction: column; /* Align containers vertically */
-            align-items: center; /* Center containers horizontally */
-            background-image: url("/images/background.jpg"); /* Replace 'path/to/your/image.jpg' with the actual path to your image */
-            background-size: cover; /* Cover the entire background */
-            background-repeat: no-repeat; /* Do not repeat the background image */
-            background-position: center; /* Center the background image */
+            flex-direction: column;
+            align-items: center;
+            background-image: url("/images/background.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .container {
@@ -24,7 +24,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            background-color: rgba(245, 222, 179, 0.8); /* Added background color with opacity */
+            background-color: rgba(245, 222, 179, 0.8);
         }
 
         .title-container {
@@ -55,6 +55,7 @@
             padding: 10px;
             text-align: center;
             border: 1px solid #000;
+            background-color: #fff;
         }
 
         .section button {
@@ -69,11 +70,15 @@
             border-radius: 5px;
             cursor: pointer;
             margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .section button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-
 
 <div class="title-container">
     <h1>Welcome to the Client page!</h1>
@@ -148,8 +153,6 @@
             </tr>
         </table>
     </div>
-</div>
-</div>
 </div>
 
 </body>

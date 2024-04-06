@@ -18,9 +18,9 @@ public class ProductDTO {
     private String description;
     private String author;
     private long stock;
-    private List<Review> reviews;
-    private Category category;
-    private List<OrderItem> orderItems;
-    private Promotion promotion;
-    private Sale sale;
+    private List<String> id_reviews;
+    private String id_category;
+    private List<String> id_orderItems; // Changed to hold OrderItemDTO instead of just IDs
+    private String id_promotion;
+    private String id_sale;
 }

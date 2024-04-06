@@ -50,4 +50,8 @@ public class User {
     @JsonIgnore
     private List<Order> orders;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnore
+    private Cart cart;
+
 }

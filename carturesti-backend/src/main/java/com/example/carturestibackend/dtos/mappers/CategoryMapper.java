@@ -6,6 +6,8 @@ import com.example.carturestibackend.entities.Product;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CategoryMapper {
 
@@ -14,7 +16,9 @@ public class CategoryMapper {
                 .id_category(category.getId_category())
                 .name(category.getName())
                 .description(category.getDescription())
-                .products(category.getProducts())
+                .id_products(Optional.ofNullable(category.getProducts())
+                        .map(products -> products.stream().map(Product::getId_product).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
     }
 
@@ -23,7 +27,9 @@ public class CategoryMapper {
                 .id_category(categoryDTO.getId_category())
                 .name(categoryDTO.getName())
                 .description(categoryDTO.getDescription())
-                .products(categoryDTO.getProducts())
+                .products(Optional.ofNullable(categoryDTO.getId_products())
+                        .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
     }
 }

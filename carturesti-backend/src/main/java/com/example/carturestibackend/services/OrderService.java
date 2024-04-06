@@ -2,12 +2,15 @@ package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.OrderDTO;
+import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.dtos.mappers.OrderMapper;
 import com.example.carturestibackend.entities.Order;
+import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.repositories.OrderRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
 import com.example.carturestibackend.validators.OrderValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +32,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderValidator orderValidator;
-
+    private final OrderItemService orderItemService;
     /**
      * Constructs a new OrderService with the specified OrderRepository.
      *
@@ -37,13 +40,15 @@ public class OrderService {
      * @param userRepository
      * @param productRepository
      * @param orderValidator
+     * @param orderItemService
      */
     @Autowired
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator) {
+    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator, OrderItemService orderItemService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderValidator = orderValidator;
+        this.orderItemService = orderItemService;
     }
 
     /**
@@ -55,9 +60,31 @@ public class OrderService {
         LOGGER.error(OrderLogger.ALL_ORDERS_RETRIEVED);
         List<Order> orderList = orderRepository.findAll();
         return orderList.stream()
-                .map(OrderMapper::toOrderDTO)
+                .map(this::calculateOrderTotals) // Calculate totals for each order
                 .collect(Collectors.toList());
     }
+
+    private OrderDTO calculateOrderTotals(Order order) {
+        List<OrderItem> orderItems = order.getOrderItems();
+        long totalQuantity = 0;
+        double totalPrice = 0;
+
+        for (OrderItem orderItem : orderItems) {
+            OrderItemDTO orderItemDTO = orderItemService.findOrderItemById(orderItem.getId_order_item());
+            if (orderItemDTO != null) {
+                totalQuantity += orderItemDTO.getQuantity();
+                totalPrice += orderItemDTO.getQuantity() * orderItemDTO.getPrice_per_unit();
+            } else {
+                LOGGER.warn("OrderItemDTO is null for orderItemId: {}", orderItem.getId_order_item());
+            }
+        }
+
+        order.setTotal_quantity(totalQuantity);
+        order.setTotal_price(totalPrice);
+
+        return OrderMapper.toOrderDTO(order);
+    }
+
 
     /**
      * Retrieves an order by its ID.
@@ -75,19 +102,24 @@ public class OrderService {
         return OrderMapper.toOrderDTO(orderOptional.get());
     }
 
+
     /**
      * Inserts a new order into the database.
      *
      * @param orderDTO The OrderDTO object representing the order to insert.
      * @return The ID of the newly inserted order.
      */
+
+    @Transactional
     public String insert(OrderDTO orderDTO) {
         Order order = OrderMapper.fromOrderDTO(orderDTO);
-        OrderValidator.validateOrder(order);
+     //   OrderValidator.validateOrder(order);
         order = orderRepository.save(order);
         LOGGER.debug(OrderLogger.ORDER_INSERTED, order.getId_order());
         return order.getId_order();
     }
+
+
 
 
     /**
@@ -125,6 +157,7 @@ public class OrderService {
 
         Order existingOrder = orderOptional.get();
         existingOrder.setOrder_date(orderDTO.getOrder_date());
+        existingOrder.setTotal_quantity(orderDTO.getTotal_quantity());
         existingOrder.setTotal_price(orderDTO.getTotal_price());
 
         Order updatedOrder = orderRepository.save(existingOrder);
