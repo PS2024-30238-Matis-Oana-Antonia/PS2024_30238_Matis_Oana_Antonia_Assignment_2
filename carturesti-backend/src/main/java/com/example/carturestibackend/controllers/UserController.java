@@ -96,6 +96,14 @@ public class UserController {
         return modelAndView;
     }
 
+    @GetMapping("/name/{role}")
+    public ModelAndView getUserByRole(@PathVariable("role") String role) {
+        LOGGER.info(UserLogger.USER_NOT_FOUND_BY_ROLE, role);
+        UserDTO dto = userService.findUserByRole(role);
+        ModelAndView modelAndView = new ModelAndView("/user");
+        modelAndView.addObject("user", dto);
+        return modelAndView;
+    }
     @GetMapping("/name/{password}")
     public ModelAndView getUserByNameAndPassword(@PathVariable("name") String name, @RequestParam("password") String password) {
         LOGGER.info(UserLogger.USER_NOT_FOUND_BY_NAME, name);

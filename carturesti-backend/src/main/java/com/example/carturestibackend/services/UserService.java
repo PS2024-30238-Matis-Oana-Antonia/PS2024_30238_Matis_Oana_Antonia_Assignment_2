@@ -80,6 +80,15 @@ public class UserService {
         return UserMapper.toUserDTO(userOptional.get());
     }
 
+    public UserDTO findUserByRole(String role) {
+        Optional<User> userOptional = Optional.ofNullable(userRepository.findByRole(role));
+        if (!userOptional.isPresent()) {
+            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_ROLE, role);
+            throw new ResourceNotFoundException(User.class.getSimpleName() + " with role: " + role);
+        }
+        return UserMapper.toUserDTO(userOptional.get());
+    }
+
     public UserDTO findUserByNameAndPassword(String name, String password) {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByNameAndPassword(name, password));
         if (!userOptional.isPresent()) {
@@ -88,6 +97,7 @@ public class UserService {
         }
         return UserMapper.toUserDTO(userOptional.get());
     }
+
 
 
     /**
