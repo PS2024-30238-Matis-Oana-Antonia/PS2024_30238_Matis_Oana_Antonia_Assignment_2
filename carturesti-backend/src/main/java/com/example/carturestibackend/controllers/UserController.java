@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -57,14 +58,15 @@ public class UserController {
      * @param userDTO The UserDTO object representing the user to insert.
      * @return A ModelAndView containing the ID of the newly inserted user.
      */
-    @PostMapping()
-    public ModelAndView insertUser(@Valid @RequestBody UserDTO userDTO) {
+    @PostMapping("/insertUser")
+    public ModelAndView insertUser(@Valid @ModelAttribute UserDTO userDTO) {
         String userID = userService.insert(userDTO);
         LOGGER.debug(UserLogger.USER_INSERTED, userID);
         ModelAndView modelAndView = new ModelAndView("/user");
         modelAndView.addObject("userID", userID);
-        return modelAndView;
+        return new ModelAndView("redirect:/user");
     }
+
 
     /**
      * Retrieves a user by their ID.
@@ -96,7 +98,7 @@ public class UserController {
         return modelAndView;
     }
 
-    @GetMapping("/name/{role}")
+    @GetMapping("/role/{role}")
     public ModelAndView getUserByRole(@PathVariable("role") String role) {
         LOGGER.info(UserLogger.USER_NOT_FOUND_BY_ROLE, role);
         UserDTO dto = userService.findUserByRole(role);
@@ -104,7 +106,7 @@ public class UserController {
         modelAndView.addObject("user", dto);
         return modelAndView;
     }
-    @GetMapping("/name/{password}")
+    @GetMapping("/password/{name}")
     public ModelAndView getUserByNameAndPassword(@PathVariable("name") String name, @RequestParam("password") String password) {
         LOGGER.info(UserLogger.USER_NOT_FOUND_BY_NAME, name);
         UserDTO dto = userService.findUserByNameAndPassword(name, password);
@@ -112,6 +114,8 @@ public class UserController {
         modelAndView.addObject("user", dto);
         return modelAndView;
     }
+
+
     /**
      * Retrieves a user by their email.
      *
@@ -133,28 +137,40 @@ public class UserController {
      * @param userID The ID of the user to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/{id_user}")
-    public ModelAndView deleteUser(@PathVariable("id_user") String userID) {
-        userService.deleteUserById(userID);
-        LOGGER.debug(UserLogger.USER_DELETED, userID);
-        ModelAndView modelAndView = new ModelAndView("/user");
-        modelAndView.addObject("message", "User with ID " + userID + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/delete")
+    public ModelAndView deleteUser(@RequestParam("id_user") String userID, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/user"); // Redirecting back to the user page
+        try {
+            userService.deleteUserById(userID);
+            LOGGER.debug(UserLogger.USER_DELETED, userID);
+            redirectAttributes.addFlashAttribute("successMessage", "User with ID " + userID + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete user with ID " + userID + ". Please try again.");
+        }
+        return mav;
     }
+
+
 
     /**
      * Updates a user by their ID.
      *
-     * @param userID   The ID of the user to update.
+     * @param id_user   The ID of the user to update.
      * @param userDTO  The updated UserDTO object representing the new state of the user.
      * @return A ModelAndView containing the updated UserDTO object.
      */
-    @PutMapping(value = "/{id_user}")
-    public ModelAndView updateUser(@PathVariable("id_user") String userID, @Valid @RequestBody UserDTO userDTO) {
-        LOGGER.debug(UserLogger.USER_UPDATED, userID);
-        UserDTO updatedUser = userService.updateUser(userID, userDTO);
-        ModelAndView modelAndView = new ModelAndView("/user");
-        modelAndView.addObject("user", updatedUser);
-        return modelAndView;
+    @PostMapping("/userUpdate")
+    public ModelAndView updateUser(@RequestParam("id_user") String id_user, @Valid @ModelAttribute UserDTO userDTO) {
+        ModelAndView mav = new ModelAndView("redirect:/user"); // Redirecting back to the user page
+        try {
+            UserDTO updatedUser = userService.updateUser(id_user, userDTO);
+            // You can optionally add a success message to be displayed on the redirected page
+            mav.addObject("successMessage", "User updated successfully!");
+        } catch (Exception e) {
+            // If an error occurs during the update, you can add an error message to be displayed on the redirected page
+            mav.addObject("errorMessage", "Failed to update user. Please try again.");
+        }
+        return mav;
     }
+
 }

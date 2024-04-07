@@ -30,7 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestParam("name") String name,
                         @RequestParam("password") String password) {
-        // Your authentication logic here to validate user credentials and determine their role
+
         String role = authenticateUser(name, password);
 
         if (role != null) {
@@ -41,7 +41,6 @@ public class AuthController {
             }
         }
 
-        // If authentication fails, redirect back to login page with error
         return "redirect:/login?error=true";
     }
 
