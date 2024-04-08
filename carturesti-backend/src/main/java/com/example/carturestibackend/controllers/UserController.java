@@ -98,6 +98,12 @@ public class UserController {
         return modelAndView;
     }
 
+    /**
+     * Retrieves a user by their role.
+     *
+     * @param role The role of the user to retrieve.
+     * @return A ModelAndView containing the UserDTO object representing the retrieved user.
+     */
     @GetMapping("/role/{role}")
     public ModelAndView getUserByRole(@PathVariable("role") String role) {
         LOGGER.info(UserLogger.USER_NOT_FOUND_BY_ROLE, role);
@@ -106,6 +112,14 @@ public class UserController {
         modelAndView.addObject("user", dto);
         return modelAndView;
     }
+
+    /**
+     * Retrieves a user by their name and password.
+     *
+     * @param name The name of the user to retrieve.
+     * @param password
+     * @return A ModelAndView containing the UserDTO object representing the retrieved user.
+     */
     @GetMapping("/password/{name}")
     public ModelAndView getUserByNameAndPassword(@PathVariable("name") String name, @RequestParam("password") String password) {
         LOGGER.info(UserLogger.USER_NOT_FOUND_BY_NAME, name);

@@ -18,7 +18,7 @@ import java.util.List;
  */
 @Controller
 @CrossOrigin
-@RequestMapping(value = "/order-items")
+@RequestMapping(value = "/order-item")
 public class OrderItemController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemController.class);
@@ -44,7 +44,7 @@ public class OrderItemController {
     public ModelAndView getOrderItems() {
         LOGGER.info(OrderItemLogger.ALL_ORDER_ITEMS_RETRIEVED);
         List<OrderItemDTO> dtos = orderItemService.findOrderItems();
-        ModelAndView modelAndView = new ModelAndView("/order-items");
+        ModelAndView modelAndView = new ModelAndView("/order-item");
         modelAndView.addObject("orderItems", dtos);
         return modelAndView;
     }
@@ -55,11 +55,11 @@ public class OrderItemController {
      * @param orderItemDTO The OrderItemDTO object representing the order item to insert.
      * @return A ModelAndView containing the ID of the newly inserted order item.
      */
-    @PostMapping()
-    public ModelAndView insertOrderItem(@Valid @RequestBody OrderItemDTO orderItemDTO) {
+    @PostMapping("/insert")
+    public ModelAndView insertOrderItem(@Valid @ModelAttribute OrderItemDTO orderItemDTO) {
         String orderItemID = orderItemService.insert(orderItemDTO);
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItemID);
-        ModelAndView modelAndView = new ModelAndView("/order-items");
+        ModelAndView modelAndView = new ModelAndView("/order-item");
         modelAndView.addObject("orderItemID", orderItemID);
         return modelAndView;
     }
@@ -74,7 +74,7 @@ public class OrderItemController {
     public ModelAndView getOrderItem(@PathVariable("id_order_item") String orderItemID) {
         LOGGER.info(OrderItemLogger.ORDER_ITEM_RETRIEVED_BY_ID, orderItemID);
         OrderItemDTO dto = orderItemService.findOrderItemById(orderItemID);
-        ModelAndView modelAndView = new ModelAndView("/order-items");
+        ModelAndView modelAndView = new ModelAndView("/order-item");
         modelAndView.addObject("orderItem", dto);
         return modelAndView;
     }
@@ -85,11 +85,11 @@ public class OrderItemController {
      * @param orderItemID The ID of the order item to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/{id_order_item}")
+    @DeleteMapping(value = "/delete")
     public ModelAndView deleteOrderItem(@PathVariable("id_order_item") String orderItemID) {
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderItemID);
         orderItemService.deleteOrderItemById(orderItemID);
-        ModelAndView modelAndView = new ModelAndView("/order-items");
+        ModelAndView modelAndView = new ModelAndView("/order-item");
         modelAndView.addObject("message", "Order item with ID " + orderItemID + " deleted successfully");
         return modelAndView;
     }
@@ -101,11 +101,11 @@ public class OrderItemController {
      * @param orderItemDTO The updated OrderItemDTO object representing the new state of the order item.
      * @return A ModelAndView containing the updated OrderItemDTO object.
      */
-    @PutMapping(value = "/{id_order_item}")
+    @PutMapping(value = "/update")
     public ModelAndView updateOrderItem(@PathVariable("id_order_item") String orderItemID, @Valid @RequestBody OrderItemDTO orderItemDTO) {
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_UPDATED, orderItemID);
         OrderItemDTO updatedOrderItem = orderItemService.updateOrderItem(orderItemID, orderItemDTO);
-        ModelAndView modelAndView = new ModelAndView("/order-items");
+        ModelAndView modelAndView = new ModelAndView("/order-item");
         modelAndView.addObject("orderItem", updatedOrderItem);
         return modelAndView;
     }

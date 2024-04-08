@@ -98,18 +98,22 @@ public class ReviewService {
         Optional<Review> reviewOptional = reviewRepository.findById(id);
         if (reviewOptional.isPresent()) {
             Review review = reviewOptional.get();
-            if (review.getUser() == null && review.getProduct() == null) {
-                reviewRepository.delete(review); // Delete the review
-                LOGGER.debug(ReviewLogger.REVIEW_DELETED, id);
-            } else {
-                LOGGER.warn("Review with ID {} cannot be deleted because it is associated with a user or product.", id);
-                // Alternatively, you can throw an exception indicating that the review cannot be deleted
+            if (review.getUser() != null) {
+                review.setUser(null); // Set user id to null
             }
+            if (review.getProduct() != null) {
+                review.setProduct(null); // Set product id to null
+            }
+            reviewRepository.save(review); // Save the changes
+            reviewRepository.delete(review); // Delete the review
+
+            LOGGER.debug(ReviewLogger.REVIEW_DELETED, id);
         } else {
             LOGGER.error(ReviewLogger.REVIEW_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
     }
+
 
 
 

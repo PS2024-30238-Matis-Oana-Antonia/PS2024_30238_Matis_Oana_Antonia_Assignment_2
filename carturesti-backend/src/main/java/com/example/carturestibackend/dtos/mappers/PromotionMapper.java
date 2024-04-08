@@ -19,7 +19,9 @@ public class PromotionMapper {
                 .name(promotion.getName())
                 .description(promotion.getDescription())
                 .percentage(promotion.getPercentage())
-                .id_products(promotion.getProducts().stream().map(Product::getId_product).collect(Collectors.toList()))
+                .id_products(Optional.ofNullable(promotion.getProducts())
+                        .map(products -> products.stream().map(Product::getId_product).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
     }
 
@@ -28,7 +30,9 @@ public class PromotionMapper {
                 .name(promotionDTO.getName())
                 .description(promotionDTO.getDescription())
                 .percentage(promotionDTO.getPercentage())
-                .products(promotionDTO.getId_products().stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
+                .products(Optional.ofNullable(promotionDTO.getId_products())
+                .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
+                .orElse(null))
                 .build();
     }
 }

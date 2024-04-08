@@ -174,8 +174,7 @@
                 <h5 class="card-title" th:text="${product.name}"></h5>
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group mt-2">
-                        <!-- Button to trigger modal -->
-                        <button type="button" class="btn btn-sm btn-primary mr-2 view-details" data-toggle="modal" data-target="#productModal" data-product-id="${product.id}" data-product-name="${product.name}" data-product-description="${product.description}" data-product-price="${product.price}" data-product-author="${product.author}">View</button>
+                        <button type="button" class="btn btn-sm btn-primary mr-2 view-details" data-toggle="modal" data-target="#productModal" data-product-id="${product.id}" data-product-name="${product.name}" data-product-description="${product.description}" data-product-price="${product.price}" data-product-author="${product.author}">Add</button>
                     </div>
                     <small class="text-muted" th:text="${product.price}"></small>
                 </div>

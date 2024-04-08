@@ -148,11 +148,10 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- Form for adding a new sale -->
                 <form method="POST" th:action="@{/sale/insertSale}" class="needs-validation" novalidate>
                     <div class="form-group">
-                        <label for="discountPercentage">Discount Percentage:</label>
-                        <input type="number" id="discountPercentage" name="discountPercentage" class="form-control" required>
+                        <label for="discount_percentage">Discount Percentage:</label>
+                        <input type="number" id="discount_percentage" name="discount_percentage" class="form-control" required>
                         <div class="invalid-feedback">Discount Percentage is required.</div>
                     </div>
                     <div class="form-group">

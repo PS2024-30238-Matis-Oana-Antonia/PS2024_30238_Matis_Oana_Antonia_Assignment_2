@@ -95,7 +95,7 @@
 </div>
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <div class="card">
                 <button type="button" class="button btn-lg" data-toggle="modal" data-target="#addProductModal">Add New Product</button>
                 <table class="table">
@@ -110,6 +110,7 @@
                         <th>Category</th>
                         <th>Promotion</th>
                         <th>Sale</th>
+                        <th>Review</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -130,6 +131,12 @@
                         <td>
                             <span th:if="${product.id_sale != null}" th:text="${product.id_sale}"></span>
                             <span th:unless="${product.id_sale != null}">No Sale</span>
+                        </td>
+                        <td>
+                            <ul>
+                                <!-- Loop through review IDs and display them -->
+                                <li th:each="reviewId : ${product.id_reviews}" th:text="${reviewId}"></li>
+                            </ul>
                         </td>
                         <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>

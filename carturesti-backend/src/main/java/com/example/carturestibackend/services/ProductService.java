@@ -41,11 +41,10 @@ public class ProductService {
      * @param reviewRepository
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, SaleService saleService, CategoryRepository categoryRepository, ProductValidator productValidator, ReviewRepository reviewRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, ReviewRepository reviewRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
-        this.saleService =  saleService;
         this.reviewRepository = reviewRepository;
     }
 
@@ -87,11 +86,22 @@ public class ProductService {
      */
     public String insert(ProductDTO productDTO) {
         Product product = ProductMapper.fromProductDTO(productDTO);
+
+        // Set promotion and sale to null if their IDs are not provided
+        if (productDTO.getId_promotion() == null || productDTO.getId_promotion().isEmpty()) {
+            product.setPromotion(null);
+        }
+        if (productDTO.getId_sale() == null || productDTO.getId_sale().isEmpty()) {
+            product.setSale(null);
+        }
+
         ProductValidator.validateProduct(product);
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
         return product.getId_product();
     }
+
+
 
 
     /**
@@ -104,15 +114,24 @@ public class ProductService {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
-            product.setCategory(null); // Disassociate the product from its category
-            productRepository.save(product); // Save the changes
-            productRepository.deleteById(id_product); // Delete the product
+
+            // Disassociate the product from its category, promotion, sale, and reviews
+            product.setCategory(null);
+            product.setPromotion(null);
+            product.setSale(null);
+            product.setReviews(null);
+
+            // Delete the product
+            productRepository.deleteById(id_product);
+
             LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);
         } else {
             LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
             throw new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + id_product);
         }
     }
+
+
 
     /**
      * Updates an existing product in the database.
@@ -175,18 +194,6 @@ public class ProductService {
         }
     }
 
-    public void applyDiscountToProduct(String productId, double discountPercentage) {
-        ProductDTO productDTO = findProductById(productId);
-        Product product = ProductMapper.fromProductDTO(productDTO);
-
-        // Apply the discount to the product
-        saleService.applyDiscount(product, discountPercentage);
-
-        // Update the product in the database
-        updateProduct(productId, ProductMapper.toProductDTO(product));
-
-        LOGGER.debug("Discount of {}% applied to product with ID: {}", discountPercentage, productId);
-    }
 
 
     public void addReviewToProduct(String productId, Review review) {

@@ -4,7 +4,9 @@ import com.example.carturestibackend.constants.CategoryLogger;
 import com.example.carturestibackend.dtos.CategoryDTO;
 import com.example.carturestibackend.dtos.mappers.CategoryMapper;
 import com.example.carturestibackend.entities.Category;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.CategoryRepository;
+import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.CategoryValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,17 +25,20 @@ import java.util.stream.Collectors;
 public class CategoryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryService.class);
     private final CategoryRepository categoryRepository;
+    private final ProductRepository productRepository;
     private final CategoryValidator categoryValidator;
 
     /**
      * Constructs a new CategoryService with the specified CategoryRepository.
      *
      * @param categoryRepository The CategoryRepository used to interact with category data in the database.
+     * @param productRepository
      * @param categoryValidator
      */
     @Autowired
-    public CategoryService(CategoryRepository categoryRepository, CategoryValidator categoryValidator) {
+    public CategoryService(CategoryRepository categoryRepository, ProductRepository productRepository, CategoryValidator categoryValidator) {
         this.categoryRepository = categoryRepository;
+        this.productRepository = productRepository;
         this.categoryValidator = categoryValidator;
     }
 
@@ -89,13 +94,26 @@ public class CategoryService {
     public void deleteCategoryById(String id_category) {
         Optional<Category> categoryOptional = categoryRepository.findById(id_category);
         if (categoryOptional.isPresent()) {
-            categoryRepository.delete(categoryOptional.get());
+            Category category = categoryOptional.get();
+
+            // Get the associated products
+            List<Product> products = category.getProducts();
+
+            // Delete associated products
+            for (Product product : products) {
+                productRepository.delete(product);
+            }
+
+            // Delete the category
+            categoryRepository.delete(category);
+
             LOGGER.debug(CategoryLogger.CATEGORY_DELETED, id_category);
         } else {
             LOGGER.error(CategoryLogger.CATEGORY_NOT_FOUND_BY_ID, id_category);
             throw new ResourceNotFoundException(Category.class.getSimpleName() + " with id: " + id_category);
         }
     }
+
 
     /**
      * Updates an existing category in the database.

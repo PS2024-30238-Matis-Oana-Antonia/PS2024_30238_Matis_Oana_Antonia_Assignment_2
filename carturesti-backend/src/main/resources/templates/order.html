@@ -2,9 +2,216 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-size: cover;
+            background-position: center;
+            background-image: url("/images/background.jpg");
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: #333;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .button {
+            background-color: #28a745; /* Green */
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            height: 60px; /* Increased height */
+            width: 200px; /* Increased width */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px; /* Add margin to the bottom */
+            font-size: 1.2rem; /* Increased font size */
+        }
+
+        .button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff; /* Setting background color to white */
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .modal-header .close {
+            color: #000;
+            opacity: 1;
+        }
+
+        .btn:hover:not(.button) {
+            background-color: transparent;
+        }
+
+        /* Updated title style */
+        .title-container {
+            background-color: #d2b48c; /* Light brown background */
+            padding: 10px;
+        }
+
+        h1.title {
+            font-size: 2.5rem;
+            color: #8B4513; /* Dark brown color */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Adding a subtle shadow */
+            margin: 0; /* Remove default margin */
+        }
+    </style>
 </head>
+
 <body>
+<div class="title-container">
+    <h1 class="title">Order Management</h1>
+</div>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <button type="button" class="button" data-toggle="modal" data-target="#addOrderItemModal">Add New Order Item</button>
+                <div class="table-responsive"> <!-- Added a div with responsive class -->
+                    <table class="table table-striped"> <!-- Added table-striped class -->
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>ID Order Item</th>
+                            <th>Quantity</th>
+                            <th>Price Per Unit</th>
+                            <th>Order</th>
+                            <th>Products</th>
+                            <th>Cart</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="orderItem: ${orderItems}">
+                            <td th:text="${orderItem != null ? orderItem.id_order_item : ''}"></td>
+                            <td th:text="${orderItem != null ? orderItem.quantity : ''}"></td>
+                            <td th:text="${orderItem != null ? orderItem.price_per_unit : ''}"></td>
+                            <td th:text="${orderItem.order != null ? orderItem.order.id_order : ''}"></td>
+                            <td>
+                                <ul th:if="${orderItem != null and orderItem.products != null and !orderItem.products.isEmpty()}">
+                                    <li th:each="product : ${orderItem.products}">
+                                        <span th:text="${product.name}"></span>
+                                    </li>
+                                </ul>
+                                <span th:unless="${orderItem != null and orderItem.products != null and !orderItem.products.isEmpty()}">No products</span>
+                            </td>
+                            <td th:text="${orderItem.cart != null ? orderItem.cart.id_cart : ''}"></td>
+                            <td>
+                                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateOrderItemModal-' + ${orderItem.id_order_item}">Edit</button>
+                                <form th:if="${orderItem != null}" id="deleteForm-${orderItem.id_order_item}" method="POST" th:action="@{/orders/delete}">
+                                    <input type="hidden" name="id_order_item" th:value="${orderItem.id_order_item}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Order Item Modal -->
+<div class="modal fade" id="addOrderItemModal" tabindex="-1" role="dialog" aria-labelledby="addOrderItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addOrderItemModalLabel">Add New Order Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form for adding a new order item -->
+                <form method="POST" th:action="@{/orders/insert}" class="needs-validation" novalidate>
+                    <!-- Input fields for order item data -->
+                    <div class="form-group">
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control" required>
+                        <div class="invalid-feedback">Quantity is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="price_per_unit">Price Per Unit:</label>
+                        <input type="number" id="price_per_unit" name="price_per_unit" class="form-control" required>
+                        <div class="invalid-feedback">Price per unit is required.</div>
+                    </div>
+                    <!-- Add more fields as needed for the order item entity -->
+                    <button type="submit" class="btn btn-primary">Add Order Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Order Item Modals -->
+<div th:each="orderItem: ${orderItems}" th:id="'updateOrderItemModal-' + ${orderItem.id_order_item}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateOrderItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateOrderItemModalLabel">Update Order Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form for updating the order item -->
+                <form method="POST" th:action="@{/orders/update}" class="needs-validation" novalidate>
+                    <input type="hidden" id="id_order_item" name="id_order_item" th:value="${orderItem.id_order_item}">
+                    <div class="form-group">
+                        <label for="updateQuantity">Quantity:</label>
+                        <input type="number" id="updateQuantity" name="quantity" th:value="${orderItem.quantity}" class="form-control" required>
+                        <div class="invalid-feedback">Quantity is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="updatePricePerUnit">Price Per Unit:</label>
+                        <input type="number" id="updatePricePerUnit" name="price_per_unit" th:value="${orderItem.price_per_unit}" class="form-control" required>
+                        <div class="invalid-feedback">Price per unit is required.</div>
+                    </div>
+                    <!-- Add more fields as needed for updating the order item -->
+                    <button type="submit" class="btn btn-primary">Update Order Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<div class="container-fluid text-center mt-4">
+    <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
+</div>
 
 </body>
 </html>

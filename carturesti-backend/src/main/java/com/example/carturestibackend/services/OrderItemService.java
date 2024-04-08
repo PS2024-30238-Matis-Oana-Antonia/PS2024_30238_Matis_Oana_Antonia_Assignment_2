@@ -1,16 +1,13 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.OrderItemLogger;
-import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
-import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
 import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.OrderItemValidator;
-import com.example.carturestibackend.validators.ProductValidator;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,24 +28,21 @@ public class OrderItemService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemService.class);
     private final OrderItemRepository orderItemRepository;
-    private ProductService productService;
+    private final ProductRepository productRepository;
     private OrderItemValidator orderItemValidator;
-    private ProductRepository productRepository;
 
     /**
-     * Constructs a new OrderItemService with the specified OrderItemRepository.
+     * Constructs a new OrderItemService with the specified OrderItemRepository and ProductRepository.
      *
      * @param orderItemRepository The OrderItemRepository used to interact with order item data in the database.
-     * @param productRepository
+     * @param productRepository   The ProductRepository used to interact with product data in the database.
      */
     @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, ProductService productService, OrderItemValidator orderItemValidator) {
+    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, OrderItemValidator orderItemValidator) {
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
-        this.productService = productService; // Assign productService here
         this.orderItemValidator = orderItemValidator;
     }
-
 
     /**
      * Retrieves all order items from the database.
@@ -85,7 +79,6 @@ public class OrderItemService {
      * @param orderItemDTO The OrderItemDTO object representing the order item to insert.
      * @return The ID of the newly inserted order item.
      */
-
     @Transactional
     public String insert(OrderItemDTO orderItemDTO) {
         OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
@@ -102,14 +95,18 @@ public class OrderItemService {
         // Update product prices and calculate total price and quantity
         for (Product product : orderItem.getProducts()) {
             // Update the product price from the database
-            ProductDTO updatedProduct = productService.findProductById(product.getId_product());
-            product.setPrice(updatedProduct.getPrice()); // Update the product price
+            Optional<Product> optionalProduct = productRepository.findById(product.getId_product());
+            if (optionalProduct.isPresent()) {
+                Product updatedProduct = optionalProduct.get();
+                product.setPrice(updatedProduct.getPrice()); // Update the product price
 
-            totalPrice += product.getPrice(); // Accumulate individual product prices to total price
-            totalQuantity++; // Increment total quantity by 1 for each product
+                totalPrice += product.getPrice(); // Accumulate individual product prices to total price
+                totalQuantity++; // Increment total quantity by 1 for each product
 
-            // Decrease the stock of the product
-            productService.decreaseProductStock(product.getId_product(), 1); // Decrease stock by 1
+                // Decrease the stock of the product
+                updatedProduct.setStock(updatedProduct.getStock() - 1); // Decrease stock by 1
+                productRepository.save(updatedProduct);
+            }
         }
 
         // Calculate average price per unit
@@ -125,10 +122,33 @@ public class OrderItemService {
     /**
      * Deletes an order item from the database by its ID.
      *
-     * @param id The ID of the order item to delete.
+     * @param orderId The ID of the order item to delete.
      * @throws ResourceNotFoundException if the order item with the specified ID is not found.
      */
+    @Transactional
+    public void deleteOrderItemById(String orderId) {
+        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(orderId);
+        if (orderItemOptional.isPresent()) {
+            OrderItem orderItem = orderItemOptional.get();
 
+            // Remove products from stock
+            for (Product product : orderItem.getProducts()) {
+                Optional<Product> optionalProduct = productRepository.findById(product.getId_product());
+                if (optionalProduct.isPresent()) {
+                    Product updatedProduct = optionalProduct.get();
+                    updatedProduct.setStock(updatedProduct.getStock() + orderItem.getQuantity());
+                    productRepository.save(updatedProduct);
+                }
+            }
+
+            // Delete order item from repository
+            orderItemRepository.delete(orderItem);
+            LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderId);
+        } else {
+            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, orderId);
+            throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + orderId);
+        }
+    }
 
     /**
      * Updates an existing order item in the database.
@@ -154,26 +174,4 @@ public class OrderItemService {
 
         return OrderItemMapper.toOrderItemDTO(updatedOrderItem);
     }
-
-
-    @Transactional
-    public void deleteOrderItemById(String orderId) {
-        Optional<OrderItem> orderItemOptional = orderItemRepository.findById(orderId);
-        if (orderItemOptional.isPresent()) {
-            OrderItem orderItem = orderItemOptional.get();
-
-            // Remove products from stock
-            for (Product product : orderItem.getProducts()) {
-                productService.increaseProductStock(product.getId_product(), orderItem.getQuantity());
-            }
-
-            // Delete order item from repository
-            orderItemRepository.delete(orderItem);
-            LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderId);
-        } else {
-            LOGGER.error(OrderItemLogger.ORDER_ITEM_NOT_FOUND_BY_ID, orderId);
-            throw new ResourceNotFoundException(OrderItem.class.getSimpleName() + " with id: " + orderId);
-        }
-    }
-
 }

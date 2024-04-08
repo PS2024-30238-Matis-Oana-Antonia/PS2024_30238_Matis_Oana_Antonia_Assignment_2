@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Service class to handle operations related to sales.
+ */
 @Service
 public class SaleService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SaleService.class);
@@ -28,6 +31,14 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final ProductRepository productRepository;
     private final SaleValidator saleValidator;
+
+    /**
+     * Constructs a new SaleService with the specified repositories and validator.
+     *
+     * @param saleRepository    The repository for sales.
+     * @param productRepository The repository for products.
+     * @param saleValidator     The validator for sales.
+     */
     @Autowired
     public SaleService(SaleRepository saleRepository, ProductRepository productRepository, SaleValidator saleValidator) {
         this.saleRepository = saleRepository;
@@ -35,6 +46,11 @@ public class SaleService {
         this.saleValidator = saleValidator;
     }
 
+    /**
+     * Retrieves all sales.
+     *
+     * @return A list of SaleDTO representing all sales.
+     */
     public List<SaleDTO> findAllSales() {
         LOGGER.info(SaleLogger.ALL_SALES_RETRIEVED);
         List<Sale> sales = saleRepository.findAll();
@@ -64,8 +80,13 @@ public class SaleService {
         return saleDTOs;
     }
 
-
-
+    /**
+     * Retrieves a sale by its ID.
+     *
+     * @param id_sale The ID of the sale to retrieve.
+     * @return The SaleDTO representing the retrieved sale.
+     * @throws ResourceNotFoundException if the sale is not found.
+     */
     public SaleDTO findSaleById(String id_sale) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
         if (saleOptional.isPresent()) {
@@ -76,6 +97,13 @@ public class SaleService {
         }
     }
 
+    /**
+     * Inserts a new sale.
+     *
+     * @param saleDTO The SaleDTO representing the sale to insert.
+     * @return The ID of the newly inserted sale.
+     * @throws IllegalArgumentException if the sale data is invalid.
+     */
     public String insertSale(SaleDTO saleDTO) {
         Sale sale = SaleMapper.fromSaleDTO(saleDTO);
         if (saleValidator.isValid(sale)) {
@@ -88,22 +116,25 @@ public class SaleService {
         }
     }
 
-
+    /**
+     * Deletes a sale by its ID.
+     *
+     * @param id_sale The ID of the sale to delete.
+     * @throws ResourceNotFoundException if the sale is not found.
+     */
     public void deleteSaleById(String id_sale) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
         if (saleOptional.isPresent()) {
             Sale sale = saleOptional.get();
 
-            // Remove associated products
-            for (Product product : sale.getProducts()) {
+            // Disassociate the sale from its associated products
+            List<Product> products = sale.getProducts();
+            for (Product product : products) {
                 product.setSale(null);
+                productRepository.save(product);
             }
-            sale.setProducts(new ArrayList<>()); // Clear the products list
 
-            // Save the changes to update associations in the database
-            saleRepository.save(sale);
-
-            // Now delete the sale entity
+            // Delete the sale
             saleRepository.delete(sale);
 
             LOGGER.debug(SaleLogger.SALE_DELETED, id_sale);
@@ -113,7 +144,14 @@ public class SaleService {
         }
     }
 
-
+    /**
+     * Updates a sale.
+     *
+     * @param id_sale  The ID of the sale to update.
+     * @param saleDTO The SaleDTO representing the new state of the sale.
+     * @return The updated SaleDTO.
+     * @throws ResourceNotFoundException if the sale is not found.
+     */
     public SaleDTO updateSale(String id_sale, SaleDTO saleDTO) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
         if (saleOptional.isPresent()) {
@@ -130,10 +168,10 @@ public class SaleService {
     }
 
     /**
-     * Applies discount to a product based on the provided discount percentage.
+     * Applies a discount to a product based on the provided discount percentage.
      *
-     * @param product            The product to which discount is to be applied.
-     * @param discountPercentage The percentage of discount to be applied.
+     * @param product            The product to apply the discount to.
+     * @param discountPercentage The percentage of the discount.
      */
     public void applyDiscount(Product product, double discountPercentage) {
         double discountedPrice = product.getPrice() * (1 - discountPercentage / 100);
