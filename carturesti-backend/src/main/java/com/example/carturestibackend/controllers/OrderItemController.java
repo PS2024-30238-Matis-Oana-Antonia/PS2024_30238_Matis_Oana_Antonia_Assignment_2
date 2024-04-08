@@ -1,7 +1,9 @@
 package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.constants.OrderItemLogger;
+import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
+import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.services.OrderItemService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -18,7 +21,7 @@ import java.util.List;
  */
 @Controller
 @CrossOrigin
-@RequestMapping(value = "/order-item")
+@RequestMapping(value = "/orderitem")
 public class OrderItemController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemController.class);
@@ -44,7 +47,7 @@ public class OrderItemController {
     public ModelAndView getOrderItems() {
         LOGGER.info(OrderItemLogger.ALL_ORDER_ITEMS_RETRIEVED);
         List<OrderItemDTO> dtos = orderItemService.findOrderItems();
-        ModelAndView modelAndView = new ModelAndView("/order-item");
+        ModelAndView modelAndView = new ModelAndView("/orderitem");
         modelAndView.addObject("orderItems", dtos);
         return modelAndView;
     }
@@ -59,7 +62,7 @@ public class OrderItemController {
     public ModelAndView insertOrderItem(@Valid @ModelAttribute OrderItemDTO orderItemDTO) {
         String orderItemID = orderItemService.insert(orderItemDTO);
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItemID);
-        ModelAndView modelAndView = new ModelAndView("/order-item");
+        ModelAndView modelAndView = new ModelAndView("/orderitem");
         modelAndView.addObject("orderItemID", orderItemID);
         return modelAndView;
     }
@@ -74,7 +77,7 @@ public class OrderItemController {
     public ModelAndView getOrderItem(@PathVariable("id_order_item") String orderItemID) {
         LOGGER.info(OrderItemLogger.ORDER_ITEM_RETRIEVED_BY_ID, orderItemID);
         OrderItemDTO dto = orderItemService.findOrderItemById(orderItemID);
-        ModelAndView modelAndView = new ModelAndView("/order-item");
+        ModelAndView modelAndView = new ModelAndView("/orderitem");
         modelAndView.addObject("orderItem", dto);
         return modelAndView;
     }
@@ -85,13 +88,17 @@ public class OrderItemController {
      * @param orderItemID The ID of the order item to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/delete")
-    public ModelAndView deleteOrderItem(@PathVariable("id_order_item") String orderItemID) {
-        LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderItemID);
-        orderItemService.deleteOrderItemById(orderItemID);
-        ModelAndView modelAndView = new ModelAndView("/order-item");
-        modelAndView.addObject("message", "Order item with ID " + orderItemID + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/delete")
+    public ModelAndView deleteOrderItem(@RequestParam("id_order_item") String orderItemID, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/order");
+        try {
+            orderItemService.deleteOrderItemById(orderItemID);
+            LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderItemID);
+            redirectAttributes.addFlashAttribute("successMessage", "Order item with ID " + orderItemID + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete order item with ID " + orderItemID + ". Please try again.");
+        }
+        return mav;
     }
 
     /**
@@ -101,12 +108,18 @@ public class OrderItemController {
      * @param orderItemDTO The updated OrderItemDTO object representing the new state of the order item.
      * @return A ModelAndView containing the updated OrderItemDTO object.
      */
-    @PutMapping(value = "/update")
-    public ModelAndView updateOrderItem(@PathVariable("id_order_item") String orderItemID, @Valid @RequestBody OrderItemDTO orderItemDTO) {
-        LOGGER.debug(OrderItemLogger.ORDER_ITEM_UPDATED, orderItemID);
-        OrderItemDTO updatedOrderItem = orderItemService.updateOrderItem(orderItemID, orderItemDTO);
-        ModelAndView modelAndView = new ModelAndView("/order-item");
-        modelAndView.addObject("orderItem", updatedOrderItem);
-        return modelAndView;
+    @PostMapping("/update")
+    public ModelAndView updateOrderItem(@RequestParam("id_order_item") String orderItemID, @Valid @ModelAttribute OrderItemDTO orderItemDTO, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/order"); // Redirecting back to the order-item page
+        try {
+            OrderItemDTO updatedOrderItem = orderItemService.updateOrderItem(orderItemID, orderItemDTO);
+            // You can optionally add a success message to be displayed on the redirected page
+            mav.addObject("successMessage", "Order item updated successfully!");
+        } catch (Exception e) {
+            // If an error occurs during the update, you can add an error message to be displayed on the redirected page
+            mav.addObject("errorMessage", "Failed to update order item. Please try again.");
+        }
+        return mav;
     }
+
 }

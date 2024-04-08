@@ -18,8 +18,6 @@ public class OrderItemDTO {
     private String id_order_item;
     private long quantity;
     private double price_per_unit;
-    private String id_order;
     private List<String> id_products;
-    private Cart cart;
 
 }

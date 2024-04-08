@@ -104,9 +104,7 @@
                             <th>ID Order Item</th>
                             <th>Quantity</th>
                             <th>Price Per Unit</th>
-                            <th>Order</th>
                             <th>Products</th>
-                            <th>Cart</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
@@ -115,22 +113,21 @@
                             <td th:text="${orderItem != null ? orderItem.id_order_item : ''}"></td>
                             <td th:text="${orderItem != null ? orderItem.quantity : ''}"></td>
                             <td th:text="${orderItem != null ? orderItem.price_per_unit : ''}"></td>
-                            <td th:text="${orderItem.order != null ? orderItem.order.id_order : ''}"></td>
                             <td>
-                                <ul th:if="${orderItem != null and orderItem.products != null and !orderItem.products.isEmpty()}">
-                                    <li th:each="product : ${orderItem.products}">
+                                <ul th:if="${orderItem != null and orderItem.id_product != null and !orderItem.id_product.isEmpty()}">
+                                    <li th:each="product : ${orderItem.id_product}">
                                         <span th:text="${product.name}"></span>
                                     </li>
                                 </ul>
-                                <span th:unless="${orderItem != null and orderItem.products != null and !orderItem.products.isEmpty()}">No products</span>
+                                <span th:unless="${orderItem != null and orderItem.id_product != null and !orderItem.id_product.isEmpty()}">No products</span>
                             </td>
-                            <td th:text="${orderItem.cart != null ? orderItem.cart.id_cart : ''}"></td>
                             <td>
                                 <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateOrderItemModal-' + ${orderItem.id_order_item}">Edit</button>
-                                <form th:if="${orderItem != null}" id="deleteForm-${orderItem.id_order_item}" method="POST" th:action="@{/orders/delete}">
-                                    <input type="hidden" name="id_order_item" th:value="${orderItem.id_order_item}">
+                                <form th:if="${orderItem != null}" id="deleteForm-${orderItem.id_order_item}" method="POST" th:action="@{/orderitem/delete}">
+                                    <input type="hidden" name="id_orderItem" th:value="${orderItem.id_order_item}">
                                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                 </form>
+
                             </td>
                         </tr>
                         </tbody>
@@ -141,7 +138,7 @@
     </div>
 </div>
 
-<!-- Add Order Item Modal -->
+
 <div class="modal fade" id="addOrderItemModal" tabindex="-1" role="dialog" aria-labelledby="addOrderItemModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -153,18 +150,14 @@
             </div>
             <div class="modal-body">
                 <!-- Form for adding a new order item -->
-                <form method="POST" th:action="@{/orders/insert}" class="needs-validation" novalidate>
+                <form method="POST" th:action="@{/orderitem/insert}" class="needs-validation" novalidate>
                     <!-- Input fields for order item data -->
                     <div class="form-group">
-                        <label for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" class="form-control" required>
-                        <div class="invalid-feedback">Quantity is required.</div>
+                        <label for="id_product">Product IDs (comma-separated):</label>
+                        <input type="text" id="id_product" name="id_product" class="form-control" required>
+                        <div class="invalid-feedback">At least one product ID is required.</div>
                     </div>
-                    <div class="form-group">
-                        <label for="price_per_unit">Price Per Unit:</label>
-                        <input type="number" id="price_per_unit" name="price_per_unit" class="form-control" required>
-                        <div class="invalid-feedback">Price per unit is required.</div>
-                    </div>
+                    <!-- Add more input fields as needed for the product list -->
                     <!-- Add more fields as needed for the order item entity -->
                     <button type="submit" class="btn btn-primary">Add Order Item</button>
                 </form>
@@ -172,6 +165,7 @@
         </div>
     </div>
 </div>
+
 
 <!-- Update Order Item Modals -->
 <div th:each="orderItem: ${orderItems}" th:id="'updateOrderItemModal-' + ${orderItem.id_order_item}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateOrderItemModalLabel" aria-hidden="true">
@@ -185,17 +179,12 @@
             </div>
             <div class="modal-body">
                 <!-- Form for updating the order item -->
-                <form method="POST" th:action="@{/orders/update}" class="needs-validation" novalidate>
+                <form method="POST" th:action="@{/orderitem/update}" class="needs-validation" novalidate>
                     <input type="hidden" id="id_order_item" name="id_order_item" th:value="${orderItem.id_order_item}">
                     <div class="form-group">
                         <label for="updateQuantity">Quantity:</label>
                         <input type="number" id="updateQuantity" name="quantity" th:value="${orderItem.quantity}" class="form-control" required>
                         <div class="invalid-feedback">Quantity is required.</div>
-                    </div>
-                    <div class="form-group">
-                        <label for="updatePricePerUnit">Price Per Unit:</label>
-                        <input type="number" id="updatePricePerUnit" name="price_per_unit" th:value="${orderItem.price_per_unit}" class="form-control" required>
-                        <div class="invalid-feedback">Price per unit is required.</div>
                     </div>
                     <!-- Add more fields as needed for updating the order item -->
                     <button type="submit" class="btn btn-primary">Update Order Item</button>

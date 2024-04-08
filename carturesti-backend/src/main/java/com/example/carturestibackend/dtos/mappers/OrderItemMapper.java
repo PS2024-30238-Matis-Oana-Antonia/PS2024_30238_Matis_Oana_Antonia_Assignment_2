@@ -5,6 +5,7 @@ import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class OrderItemMapper {
@@ -17,21 +18,21 @@ public class OrderItemMapper {
                 .id_order_item(orderItem.getId_order_item())
                 .quantity(orderItem.getQuantity())
                 .price_per_unit(orderItem.getPrice_per_unit())
-                .id_order(orderItem.getOrder().getId_order())
-                .id_products(orderItem.getProducts().stream().map(Product::getId_product).collect(Collectors.toList()))
-                .cart(orderItem.getCart())
+                .id_products(Optional.ofNullable(orderItem.getProducts())
+                        .map(products -> products.stream().map(Product::getId_product).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
+
+
     }
 
     public static OrderItem fromOrderItemDTO(OrderItemDTO orderItemDTO) {
         return OrderItem.builder()
                 .quantity(orderItemDTO.getQuantity())
                 .price_per_unit(orderItemDTO.getPrice_per_unit())
-                .order(Order.builder()
-                        .id_order(orderItemDTO.getId_order())
-                        .build())
-                .products(orderItemDTO.getId_products().stream().map(productId -> Product.builder().id_product(productId).build()).collect(Collectors.toList()))
-                .cart(orderItemDTO.getCart())
+                .products(Optional.ofNullable(orderItemDTO.getId_products())
+                        .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
     }
 }
