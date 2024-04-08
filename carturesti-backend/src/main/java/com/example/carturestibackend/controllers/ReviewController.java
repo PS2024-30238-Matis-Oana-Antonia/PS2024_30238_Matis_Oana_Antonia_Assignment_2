@@ -1,7 +1,9 @@
 package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.constants.ReviewLogger;
+import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.ReviewDTO;
+import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.services.ProductService;
 import com.example.carturestibackend.services.ReviewService;
 import com.example.carturestibackend.services.UserService;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.util.List;
 
 /**
@@ -64,14 +68,15 @@ public class ReviewController {
      * @param reviewDTO The ReviewDTO object representing the review to insert.
      * @return A ModelAndView containing the ID of the newly inserted review.
      */
-    @PostMapping()
-    public ModelAndView insert(@Valid @RequestBody ReviewDTO reviewDTO) {
+    @PostMapping("/insertReview")
+    public ModelAndView insert(@Valid @ModelAttribute ReviewDTO reviewDTO) {
         String reviewID = reviewService.insert(reviewDTO);
         LOGGER.debug(ReviewLogger.REVIEW_INSERTED, reviewID);
         ModelAndView modelAndView = new ModelAndView("/review");
         modelAndView.addObject("reviewID", reviewID);
-        return modelAndView;
+        return new ModelAndView("redirect:/review");
     }
+
 
     /**
      * Retrieves a review by its ID.
@@ -91,31 +96,40 @@ public class ReviewController {
     /**
      * Deletes a review by its ID.
      *
-     * @param reviewID The ID of the review to delete.
+     * @param ID The ID of the review to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/{id_review}")
-    public ModelAndView deleteReview(@PathVariable("id_review") String reviewID) {
-        LOGGER.debug(ReviewLogger.REVIEW_DELETED, reviewID);
-        reviewService.deleteReviewById(reviewID);
-        ModelAndView modelAndView = new ModelAndView("/review");
-        modelAndView.addObject("message", "Review with ID " + reviewID + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/deleteReview")
+    public ModelAndView deleteReview(@RequestParam("id") String ID, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/review");
+        try {
+            reviewService.deleteReviewById(ID);
+            LOGGER.debug(ReviewLogger.REVIEW_DELETED, ID);
+            redirectAttributes.addFlashAttribute("successMessage", "Review with ID " + ID + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete review with ID " + ID + ". Please try again.");
+        }
+        return mav;
     }
 
     /**
      * Updates a review by its ID.
      *
-     * @param reviewID   The ID of the review to update.
+     * @param id   The ID of the review to update.
      * @param reviewDTO  The updated ReviewDTO object representing the new state of the review.
      * @return A ModelAndView containing the updated ReviewDTO object.
      */
-    @PutMapping(value = "/{id_review}")
-    public ModelAndView updateReview(@PathVariable("id_review") String reviewID, @Valid @RequestBody ReviewDTO reviewDTO) {
-        LOGGER.debug(ReviewLogger.REVIEW_UPDATED, reviewID);
-        ReviewDTO updatedReview = reviewService.updateReview(reviewID, reviewDTO);
-        ModelAndView modelAndView = new ModelAndView("/review");
-        modelAndView.addObject("review", updatedReview);
-        return modelAndView;
+    @PostMapping("/reviewUpdate")
+    public ModelAndView updateReview(@RequestParam("id") String id, @Valid @ModelAttribute ReviewDTO reviewDTO) {
+        ModelAndView mav = new ModelAndView("redirect:/review");
+        try {
+            ReviewDTO updatedReview = reviewService.updateReview(id, reviewDTO);
+            // You can optionally add a success message to be displayed on the redirected page
+            mav.addObject("successMessage", "Review updated successfully!");
+        } catch (Exception e) {
+            // If an error occurs during the update, you can add an error message to be displayed on the redirected page
+            mav.addObject("errorMessage", "Failed to update review. Please try again.");
+        }
+        return mav;
     }
 }

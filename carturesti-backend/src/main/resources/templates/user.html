@@ -29,7 +29,7 @@
     }
 
     .button {
-      background-color: #007bff;
+      background-color: #28a745; /* Changed to green */
       border: none;
       border-radius: 20px;
       color: #fff;
@@ -41,7 +41,7 @@
     }
 
     .button:hover {
-      background-color: #0056b3;
+      background-color: #218838; /* Darker green on hover */
     }
 
     table {
@@ -84,52 +84,55 @@
       margin: 0; /* Remove default margin */
     }
   </style>
-
 </head>
 
 <body>
 <div class="title-container">
-  <h1 class="title">User Management</h1>
+  <h1 class="title">Users Management</h1>
 </div>
 
-<div class="adminbox">
-  <div class="container-fluid text-center">
-    <button type="button" class="button" data-toggle="modal" data-target="#addUserModal" style="background-color: #28a745;">Add New User</button>
-    <table class="table">
-      <thead class="thead-dark">
-      <tr>
-        <th>Id User</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Address</th>
-        <th>Age</th>
-        <th>Role</th>
-        <th>Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr th:each="user: ${users}">
-        <td th:text="${user != null ? user.id_user : ''}"></td>
-        <td th:text="${user != null ? user.name : ''}"></td>
-        <td th:text="${user != null ? user.email : ''}"></td>
-        <td th:text="${user != null ? user.address : ''}"></td>
-        <td th:text="${user != null ? user.age : ''}"></td>
-        <td th:text="${user != null ? user.role : ''}"></td>
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card">
+        <button type="button" class="button" data-toggle="modal" data-target="#addUserModal">Add New User</button>
+        <div class="table-responsive"> <!-- Added a div with responsive class -->
+          <table class="table table-striped"> <!-- Added table-striped class -->
+            <thead class="thead-dark">
+            <tr>
+              <th>Id User</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Address</th>
+              <th>Age</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user: ${users}">
+              <td th:text="${user != null ? user.id_user : ''}"></td>
+              <td th:text="${user != null ? user.name : ''}"></td>
+              <td th:text="${user != null ? user.email : ''}"></td>
+              <td th:text="${user != null ? user.address : ''}"></td>
+              <td th:text="${user != null ? user.age : ''}"></td>
+              <td th:text="${user != null ? user.role : ''}"></td>
 
-        <td>
-          <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateUserModal-' + ${user != null ? user.id_user : ''}">
-            Edit
-          </button>
-          <form th:if="${user != null}" id="deleteForm-${user.id_user}" method="POST" th:action="@{/user/delete}">
-            <input type="hidden" name="id_user" th:value="${user.id_user}">
-            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-          </form>
-        </td>
-
-
-      </tr>
-      </tbody>
-    </table>
+              <td>
+                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateUserModal-' + ${user != null ? user.id_user : ''}">
+                  Edit
+                </button>
+                <form th:if="${user != null}" id="deleteForm-${user.id_user}" method="POST" th:action="@{/user/delete}">
+                  <input type="hidden" name="id_user" th:value="${user.id_user}">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -152,14 +155,14 @@
 
           <div class="form-group">
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" class="form-control" required>
+            <input type="email" id="email" name="email" class="form-control" required pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$">
             <div class="invalid-feedback">Enter a valid email address.</div>
           </div>
 
           <div class="form-group">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" class="form-control" required>
-            <div class="invalid-feedback">Enter a valid password.</div>
+            <div class="invalid-feedback">Password is required.</div>
           </div>
 
           <div class="form-group">
@@ -170,8 +173,8 @@
 
           <div class="form-group">
             <label for="age">Age:</label>
-            <input type="number" id="age" name="age" class="form-control" required>
-            <div class="invalid-feedback">Enter a valid age.</div>
+            <input type="number" id="age" name="age" class="form-control" required min="18">
+            <div class="invalid-feedback">Age is required and must be at least 18.</div>
           </div>
 
           <div class="form-group">
@@ -182,6 +185,7 @@
 
           <button type="submit" class="btn btn-primary">Add User</button>
         </form>
+
       </div>
     </div>
   </div>
@@ -207,14 +211,14 @@
 
           <div class="form-group">
             <label for="updateEmail">Email:</label>
-            <input type="email" id="updateEmail" name="email" th:value="${user.email}" class="form-control" required>
+            <input type="email" id="updateEmail" name="email" th:value="${user.email}" class="form-control" required pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$">
             <div class="invalid-feedback">Enter a valid email address.</div>
           </div>
 
           <div class="form-group">
             <label for="updatePassword">Password:</label>
             <input type="password" id="updatePassword" name="password" th:value="${user.password}" class="form-control" required>
-            <div class="invalid-feedback">Enter a valid password.</div>
+            <div class="invalid-feedback">Password is required.</div>
           </div>
 
           <div class="form-group">
@@ -225,8 +229,8 @@
 
           <div class="form-group">
             <label for="updateAge">Age:</label>
-            <input type="number" id="updateAge" name="age" th:value="${user.age}" class="form-control" required>
-            <div class="invalid-feedback">Enter a valid age.</div>
+            <input type="number" id="updateAge" name="age" th:value="${user.age}" class="form-control" required min="18">
+            <div class="invalid-feedback">Age is required and must be at least 18.</div>
           </div>
 
           <div class="form-group">
@@ -236,6 +240,12 @@
           </div>
 
           <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
         </form>
       </div>
     </div>

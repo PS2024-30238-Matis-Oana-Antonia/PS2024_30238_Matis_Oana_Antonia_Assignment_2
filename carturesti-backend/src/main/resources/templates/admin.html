@@ -20,6 +20,39 @@
             background-position: center;
         }
 
+        .container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .back-container {
+            background-color: #d2b48c; /* Light brown background */
+            padding: 10px;
+            border-radius: 5px;
+            margin-right: 20px; /* Add margin to separate from the card */
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #5C4033; /* Light brown background */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #b39b77; /* Darker brown on hover */
+        }
+
         .card {
             width: 400px;
             padding: 20px;
@@ -64,6 +97,12 @@
 </head>
 <body>
 
+<div class="container">
+    <div class="back-container">
+        <button class="back-button" onclick="window.location.href='/'">Back to Home</button>
+    </div>
+</div>
+
 <div class="card">
     <div class="title">Welcome to the Admin page!</div>
 
@@ -76,11 +115,20 @@
         </form>
     </div>
 
+
+
     <!-- Products Section -->
     <div class="section">
         <h2>Products</h2>
         <form method="GET" action="/product">
-        <button onclick="window.location.href='view_product_endpoint'" type="button">Manage products</button>
+            <button id="seeProductsBtn" type="submit">Manage products</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>Categories</h2>
+        <form method="GET" action="/category">
+            <button id="seeCategoriesBtn" type="submit">Manage categories</button>
         </form>
     </div>
 
@@ -88,7 +136,14 @@
     <div class="section">
         <h2>Promotions</h2>
         <form method="GET" action="/promotion">
-        <button onclick="window.location.href='view_promotion_endpoint'" type="button">Manage promotions</button>
+            <button id="seePromotionsBtn" type="submit">Manage promotions</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>Sales</h2>
+        <form method="GET" action="/sale">
+            <button id="seeSalesBtn" type="submit">Manage sales</button>
         </form>
     </div>
 
@@ -96,31 +151,20 @@
     <div class="section">
         <h2>Reviews</h2>
         <form method="GET" action="/review">
-        <button onclick="window.location.href='view_review_endpoint'" type="button">Manage reviews</button>
-        </form>>
+            <button id="seeReviewsBtn" type="submit">Manage reviews</button>
+        </form>
     </div>
 
     <!-- Orders Section -->
     <div class="section">
         <h2>Orders</h2>
         <form method="GET" action="/order">
-        <button onclick="window.location.href='view_order_endpoint'" type="button">Manage orders</button>
+            <button id="seeOrdersBtn" type="submit">Manage orders</button>
         </form>
     </div>
 
-    <div class="section">
-        <h2>Categories</h2>
-        <form method="GET" action="/category">
-        <button onclick="window.location.href='view_order_endpoint'" type="button">Manage categories</button>
-        </form>
-    </div>
 
-    <div class="section">
-        <h2>Sales</h2>
-        <form method="GET" action="/sale">
-        <button onclick="window.location.href='view_order_endpoint'" type="button">Manage sales</button>
-        </form>
-    </div>
+
 </div>
 
 </body>

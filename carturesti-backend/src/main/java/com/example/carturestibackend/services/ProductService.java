@@ -4,8 +4,10 @@ import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.ProductMapper;
 import com.example.carturestibackend.entities.Product;
+import com.example.carturestibackend.entities.Review;
 import com.example.carturestibackend.repositories.CategoryRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
+import com.example.carturestibackend.repositories.ReviewRepository;
 import com.example.carturestibackend.validators.ProductValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductValidator productValidator;
     private SaleService saleService;
+    private final ReviewRepository reviewRepository;
 
     /**
      * Constructs a new ProductService with the specified ProductRepository.
@@ -35,13 +38,15 @@ public class ProductService {
      * @param productRepository  The ProductRepository used to interact with product data in the database.
      * @param categoryRepository
      * @param productValidator
+     * @param reviewRepository
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, SaleService saleService, CategoryRepository categoryRepository, ProductValidator productValidator) {
+    public ProductService(ProductRepository productRepository, SaleService saleService, CategoryRepository categoryRepository, ProductValidator productValidator, ReviewRepository reviewRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
         this.saleService =  saleService;
+        this.reviewRepository = reviewRepository;
     }
 
     /**
@@ -56,6 +61,7 @@ public class ProductService {
                 .map(ProductMapper::toProductDTO)
                 .collect(Collectors.toList());
     }
+
 
     /**
      * Retrieves a product by its ID.
@@ -97,7 +103,10 @@ public class ProductService {
     public void deleteProductById(String id_product) {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (productOptional.isPresent()) {
-            productRepository.delete(productOptional.get());
+            Product product = productOptional.get();
+            product.setCategory(null); // Disassociate the product from its category
+            productRepository.save(product); // Save the changes
+            productRepository.deleteById(id_product); // Delete the product
             LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);
         } else {
             LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
@@ -179,4 +188,13 @@ public class ProductService {
         LOGGER.debug("Discount of {}% applied to product with ID: {}", discountPercentage, productId);
     }
 
+
+    public void addReviewToProduct(String productId, Review review) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+
+        review.setProduct(product);
+
+        reviewRepository.save(review);
+    }
 }

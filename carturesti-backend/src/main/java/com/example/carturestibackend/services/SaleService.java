@@ -119,8 +119,6 @@ public class SaleService {
         if (saleOptional.isPresent()) {
             Sale existingSale = saleOptional.get();
             existingSale.setDiscount_percentage(saleDTO.getDiscount_percentage());
-            existingSale.setPrice_after_discount(saleDTO.getPrice_after_discount());
-
             Sale updatedSale = saleRepository.save(existingSale);
             LOGGER.debug(SaleLogger.SALE_UPDATED, id_sale);
 

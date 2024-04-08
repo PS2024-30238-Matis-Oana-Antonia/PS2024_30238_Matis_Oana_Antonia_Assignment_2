@@ -1,17 +1,21 @@
 package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.constants.ProductLogger;
+import com.example.carturestibackend.dtos.CategoryDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
+import com.example.carturestibackend.entities.Review;
+import com.example.carturestibackend.services.CategoryService;
 import com.example.carturestibackend.services.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.util.List;
 
 /**
@@ -25,15 +29,18 @@ public class ProductController {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
+    private final CategoryService categoryService;
 
     /**
      * Constructs a new ProductController with the specified ProductService.
      *
-     * @param productService The ProductService used to handle product-related business logic.
+     * @param productService  The ProductService used to handle product-related business logic.
+     * @param categoryService
      */
     @Autowired
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, CategoryService categoryService) {
         this.productService = productService;
+        this.categoryService = categoryService;
     }
 
     /**
@@ -56,29 +63,48 @@ public class ProductController {
      * @param productDTO The ProductDTO object representing the product to insert.
      * @return A ModelAndView containing the ID of the newly inserted product.
      */
-    @PostMapping()
-    public ModelAndView insertProduct(@Valid @RequestBody ProductDTO productDTO) {
+    @PostMapping("/insertProduct")
+    public ModelAndView insertProduct(@ModelAttribute ProductDTO productDTO) {
+        String categoryId = productDTO.getId_category();
+
+        if (categoryId != null) {
+
+            CategoryDTO categoryDTO = categoryService.findCategoryById(categoryId);
+            if (categoryDTO == null) {
+                // Handle the case where the provided category ID is invalid
+                LOGGER.error("Invalid category ID provided: {}", categoryId);
+                ModelAndView errorModelAndView = new ModelAndView("errorPage");
+                errorModelAndView.addObject("errorMessage", "Invalid category ID provided");
+                return errorModelAndView;
+            }
+            productDTO.setId_category(categoryId);
+        }
         String productID = productService.insert(productDTO);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, productID);
+
         ModelAndView modelAndView = new ModelAndView("/product");
         modelAndView.addObject("productID", productID);
-        return modelAndView;
+        return new ModelAndView("redirect:/product");
     }
+
+
+
 
     /**
      * Retrieves a product by its ID.
      *
-     * @param productID The ID of the product to retrieve.
+     * @param id_product The ID of the product to retrieve.
      * @return A ModelAndView containing the ProductDTO object representing the retrieved product.
      */
-    @GetMapping(value = "/{id_product}")
-    public ModelAndView getProduct(@PathVariable("id_product") String productID) {
-        LOGGER.info(ProductLogger.PRODUCT_RETRIEVED_BY_ID, productID);
-        ProductDTO dto = productService.findProductById(productID);
+    @GetMapping(value = "/getByProductId")
+    public ModelAndView getProduct(@RequestParam("id_product") String id_product) {
+        LOGGER.info(ProductLogger.PRODUCT_RETRIEVED_BY_ID, id_product);
+        ProductDTO dto = productService.findProductById(id_product);
         ModelAndView modelAndView = new ModelAndView("/product");
         modelAndView.addObject("product", dto);
         return modelAndView;
     }
+
 
     /**
      * Deletes a product by its ID.
@@ -86,28 +112,49 @@ public class ProductController {
      * @param productID The ID of the product to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/{id_product}")
-    public ModelAndView deleteProduct(@PathVariable("id_product") String productID) {
-        LOGGER.debug(ProductLogger.PRODUCT_DELETED, productID);
-        productService.deleteProductById(productID);
-        ModelAndView modelAndView = new ModelAndView("/product");
-        modelAndView.addObject("message", "Product with ID " + productID + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/delete")
+    public ModelAndView deleteProduct(@RequestParam("id_product") String productID, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/product");
+        try {
+            productService.deleteProductById(productID);
+            LOGGER.debug(ProductLogger.PRODUCT_DELETED, productID);
+            redirectAttributes.addFlashAttribute("successMessage", "Product with ID " + productID + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete product with ID " + productID + ". Please try again.");
+        }
+        return mav;
     }
+
+
 
     /**
      * Updates a product by its ID.
      *
-     * @param productID   The ID of the product to update.
+     * @param id_product   The ID of the product to update.
      * @param productDTO  The updated ProductDTO object representing the new state of the product.
      * @return A ModelAndView containing the updated ProductDTO object.
      */
-    @PutMapping(value = "/{id_product}")
-    public ModelAndView updateProduct(@PathVariable("id_product") String productID, @Valid @RequestBody ProductDTO productDTO) {
-        LOGGER.debug(ProductLogger.PRODUCT_UPDATED, productID);
-        ProductDTO updatedProduct = productService.updateProduct(productID, productDTO);
-        ModelAndView modelAndView = new ModelAndView("/product");
-        modelAndView.addObject("product", updatedProduct);
-        return modelAndView;
+    @PostMapping("/productUpdate")
+    public ModelAndView updateProduct(@RequestParam("id_product") String id_product, @Valid @ModelAttribute ProductDTO productDTO) {
+        ModelAndView mav = new ModelAndView("redirect:/product");
+        try {
+            ProductDTO updatedProduct = productService.updateProduct(id_product, productDTO);
+            mav.addObject("successMessage", "Product updated successfully!");
+        } catch (Exception e) {
+            mav.addObject("errorMessage", "Failed to update product. Please try again.");
+        }
+        return mav;
+    }
+
+    @PostMapping("/addReview")
+    public ModelAndView addReviewToProduct(@PathVariable("id_product") String productId, @ModelAttribute Review review) {
+        ModelAndView mav = new ModelAndView("redirect:/product");
+        try {
+            productService.addReviewToProduct(productId, review);
+            mav.addObject("successMessage", "Review added successfully!");
+        } catch (Exception e) {
+            mav.addObject("errorMessage", "Failed to add review. Please try again.");
+        }
+        return mav;
     }
 }

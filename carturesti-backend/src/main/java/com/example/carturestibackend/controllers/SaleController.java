@@ -2,7 +2,9 @@ package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.constants.SaleLogger;
 import com.example.carturestibackend.dtos.SaleDTO;
+import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.services.SaleService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -45,30 +48,38 @@ public class SaleController {
         return modelAndView;
     }
 
-    @PostMapping
-    public ModelAndView insertSale(@RequestBody SaleDTO saleDTO) {
+    @PostMapping("/insertSale")
+    public ModelAndView insertSale(@ModelAttribute @Valid SaleDTO saleDTO) {
         String saleID = saleService.insertSale(saleDTO);
         LOGGER.debug(SaleLogger.SALE_INSERTED, saleID);
         ModelAndView modelAndView = new ModelAndView("/sale");
         modelAndView.addObject("saleID", saleID);
-        return modelAndView;
+        return new ModelAndView("redirect:/sale");
     }
 
-    @DeleteMapping("/{id_sale}")
-    public ModelAndView deleteSale(@PathVariable("id_sale") String id_sale) {
-        saleService.deleteSaleById(id_sale);
-        LOGGER.debug(SaleLogger.SALE_DELETED, id_sale);
-        ModelAndView modelAndView = new ModelAndView("/sale");
-        modelAndView.addObject("message", "Sale with ID " + id_sale + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/deleteSale")
+    public ModelAndView deleteSale(@RequestParam("id_sale") String saleId, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/sale"); // Redirecting back to the sales page
+        try {
+            saleService.deleteSaleById(saleId);
+            LOGGER.debug(SaleLogger.SALE_DELETED, saleId);
+            redirectAttributes.addFlashAttribute("successMessage", "Sale with ID " + saleId + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete sale with ID " + saleId + ". Please try again.");
+        }
+        return mav;
     }
 
-    @PutMapping("/{id_sale}")
-    public ModelAndView updateSale(@PathVariable("id_sale") String id_sale, @RequestBody SaleDTO saleDTO) {
-        LOGGER.debug(SaleLogger.SALE_UPDATED, id_sale);
-        SaleDTO updatedSale = saleService.updateSale(id_sale, saleDTO);
-        ModelAndView modelAndView = new ModelAndView("/sale");
-        modelAndView.addObject("sale", updatedSale);
-        return modelAndView;
+    @PostMapping("/saleUpdate")
+    public ModelAndView updateSale(@RequestParam("id_sale") String id_sale, @Valid @ModelAttribute SaleDTO saleDTO) {
+        ModelAndView mav = new ModelAndView("redirect:/sale");
+        try {
+            SaleDTO updatedSale = saleService.updateSale(id_sale, saleDTO);
+            mav.addObject("successMessage", "Sale updated successfully!");
+        } catch (Exception e) {
+            mav.addObject("errorMessage", "Failed to update sale. Please try again.");
+        }
+        return mav;
     }
+
 }

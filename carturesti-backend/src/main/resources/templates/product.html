@@ -2,9 +2,264 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Management</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-size: cover;
+            background-position: center;
+            background-image: url("/images/background.jpg");
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: #333;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            width: 95%; /* Adjusted width to 95% */
+            max-width: 1500px; /* Adjusted max-width */
+            margin: 50px auto; /* Auto margin for centering */
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+
+        .button {
+            background-color: #28a745; /* Green */
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            height: 60px; /* Increased height */
+            width: 200px; /* Increased width */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px; /* Add margin to the bottom */
+            font-size: 1.2rem; /* Increased font size */
+        }
+
+        .button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        table {
+            width: 100%; /* Adjusted width to 100% */
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff; /* Setting background color to white */
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            width: 250px; /* Adjust the width as needed */
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .modal-header .close {
+            color: #000;
+            opacity: 1;
+        }
+
+        .btn:hover:not(.button) {
+            background-color: transparent;
+        }
+
+        /* Updated title style */
+        .title-container {
+            background-color: #d2b48c; /* Light brown background */
+            padding: 10px;
+        }
+
+        h1.title {
+            font-size: 2.5rem;
+            color: #8B4513; /* Dark brown color */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Adding a subtle shadow */
+            margin: 0; /* Remove default margin */
+        }
+    </style>
+
 </head>
 <body>
+<div class="title-container">
+    <h1 class="title">Products Management</h1>
+</div>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <button type="button" class="button btn-lg" data-toggle="modal" data-target="#addProductModal">Add New Product</button>
+                <table class="table">
+                    <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Description</th>
+                        <th>Author</th>
+                        <th>Stock</th>
+                        <th>Category</th>
+                        <th>Promotion</th>
+                        <th>Sale</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Loop through products and display them -->
+                    <tr th:each="product : ${products}">
+                        <td th:text="${product.id_product}"></td>
+                        <td th:text="${product.name}"></td>
+                        <td th:text="${product.price}"></td>
+                        <td th:text="${product.description}"></td>
+                        <td th:text="${product.author}"></td>
+                        <td th:text="${product.stock}"></td>
+                        <td th:text="${product.id_category}"></td>
+                        <td>
+                            <span th:if="${product.id_promotion != null}" th:text="${product.id_promotion}"></span>
+                            <span th:unless="${product.id_promotion != null}">No Promotion</span>
+                        </td>
+                        <td>
+                            <span th:if="${product.id_sale != null}" th:text="${product.id_sale}"></span>
+                            <span th:unless="${product.id_sale != null}">No Sale</span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>
+                            <form th:if="${product != null}" id="deleteForm-${product.id_product}" method="POST" th:action="@{/product/delete}">
+                                <input type="hidden" name="id_product" th:value="${product.id_product}">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Modal for adding a new product -->
+<div class="modal fade" id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" th:action="@{/product/insertProduct}" class="needs-validation" novalidate>
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                        <div class="invalid-feedback">Name is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="price">Price:</label>
+                        <input type="number" id="price" name="price" class="form-control" required>
+                        <div class="invalid-feedback">Price is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <input type="text" id="description" name="description" class="form-control" required>
+                        <div class="invalid-feedback">Description is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="author">Author:</label>
+                        <input type="text" id="author" name="author" class="form-control" required>
+                        <div class="invalid-feedback">Author is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock">Stock:</label>
+                        <input type="number" id="stock" name="stock" class="form-control" required>
+                        <div class="invalid-feedback">Stock is required.</div>
+                    </div>
+                    <!-- Add the Category ID field -->
+                    <div class="form-group">
+                        <label for="id_category">Category:</label>
+                        <input type="text" id="id_category" name="id_category" class="form-control" required>
+                        <div class="invalid-feedback">Category ID is required.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_promotion">Promotion:</label>
+                        <input type="text" id="id_promotion" name="id_promotion" class="form-control" required>
+                        <div class="invalid-feedback">Promotion ID is required.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_sale">Sale:</label>
+                        <input type="text" id="id_sale" name="id_sale" class="form-control" required>
+                        <div class="invalid-feedback">SaleID is required.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for updating a product -->
+<div class="modal fade" th:each="product: ${products}" th:id="'updateProductModal-' + ${product.id_product}" tabindex="-1" role="dialog" aria-labelledby="updateProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateProductModalLabel">Update Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" th:action="@{'product/productUpdate'}" class="needs-validation" novalidate>
+                    <input type="hidden" id="id_product" name="id_product" th:value="${product.id_product}">
+                    <div class="form-group">
+                        <label for="updateName">Name:</label>
+                        <input type="text" id="updateName" name="name" th:value="${product.name}" class="form-control" required>
+                        <div class="invalid-feedback">Name is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="updatePrice">Price:</label>
+                        <input type="number" id="updatePrice" name="price" th:value="${product.price}" class="form-control" required>
+                        <div class="invalid-feedback">Price is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateDescription">Description:</label>
+                        <input type="text" id="updateDescription" name="description" th:value="${product.description}" class="form-control" required>
+                        <div class="invalid-feedback">Description is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateAuthor">Author:</label>
+                        <input type="text" id="updateAuthor" name="author" th:value="${product.author}" class="form-control" required>
+                        <div class="invalid-feedback">Author is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateStock">Stock:</label>
+                        <input type="number" id="updateStock" name="stock" th:value="${product.stock}" class="form-control" required>
+                        <div class="invalid-feedback">Stock is required.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<div class="container-fluid text-center mt-4">
+    <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
+</div>
 </body>
 </html>

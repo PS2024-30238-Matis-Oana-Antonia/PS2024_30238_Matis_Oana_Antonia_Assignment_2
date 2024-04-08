@@ -27,7 +27,7 @@ public class ProductMapper {
                 .id_category(product.getCategory().getId_category())
                 .id_orderItems(Optional.ofNullable(product.getOrderItems())
                         .map(items -> items.stream().map(OrderItem::getId_order_item).collect(Collectors.toList()))
-                        .orElse(null)) // Map only IDs if order items not null
+                        .orElse(null))
                 .id_promotion(Optional.ofNullable(product.getPromotion())
                         .map(Promotion::getId_promotion)
                         .orElse(null))
@@ -52,7 +52,7 @@ public class ProductMapper {
                         .build())
                 .orderItems(Optional.ofNullable(productDTO.getId_orderItems())
                         .map(ids -> ids.stream().map(id -> OrderItem.builder().id_order_item(id).build()).collect(Collectors.toList()))
-                        .orElse(null)) // Map order items only if IDs not null
+                        .orElse(null))
                 .promotion(Optional.ofNullable(productDTO.getId_promotion())
                         .map(id -> Promotion.builder().id_promotion(id).build())
                         .orElse(null))

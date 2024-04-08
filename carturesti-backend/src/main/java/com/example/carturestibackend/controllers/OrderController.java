@@ -44,7 +44,7 @@ public class OrderController {
     public ModelAndView getOrders() {
         LOGGER.info(OrderLogger.ALL_ORDERS_RETRIEVED);
         List<OrderDTO> dtos = orderService.findOrders();
-        ModelAndView modelAndView = new ModelAndView("/orders");
+        ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("orders", dtos);
         return modelAndView;
     }
@@ -59,7 +59,7 @@ public class OrderController {
     public ModelAndView insertOrder(@Valid @RequestBody OrderDTO orderDTO) {
         String orderID = orderService.insert(orderDTO);
         LOGGER.debug(OrderLogger.ORDER_INSERTED, orderID);
-        ModelAndView modelAndView = new ModelAndView("/orders");
+        ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("orderID", orderID);
         return modelAndView;
     }
@@ -74,7 +74,7 @@ public class OrderController {
     public ModelAndView getOrder(@PathVariable("id_order") String orderID) {
         LOGGER.info(OrderLogger.ORDER_RETRIEVED_BY_ID, orderID);
         OrderDTO dto = orderService.findOrderById(orderID);
-        ModelAndView modelAndView = new ModelAndView("/orders");
+        ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("order", dto);
         return modelAndView;
     }
@@ -89,7 +89,7 @@ public class OrderController {
     public ModelAndView deleteOrder(@PathVariable("id_order") String orderID) {
         LOGGER.debug(OrderLogger.ORDER_DELETED, orderID);
         orderService.deleteOrderById(orderID);
-        ModelAndView modelAndView = new ModelAndView("/orders");
+        ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("message", "Order with ID " + orderID + " deleted successfully");
         return modelAndView;
     }
@@ -105,7 +105,7 @@ public class OrderController {
     public ModelAndView updateOrder(@PathVariable("id_order") String orderID, @Valid @RequestBody OrderDTO orderDTO) {
         LOGGER.debug(OrderLogger.ORDER_UPDATED, orderID);
         OrderDTO updatedOrder = orderService.updateOrder(orderID, orderDTO);
-        ModelAndView modelAndView = new ModelAndView("/orders");
+        ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("order", updatedOrder);
         return modelAndView;
     }

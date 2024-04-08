@@ -2,6 +2,7 @@ package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.constants.PromotionLogger;
 import com.example.carturestibackend.dtos.PromotionDTO;
+import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.services.PromotionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.util.List;
 
 /**
@@ -56,13 +59,13 @@ public class PromotionController {
      * @param promotionDTO The PromotionDTO object representing the promotion to insert.
      * @return A ModelAndView containing the ID of the newly inserted promotion.
      */
-    @PostMapping()
-    public ModelAndView insert(@Valid @RequestBody PromotionDTO promotionDTO) {
+    @PostMapping("/insert")
+    public ModelAndView insert(@Valid @ModelAttribute PromotionDTO promotionDTO) {
         String promotionID = promotionService.insert(promotionDTO);
         LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotionID);
         ModelAndView modelAndView = new ModelAndView("/promotion");
         modelAndView.addObject("promotionID", promotionID);
-        return modelAndView;
+        return new ModelAndView("redirect:/promotion");
     }
 
     /**
@@ -86,28 +89,39 @@ public class PromotionController {
      * @param promotionID The ID of the promotion to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/{id_promotion}")
-    public ModelAndView deletePromotion(@PathVariable("id_promotion") String promotionID) {
-        LOGGER.debug(PromotionLogger.PROMOTION_DELETED, promotionID);
-        promotionService.deletePromotionById(promotionID);
-        ModelAndView modelAndView = new ModelAndView("/promotion");
-        modelAndView.addObject("message", "Promotion with ID " + promotionID + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/delete")
+    public ModelAndView deletePromotion(@RequestParam("id_promotion") String promotionID, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/promotion"); // Redirecting back to the promotion page
+        try {
+            promotionService.deletePromotionById(promotionID);
+            LOGGER.debug(PromotionLogger.PROMOTION_DELETED, promotionID);
+            redirectAttributes.addFlashAttribute("successMessage", "Promotion with ID " + promotionID + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete promotion with ID " + promotionID + ". Please try again.");
+        }
+        return mav;
     }
+
 
     /**
      * Updates a promotion by its ID.
      *
-     * @param promotionID    The ID of the promotion to update.
+     * @param id_promotion    The ID of the promotion to update.
      * @param promotionDTO   The updated PromotionDTO object representing the new state of the promotion.
      * @return A ModelAndView containing the updated PromotionDTO object.
      */
-    @PutMapping(value = "/{id_promotion}")
-    public ModelAndView updatePromotion(@PathVariable("id_promotion") String promotionID, @Valid @RequestBody PromotionDTO promotionDTO) {
-        LOGGER.debug(PromotionLogger.PROMOTION_UPDATED, promotionID);
-        PromotionDTO updatedPromotion = promotionService.updatePromotion(promotionID, promotionDTO);
-        ModelAndView modelAndView = new ModelAndView("/promotion");
-        modelAndView.addObject("promotion", updatedPromotion);
-        return modelAndView;
+    @PostMapping("/promotionUpdate")
+    public ModelAndView updatePromotion(@RequestParam("id_promotion") String id_promotion, @Valid @ModelAttribute PromotionDTO promotionDTO) {
+        ModelAndView mav = new ModelAndView("redirect:/promotion"); // Redirecting back to the promotion page
+        try {
+            PromotionDTO updatedPromotion = promotionService.updatePromotion(id_promotion, promotionDTO);
+            // You can optionally add a success message to be displayed on the redirected page
+            mav.addObject("successMessage", "Promotion updated successfully!");
+        } catch (Exception e) {
+            // If an error occurs during the update, you can add an error message to be displayed on the redirected page
+            mav.addObject("errorMessage", "Failed to update promotion. Please try again.");
+        }
+        return mav;
     }
+
 }

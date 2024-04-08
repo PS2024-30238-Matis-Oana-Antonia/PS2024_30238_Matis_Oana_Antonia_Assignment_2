@@ -5,6 +5,8 @@ import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.Review;
 import com.example.carturestibackend.entities.User;
 
+import java.util.Optional;
+
 import static com.example.carturestibackend.dtos.mappers.UserMapper.toUserDTO;
 import static com.example.carturestibackend.dtos.mappers.UserMapper.fromUserDTO;
 
@@ -14,25 +16,29 @@ public class ReviewMapper {
     }
 
     public static ReviewDTO toReviewDTO(Review review) {
+        if (review == null) {
+            return null;
+        }
+
         return ReviewDTO.builder()
                 .id(review.getId())
                 .rating(review.getRating())
                 .comment(review.getComment())
-                .id_user(review.getUser().getId_user())
-                .id_product(review.getProduct().getId_product())
+                .id_user(Optional.ofNullable(review.getUser()).map(User::getId_user).orElse(null))
+                .id_product(Optional.ofNullable(review.getProduct()).map(Product::getId_product).orElse(null))
                 .build();
     }
 
     public static Review fromReviewDTO(ReviewDTO reviewDTO) {
+        if (reviewDTO == null) {
+            return null;
+        }
+
         return Review.builder()
                 .rating(reviewDTO.getRating())
                 .comment(reviewDTO.getComment())
-                .user(User.builder()
-                        .id_user(reviewDTO.getId_user())
-                        .build())
-                .product(Product.builder()
-                        .id_product(reviewDTO.getId_product())
-                        .build())
+                .user(Optional.ofNullable(reviewDTO.getId_user()).map(id -> User.builder().id_user(id).build()).orElse(null))
+                .product(Optional.ofNullable(reviewDTO.getId_product()).map(id -> Product.builder().id_product(id).build()).orElse(null))
                 .build();
     }
 }
