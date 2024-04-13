@@ -40,7 +40,7 @@ import java.util.Set;
         @JoinColumn(name = "id_user")
         private User user;
 
-        @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+        @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
         @JsonIgnore
         private List<OrderItem> orderItems;
 

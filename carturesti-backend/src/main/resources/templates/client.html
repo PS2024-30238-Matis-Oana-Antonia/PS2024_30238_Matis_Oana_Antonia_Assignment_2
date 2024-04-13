@@ -197,10 +197,10 @@
             </div>
             <div class="modal-body">
                 <!-- Product details dynamically populated from data attributes -->
-                <h5 class="modal-product-name"></h5>
-                <p class="modal-product-description"></p>
-                <p class="modal-product-price"></p>
-                <p class="modal-product-author"></p>
+                <h5 class="name"></h5>
+                <p class="description"></p>
+                <p class="price"></p>
+                <p class="author"></p>
                 <!-- Add more fields as needed -->
             </div>
             <div class="modal-footer">
@@ -223,14 +223,15 @@
         var productAuthor = $(this).data('product-author');
 
         // Populate modal with product details
-        $('.modal-product-name').text(productName);
-        $('.modal-product-description').text(productDescription);
-        $('.modal-product-price').text(productPrice);
-        $('.modal-product-author').text(productAuthor);
+        $('#productModal .name').text(productName);
+        $('#productModal .description').text(productDescription);
+        $('#productModal .price').text(productPrice);
+        $('#productModal .author').text(productAuthor);
 
         // Show the modal
         $('#productModal').modal('show');
     });
+
 </script>
 
 

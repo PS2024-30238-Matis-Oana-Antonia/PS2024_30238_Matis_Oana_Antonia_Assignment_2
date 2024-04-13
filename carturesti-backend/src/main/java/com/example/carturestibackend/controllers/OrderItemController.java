@@ -90,7 +90,7 @@ public class OrderItemController {
      */
     @PostMapping(value = "/delete")
     public ModelAndView deleteOrderItem(@RequestParam("id_order_item") String orderItemID, RedirectAttributes redirectAttributes) {
-        ModelAndView mav = new ModelAndView("redirect:/order");
+        ModelAndView mav = new ModelAndView("redirect:/orderitem");
         try {
             orderItemService.deleteOrderItemById(orderItemID);
             LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderItemID);
@@ -110,13 +110,11 @@ public class OrderItemController {
      */
     @PostMapping("/update")
     public ModelAndView updateOrderItem(@RequestParam("id_order_item") String orderItemID, @Valid @ModelAttribute OrderItemDTO orderItemDTO, RedirectAttributes redirectAttributes) {
-        ModelAndView mav = new ModelAndView("redirect:/order"); // Redirecting back to the order-item page
+        ModelAndView mav = new ModelAndView("redirect:/orderitem");
         try {
             OrderItemDTO updatedOrderItem = orderItemService.updateOrderItem(orderItemID, orderItemDTO);
-            // You can optionally add a success message to be displayed on the redirected page
             mav.addObject("successMessage", "Order item updated successfully!");
         } catch (Exception e) {
-            // If an error occurs during the update, you can add an error message to be displayed on the redirected page
             mav.addObject("errorMessage", "Failed to update order item. Please try again.");
         }
         return mav;

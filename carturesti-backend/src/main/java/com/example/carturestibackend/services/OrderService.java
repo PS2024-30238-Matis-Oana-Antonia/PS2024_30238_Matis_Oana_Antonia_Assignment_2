@@ -3,9 +3,11 @@ package com.example.carturestibackend.services;
 import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.OrderDTO;
 import com.example.carturestibackend.dtos.OrderItemDTO;
+import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
 import com.example.carturestibackend.dtos.mappers.OrderMapper;
 import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.entities.OrderItem;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.OrderRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
@@ -17,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -112,13 +116,38 @@ public class OrderService {
 
     @Transactional
     public String insert(OrderDTO orderDTO) {
+        // If order_date is null, set it to the current date
+        LocalDate orderDate = orderDTO.getOrder_date() != null ? orderDTO.getOrder_date() : LocalDate.now();
+
         Order order = OrderMapper.fromOrderDTO(orderDTO);
-     //   OrderValidator.validateOrder(order);
+        order.setOrder_date(orderDate); // Set the order_date before saving
+
+        // Save the order
         order = orderRepository.save(order);
         LOGGER.debug(OrderLogger.ORDER_INSERTED, order.getId_order());
+
+        // Create and save order items
+        List<String> orderItemIds = orderDTO.getId_orderItems();
+        if (orderItemIds != null) {
+            for (String orderItemId : orderItemIds) {
+                // Assuming you have a method to retrieve order item details by ID
+                OrderItemDTO orderItemDTO = orderItemService.findOrderItemById(orderItemId);
+                if (orderItemDTO != null) {
+                    // Set the order for the order item
+                    OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
+                    orderItem.setOrder(order); // Associate the order with the order item
+
+                    // Set the quantity for the order item
+                    orderItem.setQuantity(orderItemDTO.getQuantity());
+
+                    // Save the order item
+                    orderItemService.insert(OrderItemMapper.toOrderItemDTO(orderItem));
+                }
+            }
+        }
+
         return order.getId_order();
     }
-
 
 
 

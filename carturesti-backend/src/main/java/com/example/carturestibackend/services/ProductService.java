@@ -2,7 +2,8 @@ package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.ProductDTO;
-import com.example.carturestibackend.dtos.mappers.ProductMapper;
+import com.example.carturestibackend.dtos.mappers.*;
+import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.Review;
 import com.example.carturestibackend.repositories.CategoryRepository;
@@ -31,21 +32,25 @@ public class ProductService {
     private final ProductValidator productValidator;
     private SaleService saleService;
     private final ReviewRepository reviewRepository;
-
+    private final OrderItemService orderItemService;
     /**
      * Constructs a new ProductService with the specified ProductRepository.
      *
      * @param productRepository  The ProductRepository used to interact with product data in the database.
      * @param categoryRepository
      * @param productValidator
+     * @param saleService
      * @param reviewRepository
+     * @param orderItemService
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, ReviewRepository reviewRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, SaleService saleService, ReviewRepository reviewRepository, OrderItemService orderItemService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
+        this.saleService = saleService;
         this.reviewRepository = reviewRepository;
+        this.orderItemService = orderItemService;
     }
 
     /**
@@ -98,6 +103,16 @@ public class ProductService {
         ProductValidator.validateProduct(product);
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
+
+        // Create an OrderItem for the inserted product
+        OrderItem orderItem = new OrderItem();
+        orderItem.setProducts(List.of(product)); // Set the product for the order item
+        orderItem.setQuantity(1); // Assuming default quantity of 1
+        orderItem.setPrice_per_unit(product.getPrice()); // Set price per unit as product price
+
+        // Save the order item
+        orderItemService.insert(OrderItemMapper.toOrderItemDTO(orderItem));
+
         return product.getId_product();
     }
 

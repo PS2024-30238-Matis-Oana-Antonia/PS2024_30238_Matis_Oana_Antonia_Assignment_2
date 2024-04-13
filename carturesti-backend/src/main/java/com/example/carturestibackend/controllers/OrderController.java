@@ -1,7 +1,9 @@
 package com.example.carturestibackend.controllers;
 
+import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.OrderDTO;
+import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.services.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.util.List;
 
 /**
@@ -55,13 +59,13 @@ public class OrderController {
      * @param orderDTO The OrderDTO object representing the order to insert.
      * @return A ModelAndView containing the ID of the newly inserted order.
      */
-    @PostMapping()
-    public ModelAndView insertOrder(@Valid @RequestBody OrderDTO orderDTO) {
+    @PostMapping("/insert")
+    public ModelAndView insertOrder(@Valid @ModelAttribute OrderDTO orderDTO) {
         String orderID = orderService.insert(orderDTO);
         LOGGER.debug(OrderLogger.ORDER_INSERTED, orderID);
         ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("orderID", orderID);
-        return modelAndView;
+        return new ModelAndView("redirect:/order");
     }
 
     /**
@@ -85,15 +89,18 @@ public class OrderController {
      * @param orderID The ID of the order to delete.
      * @return A ModelAndView indicating the success of the operation.
      */
-    @DeleteMapping(value = "/{id_order}")
-    public ModelAndView deleteOrder(@PathVariable("id_order") String orderID) {
-        LOGGER.debug(OrderLogger.ORDER_DELETED, orderID);
-        orderService.deleteOrderById(orderID);
-        ModelAndView modelAndView = new ModelAndView("/order");
-        modelAndView.addObject("message", "Order with ID " + orderID + " deleted successfully");
-        return modelAndView;
+    @PostMapping(value = "/delete")
+    public ModelAndView deleteOrder(@RequestParam("id_order") String orderID, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/order");
+        try {
+            orderService.deleteOrderById(orderID);
+            LOGGER.debug(OrderLogger.ORDER_DELETED, orderID);
+            redirectAttributes.addFlashAttribute("successMessage", "Order with ID " + orderID + " deleted successfully");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete order with ID " + orderID + ". Please try again.");
+        }
+        return mav;
     }
-
     /**
      * Updates an order by its ID.
      *
@@ -101,12 +108,15 @@ public class OrderController {
      * @param orderDTO   The updated OrderDTO object representing the new state of the order.
      * @return A ModelAndView containing the updated OrderDTO object.
      */
-    @PutMapping(value = "/{id_order}")
-    public ModelAndView updateOrder(@PathVariable("id_order") String orderID, @Valid @RequestBody OrderDTO orderDTO) {
-        LOGGER.debug(OrderLogger.ORDER_UPDATED, orderID);
-        OrderDTO updatedOrder = orderService.updateOrder(orderID, orderDTO);
-        ModelAndView modelAndView = new ModelAndView("/order");
-        modelAndView.addObject("order", updatedOrder);
-        return modelAndView;
+    @PostMapping("/update")
+    public ModelAndView updateOrder(@RequestParam("id_order") String orderID, @Valid @ModelAttribute OrderDTO orderDTO, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/order");
+        try {
+            OrderDTO updatedOrder = orderService.updateOrder(orderID, orderDTO);
+            mav.addObject("successMessage", "Order updated successfully!");
+        } catch (Exception e) {
+            mav.addObject("errorMessage", "Failed to update order. Please try again.");
+        }
+        return mav;
     }
 }

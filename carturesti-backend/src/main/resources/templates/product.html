@@ -111,6 +111,7 @@
                         <th>Promotion</th>
                         <th>Sale</th>
                         <th>Review</th>
+                        <th>Order Item ID</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -132,12 +133,17 @@
                             <span th:if="${product.id_sale != null}" th:text="${product.id_sale}"></span>
                             <span th:unless="${product.id_sale != null}">No Sale</span>
                         </td>
+                        <!-- Add the id_orderItems field -->
+
+
                         <td>
-                            <ul>
+                            <span th:if="${product.id_reviews == null or product.id_reviews.isEmpty()}">No Review</span>
+                            <ul th:if="${product.id_reviews != null and not product.id_reviews.isEmpty()}">
                                 <!-- Loop through review IDs and display them -->
                                 <li th:each="reviewId : ${product.id_reviews}" th:text="${reviewId}"></li>
                             </ul>
                         </td>
+                        <td th:text="${product.id_orderItems}"></td>
                         <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>
                             <form th:if="${product != null}" id="deleteForm-${product.id_product}" method="POST" th:action="@{/product/delete}">
@@ -145,7 +151,9 @@
                                 <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                             </form>
                         </td>
+
                     </tr>
+
                     </tbody>
                 </table>
             </div>
