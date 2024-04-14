@@ -143,7 +143,7 @@
                                 <li th:each="reviewId : ${product.id_reviews}" th:text="${reviewId}"></li>
                             </ul>
                         </td>
-                        <td th:text="${product.id_orderItems}"></td>
+
                         <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>
                             <form th:if="${product != null}" id="deleteForm-${product.id_product}" method="POST" th:action="@{/product/delete}">

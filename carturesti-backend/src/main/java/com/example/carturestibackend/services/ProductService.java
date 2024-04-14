@@ -110,29 +110,14 @@ public class ProductService {
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
 
-        // Now create an associated order item
-        OrderItem orderItem = new OrderItem();
 
         // Create a list containing the product and associate it with the order item
         List<Product> productList = new ArrayList<>();
         productList.add(product);
-        orderItem.setProducts(productList);
-
-        // Assuming quantity is always 1 for each product
-        orderItem.setQuantity(1);
-
-        // Assuming price per unit is provided in the product entity
-        orderItem.setPrice_per_unit(product.getPrice());
-
-        // Save the order item
-        orderItem = orderItemRepository.save(orderItem);
 
         // Return the ID of the inserted product
         return product.getId_product();
     }
-
-
-
 
 
     /**
