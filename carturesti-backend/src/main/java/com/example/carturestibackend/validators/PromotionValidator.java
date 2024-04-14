@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PromotionValidator {
 
-    public static void validatePromotion(Promotion promotion) {
+    public static boolean validatePromotion(Promotion promotion) {
         if (promotion.getPercentage() < 0 || promotion.getPercentage() > 100) {
             throw new IllegalArgumentException("Percentage must be between 0 and 100");
         }
@@ -19,5 +19,6 @@ public class PromotionValidator {
             throw new IllegalArgumentException("Description cannot be empty");
         }
 
+        return false;
     }
 }

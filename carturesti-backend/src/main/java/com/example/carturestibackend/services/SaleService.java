@@ -1,11 +1,15 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.PromotionLogger;
 import com.example.carturestibackend.constants.SaleLogger;
 import com.example.carturestibackend.dtos.ProductDTO;
+import com.example.carturestibackend.dtos.PromotionDTO;
 import com.example.carturestibackend.dtos.SaleDTO;
 import com.example.carturestibackend.dtos.mappers.ProductMapper;
+import com.example.carturestibackend.dtos.mappers.PromotionMapper;
 import com.example.carturestibackend.dtos.mappers.SaleMapper;
 import com.example.carturestibackend.entities.Product;
+import com.example.carturestibackend.entities.Promotion;
 import com.example.carturestibackend.entities.Sale;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.SaleRepository;
@@ -59,6 +63,7 @@ public class SaleService {
         for (Sale sale : sales) {
             SaleDTO saleDTO = SaleMapper.toSaleDTO(sale);
             List<String> productIdsWithDiscount = new ArrayList<>();
+            double totalSalePrice = 0.0; // Initialize total sale price
 
             for (Product product : sale.getProducts()) {
                 String productId = product.getId_product();
@@ -69,16 +74,25 @@ public class SaleService {
                 if (discountPercentage > 0) {
                     discountedPrice = originalPrice * (1 - discountPercentage / 100);
                 }
+
+                totalSalePrice += discountedPrice; // Add discounted price to total sale price
+
+                // Update the product price in the database
+               product.setPrice_discount(discountedPrice);
+                productRepository.save(product); // Save the updated product
+
                 productIdsWithDiscount.add(productId);
             }
 
             // Set the list of product IDs with discounts in the SaleDTO
             saleDTO.setId_products(productIdsWithDiscount);
+            saleDTO.setPrice_after_discount(totalSalePrice); // Set total sale price in SaleDTO
             saleDTOs.add(saleDTO);
         }
 
         return saleDTOs;
     }
+
 
     /**
      * Retrieves a sale by its ID.
@@ -109,12 +123,43 @@ public class SaleService {
         if (saleValidator.isValid(sale)) {
             sale = saleRepository.save(sale);
             LOGGER.debug(SaleLogger.SALE_INSERTED, sale.getId_sale());
+
+            // Check if product IDs are not null
+            List<String> productIds = saleDTO.getId_products();
+            if (productIds != null) {
+                // Iterate over each product ID and associate it with the sale
+                for (String productId : productIds) {
+                    Product product = productRepository.findById(productId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+
+                    // Apply the discount percentage to the product price
+                    double discountPercentage = sale.getDiscount_percentage();
+                    double originalPrice = product.getPrice();
+                    double discountedPrice = originalPrice;
+
+                    if (discountPercentage > 0) {
+                        discountedPrice = originalPrice * (1 - discountPercentage / 100);
+                    }
+
+                    // Update the product price with the discounted price
+                    product.setPrice(discountedPrice);
+
+                    // Associate the product with the sale
+                    product.setSale(sale);
+
+                    // Save the product with the updated association and price
+                    productRepository.save(product);
+                }
+            }
+
             return sale.getId_sale();
         } else {
             LOGGER.error(SaleLogger.SALE_INSERT_FAILED_INVALID_DATA);
             throw new IllegalArgumentException("Invalid sale data");
         }
     }
+
+
 
     /**
      * Deletes a sale by its ID.
@@ -147,24 +192,26 @@ public class SaleService {
     /**
      * Updates a sale.
      *
-     * @param id_sale  The ID of the sale to update.
+     * @param id  The ID of the sale to update.
      * @param saleDTO The SaleDTO representing the new state of the sale.
      * @return The updated SaleDTO.
      * @throws ResourceNotFoundException if the sale is not found.
      */
-    public SaleDTO updateSale(String id_sale, SaleDTO saleDTO) {
-        Optional<Sale> saleOptional = saleRepository.findById(id_sale);
-        if (saleOptional.isPresent()) {
-            Sale existingSale = saleOptional.get();
-            existingSale.setDiscount_percentage(saleDTO.getDiscount_percentage());
-            Sale updatedSale = saleRepository.save(existingSale);
-            LOGGER.debug(SaleLogger.SALE_UPDATED, id_sale);
-
-            return SaleMapper.toSaleDTO(updatedSale);
-        } else {
-            LOGGER.error(SaleLogger.SALE_NOT_FOUND_BY_ID, id_sale);
-            throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id_sale);
+    public SaleDTO updateSale(String id, SaleDTO saleDTO) {
+        Optional<Sale> saleOptional = saleRepository.findById(id);
+        if (!saleOptional.isPresent()) {
+            LOGGER.error(SaleLogger.SALE_NOT_FOUND_BY_ID, id);
+            throw new ResourceNotFoundException(Sale.class.getSimpleName() + " with id: " + id);
         }
+
+        Sale existingSale = saleOptional.get();
+        existingSale.setDiscount_percentage(saleDTO.getDiscount_percentage());
+        existingSale.setPrice_after_discount(saleDTO.getPrice_after_discount());
+
+        Sale updatedSale = (Sale) saleRepository.save(existingSale);
+        LOGGER.debug(SaleLogger.SALE_UPDATED, updatedSale.getId_sale());
+
+        return SaleMapper.toSaleDTO(updatedSale);
     }
 
     /**

@@ -42,8 +42,12 @@ import java.util.Set;
         @JoinColumn(name = "id_user")
         private User user;
 
-        @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-        private List<Product> products = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "order_product",
+            joinColumns = @JoinColumn(name = "id_order"),
+            inverseJoinColumns = @JoinColumn(name = "id_product"))
+    private List<Product> products;
 
 
 }

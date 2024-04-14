@@ -111,7 +111,8 @@
                         <th>Promotion</th>
                         <th>Sale</th>
                         <th>Review</th>
-                        <th>Order Item ID</th>
+                        <th>Price discount</th>
+                        <th>Price Promotion</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -143,7 +144,8 @@
                                 <li th:each="reviewId : ${product.id_reviews}" th:text="${reviewId}"></li>
                             </ul>
                         </td>
-
+                        <td th:text="${product.price_discount}"></td>
+                        <td th:text="${product.price_promotion}"></td>
                         <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>
                             <form th:if="${product != null}" id="deleteForm-${product.id_product}" method="POST" th:action="@{/product/delete}">
@@ -224,6 +226,7 @@
 </div>
 
 <!-- Modal for updating a product -->
+<!-- Modal for updating a product -->
 <div class="modal fade" th:each="product: ${products}" th:id="'updateProductModal-' + ${product.id_product}" tabindex="-1" role="dialog" aria-labelledby="updateProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -261,6 +264,7 @@
                         <input type="number" id="updateStock" name="stock" th:value="${product.stock}" class="form-control" required>
                         <div class="invalid-feedback">Stock is required.</div>
                     </div>
+
                     <button type="submit" class="btn btn-primary">Update</button>
                 </form>
             </div>

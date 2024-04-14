@@ -1,5 +1,6 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.OrderDTO;
 import com.example.carturestibackend.dtos.OrderItemDTO;
@@ -130,17 +131,28 @@ public class OrderService {
         order.setOrder_date(orderDTO.getOrder_date());
         order.setUser(user);
 
+        // Initialize the list of products if null
+        if (order.getProducts() == null) {
+            order.setProducts(new ArrayList<>());
+        }
+
         double totalPrice = 0.0;
 
         for (String productId : orderDTO.getId_products()) {
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-            // Set the bidirectional relationship
-            product.setOrder(order); // Set the Order reference in Product
+            if (product.getStock() <= 0) {
+                throw new RuntimeException("Insufficient stock for product with ID: " + productId);
+            }
+
             order.getProducts().add(product); // Add Product to Order's products collection
 
             totalPrice += product.getPrice();
+
+            // Decrease the stock of the product
+            product.setStock(product.getStock() - 1);
+            productRepository.save(product);
         }
 
         order.setTotal_price(totalPrice);
@@ -158,6 +170,7 @@ public class OrderService {
 
 
 
+
     /**
      * Deletes an order from the database by its ID.
      *
@@ -170,17 +183,27 @@ public class OrderService {
         if (orderOptional.isPresent()) {
             Order order = orderOptional.get();
 
-            order.setUser(null);
-            order.setProducts(null);
+            // Iterate through products to increase stock
+            for (Product product : order.getProducts()) {
+                product.setStock(product.getStock() + 1);
+                product.setOrders(null); // Remove association with the order
+                productRepository.save(product);
+            }
 
-            orderRepository.save(order);
+            // Remove association with user
+            order.setUser(null);
+
+            // Delete the order
             orderRepository.delete(order);
+
             LOGGER.debug(OrderLogger.ORDER_DELETED, id_order);
         } else {
             LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id_order);
             throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id_order);
         }
     }
+
+
 
     /**
      * Updates an existing order in the database.

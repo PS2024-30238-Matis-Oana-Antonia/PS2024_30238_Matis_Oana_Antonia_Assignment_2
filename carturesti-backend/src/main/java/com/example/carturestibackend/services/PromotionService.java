@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -49,13 +50,41 @@ public class PromotionService {
      * @return A list of PromotionDTO objects representing the promotions.
      */
     public List<PromotionDTO> findPromotions() {
-        LOGGER.error(PromotionLogger.ALL_PROMOTIONS_RETRIEVED);
-        List<Promotion> promotionList = promotionRepository.findAll();
-        return promotionList.stream()
-                .map(PromotionMapper::toPromotionDTO)
-                .collect(Collectors.toList());
-    }
+        LOGGER.info(PromotionLogger.ALL_PROMOTIONS_RETRIEVED);
+        List<Promotion> promotions = promotionRepository.findAll();
+        List<PromotionDTO> promotionDTOs = new ArrayList<>();
 
+        for (Promotion promotion : promotions) {
+            PromotionDTO promotionDTO = PromotionMapper.toPromotionDTO(promotion);
+            List<String> productIdsWithPromotion = new ArrayList<>();
+            double totalPromotionPrice = 0.0; // Initialize total promotion price
+
+            for (Product product : promotion.getProducts()) {
+                String productId = product.getId_product();
+                double promotionPercentage = promotion.getPercentage();
+                double originalPrice = product.getPrice();
+                double promotionPrice = originalPrice;
+
+                if (promotionPercentage > 0) {
+                    promotionPrice = originalPrice * (1 - promotionPercentage / 100);
+                }
+
+                totalPromotionPrice += promotionPrice; // Add promotion price to total promotion price
+
+                // Update the product price in the database
+                product.setPrice_promotion(promotionPrice);
+                productRepository.save(product); // Save the updated product
+
+                productIdsWithPromotion.add(productId);
+            }
+
+            // Set the list of product IDs with promotion prices in the PromotionDTO
+            promotionDTO.setId_products(productIdsWithPromotion);
+            promotionDTOs.add(promotionDTO);
+        }
+
+        return promotionDTOs;
+    }
     /**
      * Retrieves a promotion by its ID.
      *
@@ -80,10 +109,43 @@ public class PromotionService {
      */
     public String insert(PromotionDTO promotionDTO) {
         Promotion promotion = PromotionMapper.fromPromotionDTO(promotionDTO);
-        PromotionValidator.validatePromotion(promotion);
-        promotion = (Promotion) promotionRepository.save(promotion);
-        LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotion.getId_promotion());
-        return promotion.getId_promotion();
+        if (promotionValidator.validatePromotion(promotion)) {
+            promotion = promotionRepository.save(promotion);
+            LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotion.getId_promotion());
+
+            // Check if product IDs are not null
+            List<String> productIds = promotionDTO.getId_products();
+            if (productIds != null) {
+                // Iterate over each product ID and associate it with the promotion
+                for (String productId : productIds) {
+                    Product product = productRepository.findById(productId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+
+                    // Apply the promotion percentage to the product price
+                    double promotionPercentage = promotion.getPercentage();
+                    double originalPrice = product.getPrice();
+                    double discountedPrice = originalPrice;
+
+                    if (promotionPercentage > 0) {
+                        discountedPrice = originalPrice * (1 - promotionPercentage / 100);
+                    }
+
+                    // Update the product price with the discounted price
+                    product.setPrice(discountedPrice);
+
+                    // Associate the product with the promotion
+                    product.setPromotion(promotion);
+
+                    // Save the product with the updated association and price
+                    productRepository.save(product);
+                }
+            }
+
+            return promotion.getId_promotion();
+        } else {
+            LOGGER.error(PromotionLogger.PROMOTION_INSERT_FAILED_INVALID_DATA);
+            throw new IllegalArgumentException("Invalid promotion data");
+        }
     }
 
     /**

@@ -122,6 +122,7 @@
                                 </ul>
                                 <span th:unless="${sale != null and sale.id_products != null and !sale.id_products.isEmpty()}">No product IDs</span>
                             </td>
+
                             <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateSaleModal-' + ${sale.id_sale}">Edit</button>
                                 <form th:if="${sale != null}" id="deleteForm-${sale.id_sale}" method="POST" th:action="@{/sale/deleteSale}">
@@ -154,12 +155,7 @@
                         <input type="number" id="discount_percentage" name="discount_percentage" class="form-control" required>
                         <div class="invalid-feedback">Discount Percentage is required.</div>
                     </div>
-                    <div class="form-group">
-                        <label for="id_product">Product IDs:</label>
-                        <input type="text" id="id_product" name="id_product" class="form-control" required>
-                        <div class="invalid-feedback">Product IDs are required.</div>
-                    </div>
-                    <!-- Add more fields as needed for the sale entity -->
+
                     <button type="submit" class="btn btn-primary">Add Sale</button>
                 </form>
             </div>
@@ -184,7 +180,7 @@
                     <input type="hidden" id="id_sale" name="id_sale" th:value="${sale.id_sale}">
                     <div class="form-group">
                         <label for="updateDiscountPercentage">Discount Percentage:</label>
-                        <input type="number" id="updateDiscountPercentage" name="discountPercentage" th:value="${sale.discount_percentage}" class="form-control" required>
+                        <input type="number" id="updateDiscountPercentage" name="discount_percentage" th:value="${sale.discount_percentage}" class="form-control" required>
                         <div class="invalid-feedback">Discount Percentage is required.</div>
                     </div>
                     <!-- Add more fields as needed for updating the sale -->

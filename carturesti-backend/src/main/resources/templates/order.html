@@ -199,22 +199,7 @@
                     <input type="hidden" id="id_order" name="id_order" th:value="${order.id_order}">
                     <div class="form-group">
                         <label for="updateOrderDate">Order Date:</label>
-                        <input type="date" id="updateOrderDate" name="orderDate" th:value="${order.order_date}" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="updateTotalQuantity">Total Quantity:</label>
-                        <input type="number" id="updateTotalQuantity" name="totalQuantity" th:value="${order.total_quantity}" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="updateTotalPrice">Total Price:</label>
-                        <input type="number" id="updateTotalPrice" name="totalPrice" th:value="${order.total_price}" class="form-control" required>
-                    </div>
-                    <!-- Add dropdown/select for selecting user -->
-                    <div class="form-group">
-                        <label for="updateUser">User:</label>
-                        <select id="updateUser" name="user" class="form-control" required>
-                            <option th:each="user: ${users}" th:value="${user.id}" th:text="${user.username}" th:selected="${user.id == order.user.id}"></option>
-                        </select>
+                        <input type="date" id="updateOrderDate" name="order_date" th:value="${order.order_date}" class="form-control" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Update Order</button>
                 </form>
@@ -230,6 +215,24 @@
 <div class="container-fluid text-center mt-4">
     <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
 </div>
+
+<script>
+    // JavaScript code to dynamically add input fields for products
+    document.addEventListener('DOMContentLoaded', function () {
+        const addProductButton = document.getElementById('add_product_button');
+        const orderItemsContainer = document.getElementById('order_items_container');
+
+        addProductButton.addEventListener('click', function () {
+            const productDiv = document.createElement('div');
+            productDiv.classList.add('form-group');
+            productDiv.innerHTML = `
+                <label for="id_products">Order Item:</label>
+                <input type="text" name="id_products[]" class="form-control product-id" placeholder="Enter Order Item ID" required>
+            `;
+            orderItemsContainer.appendChild(productDiv);
+        });
+    });
+</script>
 
 </body>
 </html>

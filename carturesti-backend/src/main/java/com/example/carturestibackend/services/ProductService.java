@@ -1,15 +1,12 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.ProductLogger;
-import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.*;
 import com.example.carturestibackend.entities.*;
-import com.example.carturestibackend.repositories.CategoryRepository;
-import com.example.carturestibackend.repositories.OrderItemRepository;
-import com.example.carturestibackend.repositories.ProductRepository;
-import com.example.carturestibackend.repositories.ReviewRepository;
+import com.example.carturestibackend.repositories.*;
 import com.example.carturestibackend.validators.ProductValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +14,6 @@ import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,25 +28,29 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductValidator productValidator;
-    private SaleService saleService;
+
+    private final PromotionRepository promotionRepository;
+    private final SaleRepository saleRepository;
     private final ReviewRepository reviewRepository;
     private final OrderItemRepository orderItemRepository ;
     /**
      * Constructs a new ProductService with the specified ProductRepository.
      *
-     * @param productRepository  The ProductRepository used to interact with product data in the database.
+     * @param productRepository   The ProductRepository used to interact with product data in the database.
      * @param categoryRepository
      * @param productValidator
-     * @param saleService
+     * @param promotionRepository
+     * @param saleRepository
      * @param reviewRepository
      * @param orderItemRepository
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, SaleService saleService, ReviewRepository reviewRepository, OrderItemRepository orderItemRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, PromotionRepository promotionRepository, SaleRepository saleRepository, ReviewRepository reviewRepository, OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
-        this.saleService = saleService;
+        this.promotionRepository = promotionRepository;
+        this.saleRepository = saleRepository;
         this.reviewRepository = reviewRepository;
         this.orderItemRepository = orderItemRepository;
     }
@@ -61,11 +61,45 @@ public class ProductService {
      * @return A list of ProductDTO objects representing the products.
      */
     public List<ProductDTO> findProducts() {
-        LOGGER.error(ProductLogger.ALL_PRODUCTS_RETRIEVED);
+        LOGGER.info(ProductLogger.ALL_PRODUCTS_RETRIEVED);
         List<Product> productList = productRepository.findAll();
-        return productList.stream()
-                .map(ProductMapper::toProductDTO)
-                .collect(Collectors.toList());
+        List<ProductDTO> productDTOs = new ArrayList<>();
+
+        for (Product product : productList) {
+            ProductDTO productDTO = ProductMapper.toProductDTO(product);
+
+
+            double originalPrice = product.getPrice();
+
+            Sale sale = product.getSale();
+            if(sale != null){
+                double discountPercentage = sale.getDiscount_percentage();
+                double discountPrice = originalPrice;
+                if (discountPercentage > 0) {
+                    discountPrice = originalPrice * (1 - discountPercentage / 100);
+                }
+
+                productDTO.setPrice_discount(discountPrice);
+
+            }
+
+            // Calculate promotion price if promotion is applicable
+            Promotion promotion = product.getPromotion();
+            if (promotion != null) {
+                double promotionPercentage = promotion.getPercentage();
+                double promotionPrice = originalPrice;
+
+                if (promotionPercentage > 0) {
+                    promotionPrice = originalPrice * (1 - promotionPercentage / 100);
+                }
+
+                productDTO.setPrice_promotion(promotionPrice); // Set promotion price in DTO
+            }
+
+            productDTOs.add(productDTO);
+        }
+
+        return productDTOs;
     }
 
     /**
@@ -93,8 +127,6 @@ public class ProductService {
     public String insert(ProductDTO productDTO) {
         // Create a new product entity from the DTO
         Product product = ProductMapper.fromProductDTO(productDTO);
-
-        // Set promotion, sale, and reviews to null if their IDs are not provided
         if (productDTO.getId_promotion() == null || productDTO.getId_promotion().isEmpty()) {
             product.setPromotion(null);
         }
@@ -105,17 +137,14 @@ public class ProductService {
             product.setReviews(null);
         }
 
-        // Validate and save the product entity
+
         ProductValidator.validateProduct(product);
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
 
-
-        // Create a list containing the product and associate it with the order item
         List<Product> productList = new ArrayList<>();
         productList.add(product);
 
-        // Return the ID of the inserted product
         return product.getId_product();
     }
 
@@ -126,6 +155,7 @@ public class ProductService {
      * @param id_product The ID of the product to delete.
      * @throws ResourceNotFoundException if the product with the specified ID is not found.
      */
+    @Transactional
     public void deleteProductById(String id_product) {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (productOptional.isPresent()) {
@@ -134,17 +164,20 @@ public class ProductService {
             // Get the category associated with the product
             Category category = product.getCategory();
 
-            if(product.getCategory()!=null) {
-                product.setCategory(null);
+            if (category != null) {
+                // Remove the product from the category's list of products
+                category.getProducts().remove(product);
+                categoryRepository.save(category);
             }
+
             // Disassociate the product from its other associations
             product.setPromotion(null);
             product.setSale(null);
             product.setReviews(null);
-            product.setOrderItems(null);
 
             // Save the product without its associations
             productRepository.save(product);
+
             // Delete the product
             productRepository.delete(product);
 
@@ -157,6 +190,7 @@ public class ProductService {
 
 
 
+
     /**
      * Updates an existing product in the database.
      *
@@ -165,6 +199,7 @@ public class ProductService {
      * @return The updated ProductDTO object.
      * @throws ResourceNotFoundException if the product with the specified ID is not found.
      */
+    @Transactional
     public ProductDTO updateProduct(String id_product, ProductDTO productDTO) {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (!productOptional.isPresent()) {
@@ -179,11 +214,30 @@ public class ProductService {
         existingProduct.setAuthor(productDTO.getAuthor());
         existingProduct.setStock(productDTO.getStock());
 
+        // Update promotion
+        if (productDTO.getId_promotion() != null) {
+            Promotion promotion = promotionRepository.findById(productDTO.getId_promotion())
+                    .orElseThrow(() -> new ResourceNotFoundException("Promotion not found with ID: " + productDTO.getId_promotion()));
+            existingProduct.setPromotion(promotion);
+        } else {
+            existingProduct.setPromotion(null);
+        }
+
+        // Update sale
+        if (productDTO.getId_sale() != null) {
+            Sale sale = saleRepository.findById(productDTO.getId_sale())
+                    .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + productDTO.getId_sale()));
+            existingProduct.setSale(sale);
+        } else {
+            existingProduct.setSale(null);
+        }
+
         Product updatedProduct = productRepository.save(existingProduct);
         LOGGER.debug(ProductLogger.PRODUCT_UPDATED, updatedProduct.getId_product());
 
         return ProductMapper.toProductDTO(updatedProduct);
     }
+
 
     public void decreaseProductStock(String productId, long quantity) {
         Optional<Product> productOptional = productRepository.findById(productId);

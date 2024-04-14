@@ -30,6 +30,12 @@ public class Product {
     @Column(name = "price", nullable = false)
     private double price;
 
+    @Column(name = "price_discount", nullable = false)
+    private double price_discount;
+
+    @Column(name = "price_promotion", nullable = false)
+    private double price_promotion;
+
     @Column(name = "description", nullable = false)
     private String description;
 
@@ -62,7 +68,6 @@ public class Product {
     @JoinColumn(name = "cart_id")
     private Cart cart;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "order_id")
-    private Order order;
+    @ManyToMany(mappedBy = "products", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Order> orders;
 }
