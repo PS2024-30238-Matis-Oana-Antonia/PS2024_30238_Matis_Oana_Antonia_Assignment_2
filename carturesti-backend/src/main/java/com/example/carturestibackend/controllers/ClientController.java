@@ -29,6 +29,7 @@ public class ClientController {
         // Add products to the ModelAndView
         modelAndView.addObject("products", products);
 
+
         // Set the view name
         modelAndView.setViewName("client");
 

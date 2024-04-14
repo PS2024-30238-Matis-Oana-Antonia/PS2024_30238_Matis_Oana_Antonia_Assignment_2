@@ -57,6 +57,7 @@ public class ProductController {
         return modelAndView;
     }
 
+
     /**
      * Inserts a new product.
      *
@@ -157,4 +158,7 @@ public class ProductController {
         }
         return mav;
     }
+
+
+
 }

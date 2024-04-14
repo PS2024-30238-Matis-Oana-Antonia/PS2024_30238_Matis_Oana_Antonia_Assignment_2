@@ -31,7 +31,7 @@ public class OrderItem {
     @Column(name = "price_per_unit", nullable = false)
     private double price_per_unit;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
     private Order order;
 
@@ -40,12 +40,8 @@ public class OrderItem {
             name = "order_item_product",
             joinColumns = @JoinColumn(name = "id_order_item"),
             inverseJoinColumns = @JoinColumn(name = "id_product"))
-    @JsonIgnore
     private List<Product> products;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "cart_id")
-    private Cart cart;
 
 }
 

@@ -155,12 +155,50 @@
         .back-to-home:hover {
             background-color: #c82333;
         }
+
+        .container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .back-container {
+            background-color: #d2b48c; /* Light brown background */
+            padding: 10px;
+            border-radius: 5px;
+            margin-right: 20px; /* Add margin to separate from the card */
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #5C4033; /* Light brown background */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #b39b77; /* Darker brown on hover */
+        }
+
+
     </style>
 </head>
 <body>
 <div class="title-container">
     <h1 class="title">Welcome to the Client Page!</h1>
-    <button class="add-to-cart cart-icon">🛒</button>
+    <div class="button-container">
+        <button class="add-to-cart cart-icon" onclick="goToCart()">🛒</button>
+        <button class="place-order button" onclick="placeOrder()">Place Order</button>
+    </div>
 </div>
 
 <div class="products-info">
@@ -172,68 +210,62 @@
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <h5 class="card-title" th:text="${product.name}"></h5>
+                <p class="card-text" th:text="${product.description}"></p>
+                <p class="card-text">Author: <span th:text="${product.author}"></span></p>
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group mt-2">
-                        <button type="button" class="btn btn-sm btn-primary mr-2 view-details" data-toggle="modal" data-target="#productModal" data-product-id="${product.id}" data-product-name="${product.name}" data-product-description="${product.description}" data-product-price="${product.price}" data-product-author="${product.author}">Add</button>
+                        <form th:action="@{'/cart/addProduct/' + ${product.id_product}}" method="post">
+                            <button type="submit" class="btn btn-primary">Add to Cart</button>
+                        </form>
+
                     </div>
-                    <small class="text-muted" th:text="${product.price}"></small>
+                    <small class="text-muted">Price: <span th:text="${product.price}"></span></small>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<a href="/" class="back-to-home">Back to Home Page</a>
-
-<!-- Modal for displaying product details -->
-<div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productModalLabel">Product Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Product details dynamically populated from data attributes -->
-                <h5 class="name"></h5>
-                <p class="description"></p>
-                <p class="price"></p>
-                <p class="author"></p>
-                <!-- Add more fields as needed -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-        </div>
+<div class="container">
+    <div class="back-container">
+        <button class="back-button" onclick="window.location.href='/'">Back to Home</button>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<!-- Include the full version of jQuery and other scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
 <script>
-    $('.view-details').click(function() {
-        // Retrieve product details from data attributes
-        var productName = $(this).data('product-name');
-        var productDescription = $(this).data('product-description');
-        var productPrice = $(this).data('product-price');
-        var productAuthor = $(this).data('product-author');
-
-        // Populate modal with product details
-        $('#productModal .name').text(productName);
-        $('#productModal .description').text(productDescription);
-        $('#productModal .price').text(productPrice);
-        $('#productModal .author').text(productAuthor);
-
-        // Show the modal
-        $('#productModal').modal('show');
-    });
+    function addToCart(productId) {
+        $.ajax({
+            type: "POST",
+            url: "/shoppingCart/addProduct/" + productId, // Update the URL with the correct endpoint
+            success: function(response) {
+                alert("Product added to cart successfully");
+                // Redirect to the cart page
+                window.location.href = "/cart";
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+            }
+        });
+    }
 
 </script>
 
+<script>
+    function goToCart() {
+        window.location.href = "/cart";
+    }
+</script>
+
+<script>
+    function placeOrder() {
+        window.location.href = "/order";
+    }
+</script>
 
 </body>
 </html>

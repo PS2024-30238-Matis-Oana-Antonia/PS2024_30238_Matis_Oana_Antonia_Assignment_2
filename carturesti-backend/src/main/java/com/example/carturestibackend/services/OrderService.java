@@ -8,6 +8,8 @@ import com.example.carturestibackend.dtos.mappers.OrderMapper;
 import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
+import com.example.carturestibackend.entities.User;
+import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.OrderRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
@@ -19,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,22 +34,26 @@ public class OrderService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderService.class);
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderValidator orderValidator;
     private final OrderItemService orderItemService;
+
     /**
      * Constructs a new OrderService with the specified OrderRepository.
      *
-     * @param orderRepository   The OrderRepository used to interact with order data in the database.
+     * @param orderRepository     The OrderRepository used to interact with order data in the database.
+     * @param orderItemRepository
      * @param userRepository
      * @param productRepository
      * @param orderValidator
      * @param orderItemService
      */
     @Autowired
-    public OrderService(OrderRepository orderRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator, OrderItemService orderItemService) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator, OrderItemService orderItemService) {
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderValidator = orderValidator;
@@ -69,25 +74,27 @@ public class OrderService {
     }
 
     private OrderDTO calculateOrderTotals(Order order) {
-        List<OrderItem> orderItems = order.getOrderItems();
+        List<Product> products = order.getProducts(); // Assuming you have a method to retrieve products from the order
+
         long totalQuantity = 0;
         double totalPrice = 0;
 
-        for (OrderItem orderItem : orderItems) {
-            OrderItemDTO orderItemDTO = orderItemService.findOrderItemById(orderItem.getId_order_item());
-            if (orderItemDTO != null) {
-                totalQuantity += orderItemDTO.getQuantity();
-                totalPrice += orderItemDTO.getQuantity() * orderItemDTO.getPrice_per_unit();
-            } else {
-                LOGGER.warn("OrderItemDTO is null for orderItemId: {}", orderItem.getId_order_item());
-            }
+        // Iterate through the products associated with the order
+        for (Product product : products) {
+            // Calculate total quantity and total price based on the products
+            totalQuantity += 1;// Assuming there's a method to get quantity from Product entity
+            totalPrice += product.getPrice(); // Assuming there's a method to get price from Product entity
         }
 
+        // Update order totals
         order.setTotal_quantity(totalQuantity);
         order.setTotal_price(totalPrice);
 
+        // Return OrderDTO
         return OrderMapper.toOrderDTO(order);
     }
+
+
 
 
     /**
@@ -116,37 +123,37 @@ public class OrderService {
 
     @Transactional
     public String insert(OrderDTO orderDTO) {
-        // If order_date is null, set it to the current date
-        LocalDate orderDate = orderDTO.getOrder_date() != null ? orderDTO.getOrder_date() : LocalDate.now();
+        User user = userRepository.findById(orderDTO.getId_user())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + orderDTO.getId_user()));
 
-        Order order = OrderMapper.fromOrderDTO(orderDTO);
-        order.setOrder_date(orderDate); // Set the order_date before saving
+        Order order = new Order();
+        order.setOrder_date(orderDTO.getOrder_date());
+        order.setUser(user);
 
-        // Save the order
-        order = orderRepository.save(order);
-        LOGGER.debug(OrderLogger.ORDER_INSERTED, order.getId_order());
+        double totalPrice = 0.0;
 
-        // Create and save order items
-        List<String> orderItemIds = orderDTO.getId_orderItems();
-        if (orderItemIds != null) {
-            for (String orderItemId : orderItemIds) {
-                // Assuming you have a method to retrieve order item details by ID
-                OrderItemDTO orderItemDTO = orderItemService.findOrderItemById(orderItemId);
-                if (orderItemDTO != null) {
-                    // Set the order for the order item
-                    OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
-                    orderItem.setOrder(order); // Associate the order with the order item
+        for (String productId : orderDTO.getId_products()) {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-                    // Set the quantity for the order item
-                    orderItem.setQuantity(orderItemDTO.getQuantity());
+            // Set the bidirectional relationship
+            product.setOrder(order); // Set the Order reference in Product
+            order.getProducts().add(product); // Add Product to Order's products collection
 
-                    // Save the order item
-                    orderItemService.insert(OrderItemMapper.toOrderItemDTO(orderItem));
-                }
-            }
+            totalPrice += product.getPrice();
         }
 
-        return order.getId_order();
+        order.setTotal_price(totalPrice);
+
+        try {
+            order = orderRepository.save(order);
+            return order.getId_order();
+        } catch (Exception e) {
+            // Handle any database or persistence-related exceptions
+            // Log the exception for troubleshooting purposes
+            e.printStackTrace();
+            throw new RuntimeException("Failed to save order: " + e.getMessage());
+        }
     }
 
 
@@ -154,20 +161,26 @@ public class OrderService {
     /**
      * Deletes an order from the database by its ID.
      *
-     * @param id The ID of the order to delete.
+     * @param id_order The ID of the order to delete.
      * @throws ResourceNotFoundException if the order with the specified ID is not found.
      */
-    public void deleteOrderById(String id) {
-        Optional<Order> orderOptional = orderRepository.findById(id);
+    @Transactional
+    public void deleteOrderById(String id_order) {
+        Optional<Order> orderOptional = orderRepository.findById(id_order);
         if (orderOptional.isPresent()) {
-            orderRepository.delete(orderOptional.get());
-            LOGGER.debug(OrderLogger.ORDER_DELETED, id);
+            Order order = orderOptional.get();
+
+            order.setUser(null);
+            order.setProducts(null);
+
+            orderRepository.save(order);
+            orderRepository.delete(order);
+            LOGGER.debug(OrderLogger.ORDER_DELETED, id_order);
         } else {
-            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
-            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id_order);
+            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id_order);
         }
     }
-
 
     /**
      * Updates an existing order in the database.
@@ -194,4 +207,12 @@ public class OrderService {
 
         return OrderMapper.toOrderDTO(updatedOrder);
     }
+
+
+
+    private void updateOrderTotal(Order order, OrderItem orderItem) {
+        order.setTotal_quantity(order.getTotal_quantity() + orderItem.getQuantity());
+        order.setTotal_price(order.getTotal_price() + (orderItem.getPrice_per_unit() * orderItem.getQuantity()));
+    }
+
 }

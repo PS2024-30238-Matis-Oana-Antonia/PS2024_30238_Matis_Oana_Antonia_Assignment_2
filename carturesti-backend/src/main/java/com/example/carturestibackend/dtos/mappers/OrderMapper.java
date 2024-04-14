@@ -20,8 +20,8 @@ public class OrderMapper {
                 .total_quantity(order.getTotal_quantity())
                 .total_price(order.getTotal_price())
                 .id_user(Optional.ofNullable(order.getUser()).map(User::getId_user).orElse(null))
-                .id_orderItems(Optional.ofNullable(order.getOrderItems())
-                        .map(items -> items.stream().map(OrderItem::getId_order_item).collect(Collectors.toList()))
+                .id_products(Optional.ofNullable(order.getProducts())
+                        .map(items -> items.stream().map(Product::getId_product).collect(Collectors.toList()))
                         .orElse(null)) // Map only IDs if order items not null
                 .build();
     }
@@ -32,8 +32,8 @@ public class OrderMapper {
                 .total_price(orderDTO.getTotal_price())
                 .total_quantity(orderDTO.getTotal_quantity())
                 .user(Optional.ofNullable(orderDTO.getId_user()).map(id -> User.builder().id_user(id).build()).orElse(null))
-                .orderItems(Optional.ofNullable(orderDTO.getId_orderItems())
-                        .map(ids -> ids.stream().map(id -> OrderItem.builder().id_order_item(id).build()).collect(Collectors.toList()))
+                .products(Optional.ofNullable(orderDTO.getId_products())
+                        .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
                         .orElse(null))
                 .build();
     }

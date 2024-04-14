@@ -3,10 +3,10 @@ package com.example.carturestibackend.services;
 import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.dtos.mappers.UserMapper;
-import com.example.carturestibackend.entities.User;
-import com.example.carturestibackend.repositories.OrderRepository;
-import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.entities.*;
+import com.example.carturestibackend.repositories.*;
 import com.example.carturestibackend.validators.UserValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
@@ -25,13 +25,19 @@ import java.util.stream.Collectors;
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final CartRepository cartRepository;
+    private final OrderItemRepository orderItemRepository;
     private final UserValidator userValidator;
 
     @Autowired
-    public UserService(UserRepository userRepository, OrderRepository orderRepository, UserValidator userValidator) {
+    public UserService(UserRepository userRepository, ProductRepository productRepository, OrderRepository orderRepository, CartRepository cartRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
+        this.productRepository = productRepository;
         this.orderRepository = orderRepository;
+        this.cartRepository = cartRepository;
+        this.orderItemRepository = orderItemRepository;
         this.userValidator = userValidator;
     }
 
@@ -122,11 +128,34 @@ public class UserService {
      * @param userDTO The UserDTO object representing the user to insert.
      * @return The ID of the newly inserted user.
      */
+    @Transactional
     public String insert(UserDTO userDTO) {
+        // Create a new user entity from the DTO
         User user = UserMapper.fromUserDTO(userDTO);
+
+        // Validate the user
         UserValidator.isValid(user);
+
+        // Create a new cart for the user
+        Cart cart = new Cart();
+
+        // Save the cart
+        cart = cartRepository.save(cart);
+
+        // Set the cart for the user
+        user.setCart(cart);
+
+        // Save the user
         user = userRepository.save(user);
+
+        // Associate the user with the cart
+        cart.setUser(user);
+
+        // Save the cart again to update the association
+        cart = cartRepository.save(cart);
+
         LOGGER.debug(UserLogger.USER_INSERTED, user.getId_user());
+
         return user.getId_user();
     }
 
@@ -137,16 +166,24 @@ public class UserService {
      * @param id_user The ID of the user to delete.
      * @throws ResourceNotFoundException if the user with the specified ID is not found.
      */
+    @Transactional
     public void deleteUserById(String id_user) {
         Optional<User> userOptional = userRepository.findById(id_user);
         if (userOptional.isPresent()) {
-            userRepository.delete(userOptional.get());
+            User user = userOptional.get();
+            if (user.getCart() != null) {
+                // Delete the associated cart
+                cartRepository.delete(user.getCart());
+            }
+            // Delete the user
+            userRepository.delete(user);
             LOGGER.debug(UserLogger.USER_DELETED, id_user);
         } else {
             LOGGER.error(UserLogger.USER_NOT_FOUND_BY_ID, id_user);
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
         }
     }
+
 
     /**
      * Updates an existing user in the database.
@@ -176,5 +213,16 @@ public class UserService {
 
         return UserMapper.toUserDTO(updatedUser);
     }
+
+    public String findUserIdByName(String name) {
+        User user = userRepository.findByName(name);
+        if (user != null) {
+            return user.getId_user(); // Assuming user ID is stored as a String
+        } else {
+            return null;
+        }
+    }
+
+
 }
 

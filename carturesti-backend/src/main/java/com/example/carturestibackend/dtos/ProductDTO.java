@@ -23,4 +23,5 @@ public class ProductDTO {
     private List<String> id_orderItems; // Changed to hold OrderItemDTO instead of just IDs
     private String id_promotion;
     private String id_sale;
+    private String id_order;
 }

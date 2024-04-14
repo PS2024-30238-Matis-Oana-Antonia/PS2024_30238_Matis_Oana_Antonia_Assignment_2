@@ -119,10 +119,12 @@
                             <td th:text="${order.id_user}"></td>
                             <td>
                                 <ul>
-                                    <!-- Iterate over id_orderItems for each order -->
-                                    <li th:each="itemId: ${order.id_orderItems}" th:text="${itemId}"></li>
+                                    <!-- Iterate over order items for each order -->
+                                    <li th:each="productId: ${order.id_products}" th:text="${productId}"></li>
+
                                 </ul>
                             </td>
+
                             <td>
                                 <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateOrderModal-' + ${order.id_order}">Edit</button>
                                 <form th:if="${order != null}" id="deleteForm-${order.id_order}" method="POST" th:action="@{/order/delete}">
@@ -162,12 +164,12 @@
 
                     <!-- Order Items with Quantity -->
                     <div class="form-group">
-                        <label for="id_orderItems">Order Items:</label>
-                        <div id="id_orderItems">
+                        <label for="id_products">Order Items:</label>
+                        <div id="id_products">
                             <!-- Fields for each order item -->
-                            <div class="order-item">
-                                <input type="text" name="id_orderItems" class="form-control order-item-id" placeholder="Enter Order Item ID" required>
-                                <input type="number" name="total_quantity" class="total_quantity" placeholder="Enter Quantity" required>
+                            <div class="product">
+                                <input type="text" name="id_products" class="form-control product-id" placeholder="Enter Order Item ID" required>
+
                             </div>
                         </div>
                     </div>
@@ -179,9 +181,6 @@
         </div>
     </div>
 </div>
-
-
-
 
 
 

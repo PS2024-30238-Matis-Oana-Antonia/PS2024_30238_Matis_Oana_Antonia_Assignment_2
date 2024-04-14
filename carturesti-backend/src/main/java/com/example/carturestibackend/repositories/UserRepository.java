@@ -1,5 +1,6 @@
 package com.example.carturestibackend.repositories;
 
+import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.entities.Order;
 import com.example.carturestibackend.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,5 +15,7 @@ public interface UserRepository extends JpaRepository<User,String> {
     User findByNameAndPassword(String name, String password);
 
     User findByRole(String role);
+
+    User findUserIdByName(String name);
 
 }

@@ -4,6 +4,7 @@ import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.entities.Cart;
 import com.example.carturestibackend.entities.OrderItem;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.User;
 
 import java.util.Collections;
@@ -20,8 +21,8 @@ public class CartMapper {
         return CartDTO.builder()
                 .id_cart(cart.getId_cart())
                 .id_user(Optional.ofNullable(cart.getUser()).map(User::getId_user).orElse(null))
-                .id_orderItems(Optional.ofNullable(cart.getOrderItems())
-                        .map(items -> items.stream().map(OrderItem::getId_order_item).collect(Collectors.toList()))
+                .id_products(Optional.ofNullable(cart.getProducts())
+                        .map(items -> items.stream().map(Product::getId_product).collect(Collectors.toList()))
                         .orElse(null))
                 .build();
     }
@@ -32,8 +33,8 @@ public class CartMapper {
                 .user(User.builder()
                         .id_user(cartDTO.getId_user())
                         .build())
-                .orderItems(Optional.ofNullable(cartDTO.getId_orderItems())
-                        .map(ids -> ids.stream().map(id -> OrderItem.builder().id_order_item(id).build()).collect(Collectors.toList()))
+                .products(Optional.ofNullable(cartDTO.getId_products())
+                        .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
                         .orElse(Collections.emptyList())) // Default to empty list if null
                 .build();
     }

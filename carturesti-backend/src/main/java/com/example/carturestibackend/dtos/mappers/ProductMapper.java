@@ -36,6 +36,10 @@ public class ProductMapper {
                 .id_sale(Optional.ofNullable(product.getSale())
                         .map(Sale::getId_sale)
                         .orElse(null))
+                .id_order(Optional.ofNullable(product.getOrder())
+                .map(Order::getId_order)
+                .orElse(null))
+
                 .build();
     }
 
@@ -60,6 +64,9 @@ public class ProductMapper {
                         .orElse(null))
                 .sale(Optional.ofNullable(productDTO.getId_sale())
                         .map(id -> Sale.builder().id_sale(id).build())
+                        .orElse(null))
+                .order(Optional.ofNullable(productDTO.getId_order())
+                        .map(id -> Order.builder().id_order(id).build())
                         .orElse(null))
                 .build();
     }

@@ -14,5 +14,5 @@ import java.util.List;
 public class CartDTO {
     private String id_cart;
     private String id_user;
-    private List<String> id_orderItems;
+    private List<String> id_products;
 }

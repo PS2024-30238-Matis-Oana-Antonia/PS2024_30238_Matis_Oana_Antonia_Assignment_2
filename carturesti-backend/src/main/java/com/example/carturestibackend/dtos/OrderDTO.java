@@ -18,5 +18,7 @@ public class OrderDTO {
     private double total_price;
     private long total_quantity;
     private String id_user;
-    private List<String> id_orderItems;
+    private List<String> id_products;
+
+
 }

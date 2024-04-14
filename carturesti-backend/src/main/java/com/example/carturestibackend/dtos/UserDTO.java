@@ -1,12 +1,8 @@
 package com.example.carturestibackend.dtos;
 
-import com.example.carturestibackend.entities.Cart;
-import com.example.carturestibackend.entities.Order;
-import com.example.carturestibackend.entities.Review;
 import lombok.*;
 
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter

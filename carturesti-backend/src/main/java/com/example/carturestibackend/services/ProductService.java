@@ -1,12 +1,12 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.ProductLogger;
+import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.*;
-import com.example.carturestibackend.entities.OrderItem;
-import com.example.carturestibackend.entities.Product;
-import com.example.carturestibackend.entities.Review;
+import com.example.carturestibackend.entities.*;
 import com.example.carturestibackend.repositories.CategoryRepository;
+import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.ReviewRepository;
 import com.example.carturestibackend.validators.ProductValidator;
@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,7 +34,7 @@ public class ProductService {
     private final ProductValidator productValidator;
     private SaleService saleService;
     private final ReviewRepository reviewRepository;
-    private final OrderItemService orderItemService;
+    private final OrderItemRepository orderItemRepository ;
     /**
      * Constructs a new ProductService with the specified ProductRepository.
      *
@@ -41,16 +43,16 @@ public class ProductService {
      * @param productValidator
      * @param saleService
      * @param reviewRepository
-     * @param orderItemService
+     * @param orderItemRepository
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, SaleService saleService, ReviewRepository reviewRepository, OrderItemService orderItemService) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, SaleService saleService, ReviewRepository reviewRepository, OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
         this.saleService = saleService;
         this.reviewRepository = reviewRepository;
-        this.orderItemService = orderItemService;
+        this.orderItemRepository = orderItemRepository;
     }
 
     /**
@@ -65,7 +67,6 @@ public class ProductService {
                 .map(ProductMapper::toProductDTO)
                 .collect(Collectors.toList());
     }
-
 
     /**
      * Retrieves a product by its ID.
@@ -90,31 +91,46 @@ public class ProductService {
      * @return The ID of the newly inserted product.
      */
     public String insert(ProductDTO productDTO) {
+        // Create a new product entity from the DTO
         Product product = ProductMapper.fromProductDTO(productDTO);
 
-        // Set promotion and sale to null if their IDs are not provided
+        // Set promotion, sale, and reviews to null if their IDs are not provided
         if (productDTO.getId_promotion() == null || productDTO.getId_promotion().isEmpty()) {
             product.setPromotion(null);
         }
         if (productDTO.getId_sale() == null || productDTO.getId_sale().isEmpty()) {
             product.setSale(null);
         }
+        if (productDTO.getId_reviews() == null || productDTO.getId_reviews().isEmpty()) {
+            product.setReviews(null);
+        }
 
+        // Validate and save the product entity
         ProductValidator.validateProduct(product);
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
 
-        // Create an OrderItem for the inserted product
+        // Now create an associated order item
         OrderItem orderItem = new OrderItem();
-        orderItem.setProducts(List.of(product)); // Set the product for the order item
-        orderItem.setQuantity(1); // Assuming default quantity of 1
-        orderItem.setPrice_per_unit(product.getPrice()); // Set price per unit as product price
+
+        // Create a list containing the product and associate it with the order item
+        List<Product> productList = new ArrayList<>();
+        productList.add(product);
+        orderItem.setProducts(productList);
+
+        // Assuming quantity is always 1 for each product
+        orderItem.setQuantity(1);
+
+        // Assuming price per unit is provided in the product entity
+        orderItem.setPrice_per_unit(product.getPrice());
 
         // Save the order item
-        orderItemService.insert(OrderItemMapper.toOrderItemDTO(orderItem));
+        orderItem = orderItemRepository.save(orderItem);
 
+        // Return the ID of the inserted product
         return product.getId_product();
     }
+
 
 
 
@@ -130,14 +146,22 @@ public class ProductService {
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
 
-            // Disassociate the product from its category, promotion, sale, and reviews
-            product.setCategory(null);
+            // Get the category associated with the product
+            Category category = product.getCategory();
+
+            if(product.getCategory()!=null) {
+                product.setCategory(null);
+            }
+            // Disassociate the product from its other associations
             product.setPromotion(null);
             product.setSale(null);
             product.setReviews(null);
+            product.setOrderItems(null);
 
+            // Save the product without its associations
+            productRepository.save(product);
             // Delete the product
-            productRepository.deleteById(id_product);
+            productRepository.delete(product);
 
             LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);
         } else {
@@ -219,4 +243,7 @@ public class ProductService {
 
         reviewRepository.save(review);
     }
+
+
+
 }

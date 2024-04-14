@@ -46,13 +46,11 @@ public class User {
     @JsonIgnore
     private List<Review> reviews;
 
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnore
     private List<Order> orders;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JsonIgnore
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "cart_id")
     private Cart cart;
-
 }

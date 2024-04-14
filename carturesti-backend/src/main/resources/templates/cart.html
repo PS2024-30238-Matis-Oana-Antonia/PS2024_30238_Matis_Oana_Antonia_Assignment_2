@@ -2,9 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5deb3; /* Light brown background color */
+            color: #333; /* Dark text color */
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+            color: #8B4513; /* Brown heading color */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Text shadow for effect */
+        }
+
+        #cart-items {
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 20px;
+            background-color: #fff; /* White background for cart items */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Box shadow for card effect */
+        }
+
+        #cart-total {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #total-price {
+            color: #8B4513; /* Brown color for total price */
+        }
+
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #8B4513; /* Brown background for button */
+            color: #fff; /* White text color */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #A0522D; /* Darker brown background on hover */
+        }
+    </style>
 </head>
 <body>
+<h1>Your Shopping Cart</h1>
 
+<div id="cart-items">
+    <!-- This is where your cart items will be displayed dynamically -->
+</div>
+
+<div id="cart-total">
+    <!-- Total price of items in the cart will be displayed here -->
+    <h3>Total: <span id="total-price"></span></h3>
+</div>
+
+<script>
+    // Fetch product IDs from the server and update the cart items
+    fetch('/cart/list')
+        .then(response => response.json())
+        .then(data => {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const totalPriceElement = document.getElementById('total-price');
+
+            // Clear existing items
+            cartItemsContainer.innerHTML = '';
+
+            // Populate cart items
+            data.productIds.forEach(productId => {
+                const itemPanel = document.createElement('div');
+                itemPanel.classList.add('product-panel'); // Add product panel class
+
+                // You can customize the content of each panel as per your requirement
+                itemPanel.textContent = productId;
+
+                // Append product panel to cart items container
+                cartItemsContainer.appendChild(itemPanel);
+            });
+
+            // Update total price if needed
+            if (data.total) {
+                totalPriceElement.textContent = data.total;
+            }
+        })
+        .catch(error => console.error('Error fetching cart items:', error));
+</script>
 </body>
 </html>

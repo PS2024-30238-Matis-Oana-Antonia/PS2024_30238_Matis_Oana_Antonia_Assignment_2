@@ -26,7 +26,6 @@ public class UserMapper {
                 .role(user.getRole())
                 .id_reviews(Optional.ofNullable(user.getReviews()).orElse(Collections.emptyList()).stream().map(Review::getId).collect(Collectors.toList()))
                 .id_orders(Optional.ofNullable(user.getOrders()).orElse(Collections.emptyList()).stream().map(Order::getId_order).collect(Collectors.toList()))
-                .id_cart(Optional.ofNullable(user.getCart()).map(Cart::getId_cart).orElse(null))
                 .build();
     }
 

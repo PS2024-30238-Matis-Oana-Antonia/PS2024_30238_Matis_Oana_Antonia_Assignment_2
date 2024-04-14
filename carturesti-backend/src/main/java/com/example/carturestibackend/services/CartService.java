@@ -4,14 +4,18 @@ import com.example.carturestibackend.constants.CartLogger;
 import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.dtos.mappers.CartMapper;
 import com.example.carturestibackend.entities.Cart;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.CartRepository;
+import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.CartValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,17 +28,20 @@ public class CartService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
+    private final ProductRepository productRepository;
     private final CartValidator cartValidator;
 
     /**
      * Constructs a new CartService with the specified CartRepository and CartValidator.
      *
-     * @param cartRepository The CartRepository used to access cart data.
-     * @param cartValidator  The CartValidator used to validate cart data.
+     * @param cartRepository    The CartRepository used to access cart data.
+     * @param productRepository
+     * @param cartValidator     The CartValidator used to validate cart data.
      */
     @Autowired
-    public CartService(CartRepository cartRepository, CartValidator cartValidator) {
+    public CartService(CartRepository cartRepository, ProductRepository productRepository, CartValidator cartValidator) {
         this.cartRepository = cartRepository;
+        this.productRepository = productRepository;
         this.cartValidator = cartValidator;
     }
 
@@ -119,5 +126,21 @@ public class CartService {
             LOGGER.error(CartLogger.CART_NOT_FOUND_BY_ID, id_cart);
             throw new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + id_cart);
         }
+    }
+
+    @Transactional
+    public void addProductToCart(String id_product) {
+
+    }
+
+    @Transactional
+    public void removeProductFromCart(String id_product) {
+
+    }
+
+
+    private List<String> id_products;
+    public List<String> getProductsInCartIds() {
+        return Collections.unmodifiableList(id_products);
     }
 }

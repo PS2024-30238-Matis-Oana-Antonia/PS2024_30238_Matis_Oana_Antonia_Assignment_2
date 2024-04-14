@@ -26,5 +26,5 @@ public class Cart {
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnore
-    private List<OrderItem> orderItems;
+    private List<Product> products;
 }

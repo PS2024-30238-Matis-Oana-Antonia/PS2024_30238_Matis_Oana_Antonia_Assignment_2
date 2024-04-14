@@ -57,4 +57,12 @@ public class Product {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sale_id")
     private Sale sale;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "cart_id")
+    private Cart cart;
+
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "order_id")
+    private Order order;
 }

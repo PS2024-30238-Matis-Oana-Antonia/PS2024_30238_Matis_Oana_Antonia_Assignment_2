@@ -36,13 +36,15 @@ import java.util.Set;
         @Column(name = "total_price", nullable = false)
         private double total_price;
 
-        @ManyToOne
+        private String paymentType;
+
+        @ManyToOne(cascade = CascadeType.MERGE)
         @JoinColumn(name = "id_user")
         private User user;
 
-        @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)
-        @JsonIgnore
-        private List<OrderItem> orderItems;
+        @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+        private List<Product> products = new ArrayList<>();
 
-    }
+
+}
 

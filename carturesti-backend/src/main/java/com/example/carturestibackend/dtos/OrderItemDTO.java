@@ -1,12 +1,8 @@
 package com.example.carturestibackend.dtos;
 
-import com.example.carturestibackend.entities.Cart;
-import com.example.carturestibackend.entities.Order;
-import com.example.carturestibackend.entities.Product;
 import lombok.*;
 
 import java.util.List;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -19,5 +15,7 @@ public class OrderItemDTO {
     private long quantity;
     private double price_per_unit;
     private List<String> id_products;
+    private String id_user;
+    private String id_order;
 
 }
