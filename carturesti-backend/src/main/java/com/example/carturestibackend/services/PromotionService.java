@@ -110,7 +110,10 @@ public class PromotionService {
      */
     public String insert(PromotionDTO promotionDTO) {
         Promotion promotion = PromotionMapper.fromPromotionDTO(promotionDTO);
-        if (promotionValidator.validatePromotion(promotion)) {
+
+        // Validate the promotion and get error messages if invalid
+        boolean isValidPromotion = promotionValidator.validatePromotion(promotion);
+        if (isValidPromotion) {
             promotion = promotionRepository.save(promotion);
             LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotion.getId_promotion());
 
@@ -144,10 +147,12 @@ public class PromotionService {
 
             return promotion.getId_promotion();
         } else {
+            // Log validation errors and throw exception with error messages
             LOGGER.error(PromotionLogger.PROMOTION_INSERT_FAILED_INVALID_DATA);
             throw new IllegalArgumentException("Invalid promotion data");
         }
     }
+
 
     /**
      * Deletes a promotion from the database by its ID.
