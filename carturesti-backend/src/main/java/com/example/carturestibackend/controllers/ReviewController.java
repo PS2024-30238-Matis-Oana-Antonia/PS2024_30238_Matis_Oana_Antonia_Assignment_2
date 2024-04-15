@@ -77,6 +77,14 @@ public class ReviewController {
         return new ModelAndView("redirect:/review");
     }
 
+    @PostMapping("/insertReview2")
+    public ModelAndView insert2(@Valid @ModelAttribute ReviewDTO reviewDTO) {
+        String reviewID = reviewService.insert(reviewDTO);
+        LOGGER.debug(ReviewLogger.REVIEW_INSERTED, reviewID);
+        ModelAndView modelAndView = new ModelAndView("/client");
+        modelAndView.addObject("reviewID", reviewID);
+        return new ModelAndView("redirect:/client");
+    }
 
     /**
      * Retrieves a review by its ID.
@@ -132,4 +140,7 @@ public class ReviewController {
         }
         return mav;
     }
+
+
+
 }

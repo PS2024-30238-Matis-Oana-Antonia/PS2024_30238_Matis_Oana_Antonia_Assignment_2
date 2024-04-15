@@ -118,6 +118,42 @@ public class ProductService {
         return ProductMapper.toProductDTO(productOptional.get());
     }
 
+
+    public List<ProductDTO> findProductsByName(String name) {
+        // Query the database for products with the specified name
+        List<Product> products = productRepository.findByName(name);
+
+        // Map products to ProductDTOs
+        List<ProductDTO> dtos = new ArrayList<>();
+        for (Product product : products) {
+            ProductDTO dto = new ProductDTO();
+            dto.setId_product(product.getId_product());
+            dto.setName(product.getName());
+            dto.setDescription(product.getDescription());
+            dto.setId_category(product.getCategory() != null ? product.getCategory().getId_category() : null);
+            dto.setAuthor(product.getAuthor());
+            dto.setPrice(product.getPrice());
+            dto.setPrice_discount(product.getPrice_discount());
+            dto.setPrice_promotion(product.getPrice_promotion());
+            dto.setId_promotion(product.getPromotion() != null ? product.getPromotion().getId_promotion() : null);
+            dto.setId_sale(product.getSale() != null ? product.getSale().getId_sale() : null);
+            // Map other fields as needed
+
+            // Extract IDs of reviews if reviews exist
+            List<String> reviewIds = new ArrayList<>();
+            if (product.getReviews() != null) {
+                for (Review review : product.getReviews()) {
+                    reviewIds.add(review.getId());
+                }
+            }
+            dto.setId_reviews(reviewIds);
+
+            dtos.add(dto);
+        }
+        return dtos;
+    }
+
+
     /**
      * Inserts a new product into the database.
      *
@@ -189,8 +225,6 @@ public class ProductService {
     }
 
 
-
-
     /**
      * Updates an existing product in the database.
      *
@@ -214,7 +248,6 @@ public class ProductService {
         existingProduct.setAuthor(productDTO.getAuthor());
         existingProduct.setStock(productDTO.getStock());
 
-        // Update promotion
         if (productDTO.getId_promotion() != null) {
             Promotion promotion = promotionRepository.findById(productDTO.getId_promotion())
                     .orElseThrow(() -> new ResourceNotFoundException("Promotion not found with ID: " + productDTO.getId_promotion()));
@@ -223,7 +256,6 @@ public class ProductService {
             existingProduct.setPromotion(null);
         }
 
-        // Update sale
         if (productDTO.getId_sale() != null) {
             Sale sale = saleRepository.findById(productDTO.getId_sale())
                     .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + productDTO.getId_sale()));
@@ -282,6 +314,13 @@ public class ProductService {
 
         reviewRepository.save(review);
     }
+
+    /**
+     * Retrieves products from the database by name.
+     *
+     * @param name The name of the product to retrieve.
+     * @return A list of ProductDTO objects representing the products with matching names.
+     */
 
 
 

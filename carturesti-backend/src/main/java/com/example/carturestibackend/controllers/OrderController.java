@@ -69,6 +69,14 @@ public class OrderController {
         modelAndView.addObject("orderID", orderID);
         return new ModelAndView("redirect:/order");
     }
+    @PostMapping("/insert2")
+    public ModelAndView insertOrderClient(@Valid @ModelAttribute OrderDTO orderDTO) {
+        String orderID = orderService.insert(orderDTO);
+        LOGGER.debug(OrderLogger.ORDER_INSERTED, orderID);
+        ModelAndView modelAndView = new ModelAndView("/order");
+        modelAndView.addObject("orderID", orderID);
+        return new ModelAndView("redirect:/orderclient");
+    }
 
     /**
      * Retrieves an order by its ID.
@@ -120,6 +128,14 @@ public class OrderController {
             mav.addObject("errorMessage", "Failed to update order. Please try again.");
         }
         return mav;
+    }
+
+    @GetMapping(value = "/byUserId")
+    public ModelAndView getOrdersByUserId(@RequestParam("userId") String userId) {
+        List<OrderDTO> dtos = orderService.findOrdersByUserId(userId);
+        ModelAndView modelAndView = new ModelAndView("/order"); // Assuming there's a view named "order"
+        modelAndView.addObject("orders", dtos);
+        return modelAndView;
     }
 
 }

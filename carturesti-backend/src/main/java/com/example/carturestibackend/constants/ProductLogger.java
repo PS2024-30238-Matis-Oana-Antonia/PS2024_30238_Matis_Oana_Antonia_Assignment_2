@@ -2,6 +2,7 @@ package com.example.carturestibackend.constants;
 
 public class ProductLogger {
     public static final String PRODUCT_NOT_FOUND_BY_ID = "Product with id {} was not found in the database";
+    public static final String PRODUCT_NOT_FOUND_BY_NAME = "Product with name {} was not found in the database";
     public static final String PRODUCT_RETRIEVED_BY_ID = "Product with id {} retrieved from the database";
     public static final String PRODUCT_INSERTED = "Product with id {} was inserted into the database";
     public static final String PRODUCT_DELETED = "Product with id {} was deleted from the database";

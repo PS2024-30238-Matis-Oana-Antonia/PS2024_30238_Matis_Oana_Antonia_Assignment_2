@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Management</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-size: cover;
+            background-position: center;
+            background-image: url("/images/background.jpg");
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: #333;
+        }
+
+        .card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .button {
+            background-color: #28a745; /* Green */
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            height: 60px; /* Increased height */
+            width: 200px; /* Increased width */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 20px; /* Add margin to the bottom */
+            font-size: 1.2rem; /* Increased font size */
+        }
+
+        .button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff; /* Setting background color to white */
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .modal-header .close {
+            color: #000;
+            opacity: 1;
+        }
+
+        .btn:hover:not(.button) {
+            background-color: transparent;
+        }
+
+        /* Updated title style */
+        .title-container {
+            background-color: #d2b48c; /* Light brown background */
+            padding: 10px;
+        }
+
+        h1.title {
+            font-size: 2.5rem;
+            color: #8B4513; /* Dark brown color */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Adding a subtle shadow */
+            margin: 0; /* Remove default margin */
+        }
+    </style>
+</head>
+
+<body>
+<div class="title-container">
+    <h1 class="title">Review Management</h1>
+</div>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <!-- Button to add a new review -->
+                <button type="button" class="button" data-toggle="modal" data-target="#addReviewModal">Add New Review</button>
+                <!-- Table to display reviews -->
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>User</th>
+                            <th>Product</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Iterate over reviews -->
+                        <tr th:each="review: ${reviews}">
+                            <td th:text="${review != null ? review.id : ''}"></td>
+                            <td th:text="${review != null ? review.rating : ''}"></td>
+                            <td th:text="${review != null ? review.comment : ''}"></td>
+                            <td th:text="${review != null ? review.id_user : ''}"></td>
+                            <td th:text="${review != null ? review.id_product : ''}"></td>
+
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<div class="container-fluid text-center mt-4">
+    <a href="/client" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Client</a>
+</div>
+
+</body>
+</html>

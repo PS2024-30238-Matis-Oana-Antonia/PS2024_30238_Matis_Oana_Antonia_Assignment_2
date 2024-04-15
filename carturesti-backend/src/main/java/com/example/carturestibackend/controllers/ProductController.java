@@ -1,8 +1,10 @@
 package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.constants.ProductLogger;
+import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.CategoryDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
+import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.entities.Review;
 import com.example.carturestibackend.services.CategoryService;
 import com.example.carturestibackend.services.ProductService;
@@ -103,6 +105,16 @@ public class ProductController {
         ProductDTO dto = productService.findProductById(id_product);
         ModelAndView modelAndView = new ModelAndView("/product");
         modelAndView.addObject("product", dto);
+        return modelAndView;
+    }
+
+
+    @GetMapping("/getByName")
+    public ModelAndView getProductByName(@RequestParam("name") String name) {
+        LOGGER.info(ProductLogger.PRODUCT_NOT_FOUND_BY_NAME, name);
+        List<ProductDTO> dtos = productService.findProductsByName(name);
+        ModelAndView modelAndView = new ModelAndView("/product2");
+        modelAndView.addObject("products", dtos);
         return modelAndView;
     }
 

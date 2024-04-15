@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-size: cover;
+      background-position: center;
+      background-image: url("/images/background.jpg");
+      font-family: Arial, sans-serif;
+      text-align: center;
+      color: #333;
+    }
+
+    .card {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      width: 80%;
+      max-width: 1200px;
+      margin: 50px auto;
+      padding: 20px;
+      box-sizing: border-box;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .button {
+      background-color: #28a745; /* Green */
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      height: 60px; /* Increased height */
+      width: 200px; /* Increased width */
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 20px; /* Add margin to the bottom */
+      font-size: 1.2rem; /* Increased font size */
+    }
+
+    .button:hover {
+      background-color: #218838; /* Darker green on hover */
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: #fff; /* Setting background color to white */
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #343a40;
+      color: #fff;
+    }
+
+    .modal-header .close {
+      color: #000;
+      opacity: 1;
+    }
+
+    .btn:hover:not(.button) {
+      background-color: transparent;
+    }
+
+    /* Updated title style */
+    .title-container {
+      background-color: #d2b48c; /* Light brown background */
+      padding: 10px;
+    }
+
+    h1.title {
+      font-size: 2.5rem;
+      color: #8B4513; /* Dark brown color */
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Adding a subtle shadow */
+      margin: 0; /* Remove default margin */
+    }
+  </style>
+</head>
+
+<body>
+<div class="title-container">
+  <h1 class="title">Order Management</h1>
+</div>
+
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card">
+        <div class="container-fluid text-center mt-4">
+          <button type="button" class="btn btn-primary btn-lg" style="background-color: #d2b48c;" data-toggle="modal" data-target="#addOrderModal">Add New Order</button>
+          <button type="button" class="btn btn-primary btn-lg" style="background-color: #d2b48c; margin-left: 10px;" data-toggle="modal" data-target="#viewOrderByUserIdModal">View Order by ID</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead class="thead-dark">
+
+            </thead>
+            <tbody>
+            <tr th:each="order: ${orders}">
+
+              <td>
+                <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateOrderModal-' + ${order.id_order}">Edit</button>
+                <form th:if="${order != null}" id="deleteForm-${order.id_order}" method="POST" th:action="@{/order/delete}">
+                  <input type="hidden" name="id_order" th:value="${order.id_order}">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="addOrderModal" tabindex="-1" role="dialog" aria-labelledby="addOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addOrderModalLabel">Add New Order</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" th:action="@{/order/insert2}" class="needs-validation" novalidate>
+          <div class="form-group">
+            <label for="order_date">Order Date:</label>
+            <input type="date" id="order_date" name="order_date" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="id_user">User ID:</label>
+            <input type="text" id="id_user" name="id_user" class="id_user" placeholder="Enter User ID" required>
+          </div>
+          <div class="form-group">
+            <label for="id_products">Order Items:</label>
+            <div id="id_products">
+              <div class="product">
+                <input type="text" name="id_products" class="form-control product-id" placeholder="Enter Order Item ID" required>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Add Order</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="viewOrderByUserIdModal" tabindex="-1" role="dialog" aria-labelledby="viewOrderByUserIdModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewOrderByUserIdModalLabel">View Orders by User ID</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="GET" action="/order/byUserId">
+          <div class="form-group">
+            <label for="userIdInput">User ID:</label>
+            <input type="text" class="form-control" id="userIdInput" name="userId" placeholder="Enter User ID">
+          </div>
+          <button type="submit" class="btn btn-primary">View Orders</button>
+        </form>
+        <div id="ordersByUserIdContainer">
+          <!-- Orders fetched by server-side rendering will be displayed here -->
+          <!-- You can render orders dynamically based on the server response -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Order Modal -->
+<div th:each="order: ${orders}" th:id="'updateOrderModal-' + ${order.id_order}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateOrderModalLabel">Update Order</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" th:action="@{/order/update}" class="needs-validation" novalidate>
+          <input type="hidden" id="id_order" name="id_order" th:value="${order.id_order}">
+          <div class="form-group">
+            <label for="updateOrderDate">Order Date:</label>
+            <input type="date" id="updateOrderDate" name="order_date" th:value="${order.order_date}" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Update Order</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<div class="container-fluid text-center mt-4">
+  <a href="/client" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Client Page</a>
+</div>
+
+
+</body>
+</html>

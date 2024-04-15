@@ -198,6 +198,7 @@
     <div class="button-container">
         <button class="add-to-cart cart-icon" onclick="goToCart()">🛒</button>
         <button class="place-order button" onclick="placeOrder()">Place Order</button>
+        <button class="search-product button" data-toggle="modal" data-target="#searchProductModal">Search Product</button>
     </div>
 </div>
 
@@ -210,14 +211,15 @@
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <h5 class="card-title" th:text="${product.name}"></h5>
-                <p class="card-text" th:text="${product.description}"></p>
+                <p class="card-text">Id: <span th:text="${product.id_product}"></span></p>
+                <p class="card-text">About: <span th:text="${product.description}"></span></p>
                 <p class="card-text">Author: <span th:text="${product.author}"></span></p>
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group mt-2">
                         <form th:action="@{'/cart/addProduct/' + ${product.id_product}}" method="post">
                             <button type="submit" class="btn btn-primary">Add to Cart</button>
                         </form>
-
+                        <button type="button" class="btn btn-sm btn-primary" style="background-color: #d2b48c;" data-toggle="modal" data-target="#addReviewModal">Add New Review</button>
                     </div>
                     <small class="text-muted">Price: <span th:text="${product.price}"></span></small>
                 </div>
@@ -225,6 +227,70 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal fade" id="addReviewModal" tabindex="-1" role="dialog" aria-labelledby="addReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addReviewModalLabel">Add New Review</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" th:action="@{/review/insertReview2}" class="needs-validation" novalidate>
+                    <div class="form-group">
+                        <label for="rating">Rating:</label>
+                        <input type="number" id="rating" name="rating" class="form-control" required>
+                        <div class="invalid-feedback">Rating is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Comment:</label>
+                        <input type="text" id="comment" name="comment" class="form-control" required>
+                        <div class="invalid-feedback">Comment is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_user">User ID:</label>
+                        <input type="text" id="id_user" name="id_user" class="form-control" required>
+                        <div class="invalid-feedback">User ID is required.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_product">Product ID:</label>
+                        <input type="text" id="id_product" name="id_product" class="form-control" required>
+                        <div class="invalid-feedback">Product ID is required.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Add Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="searchProductModal" tabindex="-1" role="dialog" aria-labelledby="searchProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="searchProductModalLabel">Search Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/product/getByName" method="GET">
+                    <div class="form-group">
+                        <label for="name">Product Name:</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter product name">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="container">
     <div class="back-container">
@@ -263,7 +329,14 @@
 
 <script>
     function placeOrder() {
-        window.location.href = "/order";
+        window.location.href = "/orderclient";
+    }
+</script>
+
+<script>
+    function redirectToReviews() {
+        // Redirect to the reviews page
+        window.location.href = "/review2";
     }
 </script>
 

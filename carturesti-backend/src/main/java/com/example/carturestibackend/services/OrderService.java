@@ -122,10 +122,19 @@ public class OrderService {
      * @return The ID of the newly inserted order.
      */
 
+
     @Transactional
     public String insert(OrderDTO orderDTO) {
+        Logger logger = LoggerFactory.getLogger(getClass());
+
         User user = userRepository.findById(orderDTO.getId_user())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + orderDTO.getId_user()));
+                .orElseThrow(() -> {
+                    String message = String.format(OrderLogger.ORDER_NOT_FOUND_BY_ID, orderDTO.getId_user());
+                    logger.error(message);
+                    return new ResourceNotFoundException(message);
+                });
+
+        logger.info(OrderLogger.ORDER_RETRIEVED_BY_ID, user.getId_user());
 
         Order order = new Order();
         order.setOrder_date(orderDTO.getOrder_date());
@@ -140,35 +149,52 @@ public class OrderService {
 
         for (String productId : orderDTO.getId_products()) {
             Product product = productRepository.findById(productId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
+                    .orElseThrow(() -> {
+                        String message = String.format(OrderLogger.ORDER_NOT_FOUND_BY_ID, productId);
+                        logger.error(message);
+                        return new ResourceNotFoundException(message);
+                    });
 
             if (product.getStock() <= 0) {
-                throw new RuntimeException("Insufficient stock for product with ID: " + productId);
+                String message = "Insufficient stock for product with ID: " + productId;
+                logger.error(message);
+                throw new RuntimeException(message);
             }
 
-            order.getProducts().add(product); // Add Product to Order's products collection
+            // Choose the minimum price among original, discounted, and promotional price
+            double priceToUse = Double.MAX_VALUE; // Initialize with maximum value
+            if (product.getPrice() < priceToUse) {
+                priceToUse = product.getPrice();
+            }
+            if (product.getPrice_discount() > 0 && product.getPrice_discount() < priceToUse) {
+                priceToUse = product.getPrice_discount();
+            }
+            if (product.getPrice_promotion() > 0 && product.getPrice_promotion() < priceToUse) {
+                priceToUse = product.getPrice_promotion();
+            }
 
-            totalPrice += product.getPrice();
+            order.getProducts().add(product);
+            totalPrice += priceToUse;
 
             // Decrease the stock of the product
             product.setStock(product.getStock() - 1);
             productRepository.save(product);
+
+            logger.info("Product with ID {} added to order. Price used: {}", product.getId_product(), priceToUse);
         }
 
         order.setTotal_price(totalPrice);
+        logger.info("Total price calculated for order: {}", totalPrice);
 
         try {
             order = orderRepository.save(order);
+            logger.info(OrderLogger.ORDER_INSERTED, order.getId_order());
             return order.getId_order();
         } catch (Exception e) {
-            // Handle any database or persistence-related exceptions
-            // Log the exception for troubleshooting purposes
-            e.printStackTrace();
+            logger.error("Failed to save order: {}", e.getMessage());
             throw new RuntimeException("Failed to save order: " + e.getMessage());
         }
     }
-
-
 
 
     /**
@@ -183,17 +209,16 @@ public class OrderService {
         if (orderOptional.isPresent()) {
             Order order = orderOptional.get();
 
-            // Iterate through products to increase stock
-            for (Product product : order.getProducts()) {
-                product.setStock(product.getStock() + 1);
-                product.setOrders(null); // Remove association with the order
-                productRepository.save(product);
-            }
-
-            // Remove association with user
+            // Remove association with user without cascading deletion
             order.setUser(null);
 
-            // Delete the order
+            for (Product product : order.getProducts()) {
+                // Increase stock by 1 for each product in the order
+                product.setStock(product.getStock() + 1);
+                product.setOrders(null); // Remove association with the order
+                productRepository.save(product); // Save the updated product
+            }
+
             orderRepository.delete(order);
 
             LOGGER.debug(OrderLogger.ORDER_DELETED, id_order);
@@ -231,6 +256,19 @@ public class OrderService {
         return OrderMapper.toOrderDTO(updatedOrder);
     }
 
+    public List<OrderDTO> findOrdersByUserId(String userId) {
+        // Find the user by ID
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+        // Retrieve orders associated with the user
+        List<Order> orders = orderRepository.findByUser(user);
+
+        // Map orders to OrderDTOs and calculate totals for each order
+        return orders.stream()
+                .map(this::calculateOrderTotals)
+                .collect(Collectors.toList());
+    }
 
 
     private void updateOrderTotal(Order order, OrderItem orderItem) {
