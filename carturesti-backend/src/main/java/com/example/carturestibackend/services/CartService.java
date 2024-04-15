@@ -4,7 +4,6 @@ import com.example.carturestibackend.constants.CartLogger;
 import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.dtos.mappers.CartMapper;
 import com.example.carturestibackend.entities.Cart;
-import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.CartRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.CartValidator;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class CartService {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(CartService.class);
 
     private final CartRepository cartRepository;
@@ -128,18 +128,33 @@ public class CartService {
         }
     }
 
+    /**
+     * Adds a product to the cart.
+     *
+     * @param id_product The ID of the product to add to the cart.
+     */
     @Transactional
     public void addProductToCart(String id_product) {
 
     }
 
+    /**
+     * Removes a product from the cart.
+     *
+     * @param id_product The ID of the product to remove from the cart.
+     */
     @Transactional
     public void removeProductFromCart(String id_product) {
 
     }
 
-
     private List<String> id_products;
+
+    /**
+     * Retrieves the IDs of all products in the cart.
+     *
+     * @return A list of product IDs.
+     */
     public List<String> getProductsInCartIds() {
         return Collections.unmodifiableList(id_products);
     }

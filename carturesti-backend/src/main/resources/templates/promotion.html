@@ -141,6 +141,7 @@
 </div>
 
 <!-- Add Promotion Modal -->
+<!-- Add Promotion Modal -->
 <div class="modal fade" id="addPromotionModal" tabindex="-1" role="dialog" aria-labelledby="addPromotionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -166,8 +167,8 @@
           </div>
           <div class="form-group">
             <label for="percentage">Percentage:</label>
-            <input type="number" id="percentage" name="percentage" class="form-control" required>
-            <div class="invalid-feedback">Percentage is required.</div>
+            <input type="number" id="percentage" name="percentage" class="form-control" min="0" max="100" required>
+            <div class="invalid-feedback">Percentage must be between 0 and 100.</div>
           </div>
           <!-- Add more fields as needed for the promotion entity -->
           <button type="submit" class="btn btn-primary">Add Promotion</button>
@@ -203,8 +204,8 @@
           </div>
           <div class="form-group">
             <label for="updatePercentage">Percentage:</label>
-            <input type="number" id="updatePercentage" name="percentage" th:value="${promotion.percentage}" class="form-control" required>
-            <div class="invalid-feedback">Percentage is required.</div>
+            <input type="number" id="updatePercentage" name="percentage" th:value="${promotion.percentage}" class="form-control" min="0" max="100" required>
+            <div class="invalid-feedback">Percentage must be between 0 and 100.</div>
           </div>
           <!-- Add more fields as needed for updating the promotion -->
           <button type="submit" class="btn btn-primary">Update Promotion</button>
@@ -221,6 +222,27 @@
 <div class="container-fluid text-center mt-4">
   <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
 </div>
+
+<script>
+  // Validation script
+  (function() {
+    'use strict';
+    window.addEventListener('load', function() {
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.getElementsByClassName('needs-validation');
+      // Loop over them and prevent submission
+      var validation = Array.prototype.filter.call(forms, function(form) {
+        form.addEventListener('submit', function(event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  })();
+</script>
 
 </body>
 </html>

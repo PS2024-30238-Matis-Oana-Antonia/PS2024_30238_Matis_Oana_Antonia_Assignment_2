@@ -82,8 +82,6 @@ public class ProductService {
                 productDTO.setPrice_discount(discountPrice);
 
             }
-
-            // Calculate promotion price if promotion is applicable
             Promotion promotion = product.getPromotion();
             if (promotion != null) {
                 double promotionPercentage = promotion.getPercentage();
@@ -95,6 +93,7 @@ public class ProductService {
 
                 productDTO.setPrice_promotion(promotionPrice); // Set promotion price in DTO
             }
+
 
             productDTOs.add(productDTO);
         }
@@ -120,10 +119,9 @@ public class ProductService {
 
 
     public List<ProductDTO> findProductsByName(String name) {
-        // Query the database for products with the specified name
+
         List<Product> products = productRepository.findByName(name);
 
-        // Map products to ProductDTOs
         List<ProductDTO> dtos = new ArrayList<>();
         for (Product product : products) {
             ProductDTO dto = new ProductDTO();
@@ -137,9 +135,6 @@ public class ProductService {
             dto.setPrice_promotion(product.getPrice_promotion());
             dto.setId_promotion(product.getPromotion() != null ? product.getPromotion().getId_promotion() : null);
             dto.setId_sale(product.getSale() != null ? product.getSale().getId_sale() : null);
-            // Map other fields as needed
-
-            // Extract IDs of reviews if reviews exist
             List<String> reviewIds = new ArrayList<>();
             if (product.getReviews() != null) {
                 for (Review review : product.getReviews()) {
@@ -173,7 +168,6 @@ public class ProductService {
             product.setReviews(null);
         }
 
-
         ProductValidator.validateProduct(product);
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
@@ -196,25 +190,18 @@ public class ProductService {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
-
-            // Get the category associated with the product
             Category category = product.getCategory();
 
             if (category != null) {
-                // Remove the product from the category's list of products
+
                 category.getProducts().remove(product);
                 categoryRepository.save(category);
             }
 
-            // Disassociate the product from its other associations
             product.setPromotion(null);
             product.setSale(null);
             product.setReviews(null);
-
-            // Save the product without its associations
             productRepository.save(product);
-
-            // Delete the product
             productRepository.delete(product);
 
             LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);

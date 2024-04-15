@@ -96,10 +96,8 @@ public class CategoryService {
         if (categoryOptional.isPresent()) {
             Category category = categoryOptional.get();
 
-            // Get the associated products
             List<Product> products = category.getProducts();
 
-            // Delete associated products
             for (Product product : products) {
                 productRepository.delete(product);
             }

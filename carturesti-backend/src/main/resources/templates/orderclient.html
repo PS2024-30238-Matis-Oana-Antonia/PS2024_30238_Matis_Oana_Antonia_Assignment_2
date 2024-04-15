@@ -139,27 +139,46 @@
           <div class="form-group">
             <label for="order_date">Order Date:</label>
             <input type="date" id="order_date" name="order_date" class="form-control" required>
+            <div class="invalid-feedback">Please provide a valid order date.</div>
           </div>
           <div class="form-group">
             <label for="id_user">User ID:</label>
-            <input type="text" id="id_user" name="id_user" class="id_user" placeholder="Enter User ID" required>
+            <input type="text" id="id_user" name="id_user" class="id_user form-control" placeholder="Enter User ID" required>
+            <div class="invalid-feedback">Please provide a valid user ID.</div>
           </div>
           <div class="form-group">
             <label for="id_products">Order Items:</label>
             <div id="id_products">
               <div class="product">
                 <input type="text" name="id_products" class="form-control product-id" placeholder="Enter Order Item ID" required>
+                <div class="invalid-feedback">Please provide a valid order item ID.</div>
               </div>
             </div>
           </div>
-
           <button type="submit" class="btn btn-primary">Add Order</button>
         </form>
-
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  // Set min date to current date for order_date input
+  document.addEventListener('DOMContentLoaded', function () {
+    const orderDateInput = document.getElementById('order_date');
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    let month = currentDate.getMonth() + 1;
+    let day = currentDate.getDate();
+
+    // Format month and day to ensure they have two digits
+    month = month < 10 ? '0' + month : month;
+    day = day < 10 ? '0' + day : day;
+
+    // Set the min attribute to the current date
+    orderDateInput.min = `${year}-${month}-${day}`;
+  });
+</script>
 
 <div class="modal fade" id="viewOrderByUserIdModal" tabindex="-1" role="dialog" aria-labelledby="viewOrderByUserIdModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -174,7 +193,8 @@
         <form method="GET" action="/order/byUserId">
           <div class="form-group">
             <label for="userIdInput">User ID:</label>
-            <input type="text" class="form-control" id="userIdInput" name="userId" placeholder="Enter User ID">
+            <input type="text" class="form-control" id="userIdInput" name="userId" placeholder="Enter User ID" required>
+            <div class="invalid-feedback">Please provide a valid User ID.</div>
           </div>
           <button type="submit" class="btn btn-primary">View Orders</button>
         </form>
@@ -220,6 +240,26 @@
   <a href="/client" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Client Page</a>
 </div>
 
+<script>
+  // JavaScript for form validation
+  (function() {
+    'use strict';
+    window.addEventListener('load', function() {
+      // Fetch all the forms we want to apply custom Bootstrap validation styles to
+      var forms = document.getElementsByClassName('needs-validation');
+      // Loop over them and prevent submission
+      var validation = Array.prototype.filter.call(forms, function(form) {
+        form.addEventListener('submit', function(event) {
+          if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        }, false);
+      });
+    }, false);
+  })();
+</script>
 
 </body>
 </html>

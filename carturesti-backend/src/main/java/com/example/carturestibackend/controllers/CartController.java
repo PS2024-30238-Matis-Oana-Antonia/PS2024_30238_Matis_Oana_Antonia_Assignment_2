@@ -30,12 +30,22 @@ public class CartController {
     private final CartService cartService;
     private final ProductService productService;
 
+    /**
+     * Constructor for CartController.
+     * @param cartService The CartService instance to be injected.
+     * @param productService The ProductService instance to be injected.
+     */
     @Autowired
     public CartController(CartService cartService, ProductService productService) {
         this.cartService = cartService;
         this.productService = productService;
     }
 
+    /**
+     * Handler method for GET requests to "/cart".
+     * Retrieves all carts.
+     * @return ModelAndView containing the view name and list of carts.
+     */
     @GetMapping()
     public ModelAndView getCarts() {
         LOGGER.info(CartLogger.ALL_CARTS_RETRIEVED);
@@ -45,6 +55,12 @@ public class CartController {
         return modelAndView;
     }
 
+    /**
+     * Handler method for POST requests to "/cart".
+     * Inserts a new cart.
+     * @param cartDTO The CartDTO object to be inserted.
+     * @return ModelAndView containing the view name and inserted cart ID.
+     */
     @PostMapping()
     public ModelAndView insertCart(@Valid @RequestBody CartDTO cartDTO) {
         String cartID = cartService.insertCart(cartDTO);
@@ -54,6 +70,12 @@ public class CartController {
         return modelAndView;
     }
 
+    /**
+     * Handler method for GET requests to "/cart/{id_cart}".
+     * Retrieves a cart by ID.
+     * @param cartID The ID of the cart to retrieve.
+     * @return ModelAndView containing the view name and retrieved cart.
+     */
     @GetMapping(value = "/{id_cart}")
     public ModelAndView getCart(@PathVariable("id_cart") String cartID) {
         LOGGER.info(CartLogger.CART_RETRIEVED_BY_ID, cartID);
@@ -63,6 +85,12 @@ public class CartController {
         return modelAndView;
     }
 
+    /**
+     * Handler method for DELETE requests to "/cart/{id_cart}".
+     * Deletes a cart by ID.
+     * @param cartID The ID of the cart to delete.
+     * @return ModelAndView containing the view name and success message.
+     */
     @DeleteMapping(value = "/{id_cart}")
     public ModelAndView deleteCart(@PathVariable("id_cart") String cartID) {
         LOGGER.debug(CartLogger.CART_DELETED, cartID);
@@ -72,6 +100,13 @@ public class CartController {
         return modelAndView;
     }
 
+    /**
+     * Handler method for PUT requests to "/cart/{id_cart}".
+     * Updates a cart.
+     * @param cartID The ID of the cart to update.
+     * @param cartDTO The updated CartDTO object.
+     * @return ModelAndView containing the view name and updated cart.
+     */
     @PutMapping(value = "/{id_cart}")
     public ModelAndView updateCart(@PathVariable("id_cart") String cartID, @Valid @RequestBody CartDTO cartDTO) {
         LOGGER.debug(CartLogger.CART_UPDATED, cartID);
@@ -81,22 +116,31 @@ public class CartController {
         return modelAndView;
     }
 
+    /**
+     * Handler method for POST requests to "/cart/addProduct/{id_product}".
+     * Adds a product to the cart.
+     * @param id_product The ID of the product to add to the cart.
+     * @return ModelAndView containing the view name, product details, and success message.
+     */
     @PostMapping("/addProduct/{id_product}")
     public ModelAndView addProductToCart(@PathVariable("id_product") String id_product) {
-        ProductDTO product = productService.findProductById(id_product); // Assuming productService has a method to get product by ID
+        ProductDTO product = productService.findProductById(id_product);
         if (product == null) {
-
             return new ModelAndView("error"); // Redirect to an error page
         }
-
         cartService.addProductToCart(String.valueOf(product));
-
         ModelAndView modelAndView = new ModelAndView("/cart");
         modelAndView.addObject("product", product); // Add product details to the model
         modelAndView.addObject("message", "Product added to cart successfully");
         return modelAndView;
     }
 
+    /**
+     * Handler method for POST requests to "/cart/shoppingCart/removeProduct/{id_product}".
+     * Removes a product from the cart.
+     * @param id_product The ID of the product to remove from the cart.
+     * @return ModelAndView containing the view name and success message.
+     */
     @PostMapping("/shoppingCart/removeProduct/{id_product}")
     public ModelAndView removeProductFromCart(@PathVariable("id_product") String id_product) {
         cartService.removeProductFromCart(id_product);
@@ -105,12 +149,15 @@ public class CartController {
         return modelAndView;
     }
 
+    /**
+     * Handler method for GET requests to "/cart/list".
+     * Displays the shopping cart.
+     * @return ModelAndView containing the view name and product IDs in the cart.
+     */
     @GetMapping("/list")
     public ModelAndView shoppingCart() {
         ModelAndView modelAndView = new ModelAndView("/cart");
         modelAndView.addObject("productIds", cartService.getProductsInCartIds());
         return modelAndView;
     }
-
-
 }

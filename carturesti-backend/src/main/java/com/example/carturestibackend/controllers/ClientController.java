@@ -9,30 +9,34 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
+/**
+ * Controller class to handle HTTP requests related to the client page.
+ */
 @Controller
 public class ClientController {
 
     private final ProductService productService;
 
+    /**
+     * Constructor for ClientController.
+     * @param productService The ProductService instance to be injected.
+     */
     @Autowired
     public ClientController(ProductService productService) {
         this.productService = productService;
     }
 
+    /**
+     * Handler method for GET requests to "/client".
+     * Retrieves products and displays the client page.
+     * @return ModelAndView containing the view name and list of products.
+     */
     @GetMapping("/client")
     public ModelAndView clientPage() {
         ModelAndView modelAndView = new ModelAndView();
-
-        // Fetch products from the ProductService
         List<ProductDTO> products = productService.findProducts();
-
-        // Add products to the ModelAndView
         modelAndView.addObject("products", products);
-
-
-        // Set the view name
         modelAndView.setViewName("client");
-
         return modelAndView;
     }
 }

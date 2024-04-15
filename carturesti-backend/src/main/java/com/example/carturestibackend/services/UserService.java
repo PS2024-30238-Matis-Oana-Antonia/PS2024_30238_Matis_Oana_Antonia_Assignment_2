@@ -133,25 +133,18 @@ public class UserService {
         // Create a new user entity from the DTO
         User user = UserMapper.fromUserDTO(userDTO);
 
-        // Validate the user
         UserValidator.isValid(user);
 
-        // Create a new cart for the user
         Cart cart = new Cart();
 
-        // Save the cart
         cart = cartRepository.save(cart);
 
-        // Set the cart for the user
         user.setCart(cart);
 
-        // Save the user
         user = userRepository.save(user);
 
-        // Associate the user with the cart
         cart.setUser(user);
 
-        // Save the cart again to update the association
         cart = cartRepository.save(cart);
 
         LOGGER.debug(UserLogger.USER_INSERTED, user.getId_user());
@@ -212,15 +205,6 @@ public class UserService {
         LOGGER.debug(UserLogger.USER_UPDATED, updatedUser.getId_user());
 
         return UserMapper.toUserDTO(updatedUser);
-    }
-
-    public String findUserIdByName(String name) {
-        User user = userRepository.findByName(name);
-        if (user != null) {
-            return user.getId_user(); // Assuming user ID is stored as a String
-        } else {
-            return null;
-        }
     }
 
 

@@ -14,6 +14,7 @@ import com.example.carturestibackend.entities.Sale;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.SaleRepository;
 import com.example.carturestibackend.validators.SaleValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -167,19 +168,19 @@ public class SaleService {
      * @param id_sale The ID of the sale to delete.
      * @throws ResourceNotFoundException if the sale is not found.
      */
+    @Transactional
     public void deleteSaleById(String id_sale) {
         Optional<Sale> saleOptional = saleRepository.findById(id_sale);
         if (saleOptional.isPresent()) {
             Sale sale = saleOptional.get();
 
-            // Disassociate the sale from its associated products
             List<Product> products = sale.getProducts();
             for (Product product : products) {
                 product.setSale(null);
+                product.setPrice_discount(0.0);
                 productRepository.save(product);
             }
 
-            // Delete the sale
             saleRepository.delete(sale);
 
             LOGGER.debug(SaleLogger.SALE_DELETED, id_sale);

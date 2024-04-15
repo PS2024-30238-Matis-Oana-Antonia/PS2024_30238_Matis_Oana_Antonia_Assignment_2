@@ -91,7 +91,6 @@ public class OrderItemService {
         // Initialize total price and quantity
         double totalPrice = 0;
         long totalQuantity = 0;
-
         // Update product prices and calculate total price and quantity
         for (Product product : orderItem.getProducts()) {
             // Update the product price from the database
@@ -109,7 +108,6 @@ public class OrderItemService {
             }
         }
 
-        // Calculate average price per unit
         orderItem.setQuantity(totalQuantity);
         double pricePerUnit = totalQuantity != 0 ? totalPrice / totalQuantity : 0.0;
         orderItem.setPrice_per_unit(pricePerUnit);

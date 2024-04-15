@@ -8,6 +8,7 @@ import com.example.carturestibackend.repositories.ReviewRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
 import com.example.carturestibackend.validators.ReviewValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +95,7 @@ public class ReviewService {
      * @param id The ID of the review to delete.
      * @throws ResourceNotFoundException if the review with the specified ID is not found.
      */
+    @Transactional
     public void deleteReviewById(String id) {
         Optional<Review> reviewOptional = reviewRepository.findById(id);
         if (reviewOptional.isPresent()) {

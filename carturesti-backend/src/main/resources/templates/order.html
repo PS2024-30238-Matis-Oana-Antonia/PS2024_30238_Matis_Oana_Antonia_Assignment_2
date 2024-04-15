@@ -156,10 +156,12 @@
                     <div class="form-group">
                         <label for="order_date">Order Date:</label>
                         <input type="date" id="order_date" name="order_date" class="form-control" required>
+                        <div class="invalid-feedback">Order date is required.</div>
                     </div>
                     <div class="form-group">
                         <label for="id_user">User ID:</label>
                         <input type="text" id="id_user" name="id_user" class="id_user" placeholder="Enter User ID" required>
+                        <div class="invalid-feedback">User ID is required.</div>
                     </div>
 
                     <!-- Order Items with Quantity -->
@@ -169,7 +171,7 @@
                             <!-- Fields for each order item -->
                             <div class="product">
                                 <input type="text" name="id_products" class="form-control product-id" placeholder="Enter Order Item ID" required>
-
+                                <div class="invalid-feedback">Order Item ID is required.</div>
                             </div>
                         </div>
                     </div>
@@ -181,6 +183,7 @@
         </div>
     </div>
 </div>
+
 
 
 
@@ -236,6 +239,45 @@
             `;
             orderItemsContainer.appendChild(productDiv);
         });
+    });
+</script>
+
+<script>
+    // JavaScript for form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+
+<script>
+    // Set min date to current date for order_date input
+    document.addEventListener('DOMContentLoaded', function () {
+        const orderDateInput = document.getElementById('order_date');
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        let month = currentDate.getMonth() + 1;
+        let day = currentDate.getDate();
+
+        // Format month and day to ensure they have two digits
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        // Set the min attribute to the current date
+        orderDateInput.min = `${year}-${month}-${day}`;
     });
 </script>
 

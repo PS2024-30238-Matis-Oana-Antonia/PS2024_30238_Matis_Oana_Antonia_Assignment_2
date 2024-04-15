@@ -182,8 +182,8 @@
                     </div>
                     <div class="form-group">
                         <label for="price">Price:</label>
-                        <input type="number" id="price" name="price" class="form-control" required>
-                        <div class="invalid-feedback">Price is required.</div>
+                        <input type="number" id="price" name="price" class="form-control" min="0" required>
+                        <div class="invalid-feedback">Price must be at least 0.</div>
                     </div>
                     <div class="form-group">
                         <label for="description">Description:</label>
@@ -197,10 +197,10 @@
                     </div>
                     <div class="form-group">
                         <label for="stock">Stock:</label>
-                        <input type="number" id="stock" name="stock" class="form-control" required>
-                        <div class="invalid-feedback">Stock is required.</div>
+                        <input type="number" id="stock" name="stock" class="form-control" min="0" required>
+                        <div class="invalid-feedback">Stock must be at least 0.</div>
                     </div>
-                    <!-- Add the Category ID field -->
+
                     <div class="form-group">
                         <label for="id_category">Category:</label>
                         <input type="text" id="id_category" name="id_category" class="form-control" required>
@@ -218,15 +218,14 @@
                         <input type="text" id="id_sale" name="id_sale" class="form-control" required>
                         <div class="invalid-feedback">SaleID is required.</div>
                     </div>
-                    <button type="submit" class="btn btn-primary">Add Product</button>
+                    <button type="submit" class="btn btn-primary" onclick="validateForm()">Add Product</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal for updating a product -->
-<!-- Modal for updating a product -->
+
 <div class="modal fade" th:each="product: ${products}" th:id="'updateProductModal-' + ${product.id_product}" tabindex="-1" role="dialog" aria-labelledby="updateProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -246,8 +245,8 @@
                     </div>
                     <div class="form-group">
                         <label for="updatePrice">Price:</label>
-                        <input type="number" id="updatePrice" name="price" th:value="${product.price}" class="form-control" required>
-                        <div class="invalid-feedback">Price is required.</div>
+                        <input type="number" id="updatePrice" name="price" th:value="${product.price}" class="form-control" min="0" required>
+                        <div class="invalid-feedback">Price must be at least 0.</div>
                     </div>
                     <div class="form-group">
                         <label for="updateDescription">Description:</label>
@@ -261,8 +260,8 @@
                     </div>
                     <div class="form-group">
                         <label for="updateStock">Stock:</label>
-                        <input type="number" id="updateStock" name="stock" th:value="${product.stock}" class="form-control" required>
-                        <div class="invalid-feedback">Stock is required.</div>
+                        <input type="number" id="updateStock" name="stock" th:value="${product.stock}" class="form-control" min="0" required>
+                        <div class="invalid-feedback">Stock must be at least 0.</div>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Update</button>
@@ -280,5 +279,27 @@
 <div class="container-fluid text-center mt-4">
     <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
 </div>
+
+<script>
+    // JavaScript for form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+
 </body>
 </html>

@@ -239,7 +239,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form method="POST" th:action="@{/review/insertReview2}" class="needs-validation" novalidate>
+                <form method="POST" action="/review/insertReview2" class="needs-validation" novalidate>
                     <div class="form-group">
                         <label for="rating">Rating:</label>
                         <input type="number" id="rating" name="rating" class="form-control" required>
@@ -260,14 +260,12 @@
                         <input type="text" id="id_product" name="id_product" class="form-control" required>
                         <div class="invalid-feedback">Product ID is required.</div>
                     </div>
-
                     <button type="submit" class="btn btn-primary">Add Review</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
-
 
 <div class="modal fade" id="searchProductModal" tabindex="-1" role="dialog" aria-labelledby="searchProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -279,10 +277,11 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="/product/getByName" method="GET">
+                <form action="/product/getByName" method="GET" class="needs-validation" novalidate>
                     <div class="form-group">
                         <label for="name">Product Name:</label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter product name">
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter product name" required>
+                        <div class="invalid-feedback">Please enter a product name.</div>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>
                 </form>
@@ -290,6 +289,7 @@
         </div>
     </div>
 </div>
+
 
 
 <div class="container">
@@ -338,6 +338,27 @@
         // Redirect to the reviews page
         window.location.href = "/review2";
     }
+</script>
+
+<script>
+    // JavaScript for form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.getElementsByClassName('needs-validation');
+            // Loop over them and prevent submission
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
 </script>
 
 </body>

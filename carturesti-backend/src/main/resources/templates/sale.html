@@ -152,8 +152,8 @@
                 <form method="POST" th:action="@{/sale/insertSale}" class="needs-validation" novalidate>
                     <div class="form-group">
                         <label for="discount_percentage">Discount Percentage:</label>
-                        <input type="number" id="discount_percentage" name="discount_percentage" class="form-control" required>
-                        <div class="invalid-feedback">Discount Percentage is required.</div>
+                        <input type="number" id="discount_percentage" name="discount_percentage" class="form-control" required min="0" max="100">
+                        <div class="invalid-feedback">Discount Percentage is required and must be between 0 and 100.</div>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Add Sale</button>
@@ -162,7 +162,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Update Sale Modals -->
 <div th:each="sale: ${sales}" th:id="'updateSaleModal-' + ${sale.id_sale}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateSaleModalLabel" aria-hidden="true">
@@ -180,8 +179,8 @@
                     <input type="hidden" id="id_sale" name="id_sale" th:value="${sale.id_sale}">
                     <div class="form-group">
                         <label for="updateDiscountPercentage">Discount Percentage:</label>
-                        <input type="number" id="updateDiscountPercentage" name="discount_percentage" th:value="${sale.discount_percentage}" class="form-control" required>
-                        <div class="invalid-feedback">Discount Percentage is required.</div>
+                        <input type="number" id="updateDiscountPercentage" name="discount_percentage" th:value="${sale.discount_percentage}" class="form-control" required min="0" max="100">
+                        <div class="invalid-feedback">Discount Percentage is required and must be between 0 and 100.</div>
                     </div>
                     <!-- Add more fields as needed for updating the sale -->
                     <button type="submit" class="btn btn-primary">Update Sale</button>
@@ -198,6 +197,24 @@
 <div class="container-fluid text-center mt-4">
     <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
 </div>
+
+<script>
+    // JavaScript for form validation
+    document.addEventListener('DOMContentLoaded', function () {
+        var forms = document.querySelectorAll('.needs-validation');
+
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
 
 </body>
 </html>

@@ -39,7 +39,6 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderValidator orderValidator;
-    private final OrderItemService orderItemService;
 
     /**
      * Constructs a new OrderService with the specified OrderRepository.
@@ -49,16 +48,16 @@ public class OrderService {
      * @param userRepository
      * @param productRepository
      * @param orderValidator
-     * @param orderItemService
+
      */
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator, OrderItemService orderItemService) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderValidator = orderValidator;
-        this.orderItemService = orderItemService;
+
     }
 
     /**

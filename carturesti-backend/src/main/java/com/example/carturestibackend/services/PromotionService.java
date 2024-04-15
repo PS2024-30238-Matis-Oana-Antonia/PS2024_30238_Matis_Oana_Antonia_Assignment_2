@@ -8,6 +8,7 @@ import com.example.carturestibackend.entities.Promotion;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.PromotionRepository;
 import com.example.carturestibackend.validators.PromotionValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,28 +155,25 @@ public class PromotionService {
      * @param id The ID of the promotion to delete.
      * @throws ResourceNotFoundException if the promotion with the specified ID is not found.
      */
+    @Transactional
     public void deletePromotionById(String id) {
         Optional<Promotion> promotionOptional = promotionRepository.findById(id);
         if (promotionOptional.isPresent()) {
             Promotion promotion = promotionOptional.get();
 
-            // Disassociate the promotion from its associated products
             List<Product> products = promotion.getProducts();
             for (Product product : products) {
                 product.setPromotion(null);
+                product.setPrice_promotion(0.0);
                 productRepository.save(product);
             }
-
-            // Delete the promotion
             promotionRepository.delete(promotion);
-
             LOGGER.debug(PromotionLogger.PROMOTION_DELETED, id);
         } else {
             LOGGER.error(PromotionLogger.PROMOTION_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Promotion.class.getSimpleName() + " with id: " + id);
         }
     }
-
 
     /**
      * Updates an existing promotion in the database.

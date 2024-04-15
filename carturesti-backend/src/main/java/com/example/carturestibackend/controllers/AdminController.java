@@ -1,7 +1,6 @@
 package com.example.carturestibackend.controllers;
 
 import com.example.carturestibackend.dtos.UserDTO;
-import com.example.carturestibackend.entities.User;
 import com.example.carturestibackend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -10,25 +9,37 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
+/**
+ * Controller class for handling admin-related requests and operations.
+ */
 @Controller
 public class AdminController {
 
     private final UserService userService;
 
+    /**
+     * Constructor for AdminController.
+     * @param userService The UserService instance to be injected.
+     */
     @Autowired
     public AdminController(UserService userService) {
         this.userService = userService;
     }
 
+    /**
+     * Handler method for GET requests to "/admin".
+     * Retrieves a list of users and returns the admin page.
+     * @return ModelAndView representing the admin page.
+     */
     @GetMapping("/admin")
     public ModelAndView adminPage() {
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("admin");
 
-        // Fetch user data from the UserService
+        // Retrieve list of users
         List<UserDTO> users = userService.findUsers();
 
-        // Add the user data to the model
+        // Add users to the model
         modelAndView.addObject("_embedded", users);
 
         return modelAndView;

@@ -152,8 +152,8 @@
                 <form method="POST" th:action="@{/review/insertReview}" class="needs-validation" novalidate>
                     <div class="form-group">
                         <label for="rating">Rating:</label>
-                        <input type="number" id="rating" name="rating" class="form-control" required>
-                        <div class="invalid-feedback">Rating is required.</div>
+                        <input type="number" id="rating" name="rating" class="form-control" required min="0" max="5">
+                        <div class="invalid-feedback">Rating must be between 0 and 5.</div>
                     </div>
                     <div class="form-group">
                         <label for="comment">Comment:</label>
@@ -195,7 +195,7 @@
                     <input type="hidden" id="id" name="id" th:value="${review.id}">
                     <div class="form-group">
                         <label for="updateRating">Rating:</label>
-                        <input type="number" id="updateRating" name="rating" th:value="${review.rating}" class="form-control" required>
+                        <input type="number" id="updateRating" name="rating" th:value="${review.rating}" class="form-control" required min="0" max="5">
                         <div class="invalid-feedback">Rating is required.</div>
                     </div>
                     <div class="form-group">
@@ -218,6 +218,23 @@
 <div class="container-fluid text-center mt-4">
     <a href="/admin" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Admin</a>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var forms = document.querySelectorAll('.needs-validation');
+
+        Array.prototype.slice.call(forms).forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
 
 </body>
 </html>
