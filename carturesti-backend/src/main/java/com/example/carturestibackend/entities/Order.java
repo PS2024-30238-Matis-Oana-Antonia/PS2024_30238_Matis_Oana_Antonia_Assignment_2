@@ -36,18 +36,18 @@ import java.util.Set;
         @Column(name = "total_price", nullable = false)
         private double total_price;
 
-        private String paymentType;
+
 
         @ManyToOne(cascade = CascadeType.MERGE)
         @JoinColumn(name = "id_user")
         private User user;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
+        @ManyToMany(fetch = FetchType.EAGER)
+        @JoinTable(
             name = "order_product",
             joinColumns = @JoinColumn(name = "id_order"),
             inverseJoinColumns = @JoinColumn(name = "id_product"))
-    private List<Product> products;
+        private List<Product> products;
 
 
 }

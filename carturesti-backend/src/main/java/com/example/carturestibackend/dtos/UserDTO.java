@@ -21,5 +21,6 @@ public class UserDTO {
     private List<String> id_reviews;
     private List<String> id_orders;
     private String id_cart;
+    private List<String> id_payments;
 
 }

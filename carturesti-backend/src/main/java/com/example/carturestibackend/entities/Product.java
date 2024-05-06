@@ -30,9 +30,6 @@ public class Product {
     @Column(name = "price", nullable = false)
     private double price;
 
-    @Column(name = "price_discount", nullable = false)
-    private double price_discount;
-
     @Column(name = "price_promotion", nullable = false)
     private double price_promotion;
 
@@ -60,9 +57,6 @@ public class Product {
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "sale_id")
-    private Sale sale;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cart_id")

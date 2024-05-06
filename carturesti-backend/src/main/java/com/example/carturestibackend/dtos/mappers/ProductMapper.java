@@ -18,7 +18,6 @@ public class ProductMapper {
                 .id_product(product.getId_product())
                 .name(product.getName())
                 .price(product.getPrice())
-                .price_discount(product.getPrice_discount())
                 .price_promotion(product.getPrice_promotion())
                 .description(product.getDescription())
                 .author(product.getAuthor())
@@ -35,9 +34,6 @@ public class ProductMapper {
                 .id_promotion(Optional.ofNullable(product.getPromotion())
                         .map(Promotion::getId_promotion)
                         .orElse(null))
-                .id_sale(Optional.ofNullable(product.getSale())
-                        .map(Sale::getId_sale)
-                        .orElse(null))
                 .build();
     }
 
@@ -45,7 +41,6 @@ public class ProductMapper {
         return Product.builder()
                 .name(productDTO.getName())
                 .price(productDTO.getPrice())
-                .price_discount(productDTO.getPrice_discount())
                 .price_promotion(productDTO.getPrice_promotion())
                 .description(productDTO.getDescription())
                 .author(productDTO.getAuthor())
@@ -61,9 +56,6 @@ public class ProductMapper {
                         .orElse(null))
                 .promotion(Optional.ofNullable(productDTO.getId_promotion())
                         .map(id -> Promotion.builder().id_promotion(id).build())
-                        .orElse(null))
-                .sale(Optional.ofNullable(productDTO.getId_sale())
-                        .map(id -> Sale.builder().id_sale(id).build())
                         .orElse(null))
                 .build();
     }

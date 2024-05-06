@@ -10,13 +10,11 @@ import java.time.ZoneId;
 @Component
 public class OrderValidator {
 
-    public static void validateOrder(Order order) {
-        validateOrderDate(order.getOrder_date());
-        validateTotalPrice(order.getTotal_price());
-
+    public static boolean validateOrder(Order order) {
+        return validateOrderDate(order.getOrder_date()) && validateTotalPrice(order.getTotal_price());
     }
 
-    private static void validateOrderDate(LocalDate orderDate) {
+    private static boolean validateOrderDate(LocalDate orderDate) {
         if (orderDate == null) {
             throw new IllegalArgumentException("Order date must not be null");
         }
@@ -24,11 +22,13 @@ public class OrderValidator {
         if (orderDate.isBefore(currentDate)) {
             throw new IllegalArgumentException("Order date must be current or future date");
         }
+        return true;
     }
 
-    private static void validateTotalPrice(double totalPrice) {
+    private static boolean validateTotalPrice(double totalPrice) {
         if (totalPrice <= 0) {
             throw new IllegalArgumentException("Total price must be greater than 0");
         }
+        return true;
     }
 }

@@ -28,9 +28,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductValidator productValidator;
-
     private final PromotionRepository promotionRepository;
-    private final SaleRepository saleRepository;
     private final ReviewRepository reviewRepository;
     private final OrderItemRepository orderItemRepository ;
     /**
@@ -40,17 +38,15 @@ public class ProductService {
      * @param categoryRepository
      * @param productValidator
      * @param promotionRepository
-     * @param saleRepository
      * @param reviewRepository
      * @param orderItemRepository
      */
     @Autowired
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, PromotionRepository promotionRepository, SaleRepository saleRepository, ReviewRepository reviewRepository, OrderItemRepository orderItemRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductValidator productValidator, PromotionRepository promotionRepository, ReviewRepository reviewRepository, OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.productValidator = productValidator;
         this.promotionRepository = promotionRepository;
-        this.saleRepository = saleRepository;
         this.reviewRepository = reviewRepository;
         this.orderItemRepository = orderItemRepository;
     }
@@ -71,17 +67,7 @@ public class ProductService {
 
             double originalPrice = product.getPrice();
 
-            Sale sale = product.getSale();
-            if(sale != null){
-                double discountPercentage = sale.getDiscount_percentage();
-                double discountPrice = originalPrice;
-                if (discountPercentage > 0) {
-                    discountPrice = originalPrice * (1 - discountPercentage / 100);
-                }
 
-                productDTO.setPrice_discount(discountPrice);
-
-            }
             Promotion promotion = product.getPromotion();
             if (promotion != null) {
                 double promotionPercentage = promotion.getPercentage();
@@ -131,10 +117,8 @@ public class ProductService {
             dto.setId_category(product.getCategory() != null ? product.getCategory().getId_category() : null);
             dto.setAuthor(product.getAuthor());
             dto.setPrice(product.getPrice());
-            dto.setPrice_discount(product.getPrice_discount());
             dto.setPrice_promotion(product.getPrice_promotion());
             dto.setId_promotion(product.getPromotion() != null ? product.getPromotion().getId_promotion() : null);
-            dto.setId_sale(product.getSale() != null ? product.getSale().getId_sale() : null);
             List<String> reviewIds = new ArrayList<>();
             if (product.getReviews() != null) {
                 for (Review review : product.getReviews()) {
@@ -161,9 +145,7 @@ public class ProductService {
         if (productDTO.getId_promotion() == null || productDTO.getId_promotion().isEmpty()) {
             product.setPromotion(null);
         }
-        if (productDTO.getId_sale() == null || productDTO.getId_sale().isEmpty()) {
-            product.setSale(null);
-        }
+
         if (productDTO.getId_reviews() == null || productDTO.getId_reviews().isEmpty()) {
             product.setReviews(null);
         }
@@ -199,7 +181,6 @@ public class ProductService {
             }
 
             product.setPromotion(null);
-            product.setSale(null);
             product.setReviews(null);
             productRepository.save(product);
             productRepository.delete(product);
@@ -243,13 +224,7 @@ public class ProductService {
             existingProduct.setPromotion(null);
         }
 
-        if (productDTO.getId_sale() != null) {
-            Sale sale = saleRepository.findById(productDTO.getId_sale())
-                    .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + productDTO.getId_sale()));
-            existingProduct.setSale(sale);
-        } else {
-            existingProduct.setSale(null);
-        }
+
 
         Product updatedProduct = productRepository.save(existingProduct);
         LOGGER.debug(ProductLogger.PRODUCT_UPDATED, updatedProduct.getId_product());

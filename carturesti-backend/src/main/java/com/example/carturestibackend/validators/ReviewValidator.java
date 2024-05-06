@@ -6,7 +6,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ReviewValidator {
 
-    public static void validateReview(Review review) {
+    public static boolean validateReview(Review review) {
+        if (review == null) {
+            return false;
+        }
+
         if (review.getRating() < 1 || review.getRating() > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5");
         }
@@ -15,6 +19,6 @@ public class ReviewValidator {
             throw new IllegalArgumentException("Comment cannot be empty");
         }
 
-        // Alte verificări și validări...
+        return true;
     }
 }

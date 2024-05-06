@@ -111,7 +111,6 @@
                         <th>Promotion</th>
                         <th>Sale</th>
                         <th>Review</th>
-                        <th>Price discount</th>
                         <th>Price Promotion</th>
                         <th>Actions</th>
                     </tr>
@@ -144,7 +143,6 @@
                                 <li th:each="reviewId : ${product.id_reviews}" th:text="${reviewId}"></li>
                             </ul>
                         </td>
-                        <td th:text="${product.price_discount}"></td>
                         <td th:text="${product.price_promotion}"></td>
                         <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>
@@ -213,11 +211,6 @@
 
                     </div>
 
-                    <div class="form-group">
-                        <label for="id_sale">Sale:</label>
-                        <input type="text" id="id_sale" name="id_sale" class="form-control">
-
-                    </div>
                     <button type="submit" class="btn btn-primary" onclick="validateForm()">Add Product</button>
                 </form>
             </div>

@@ -165,9 +165,7 @@ public class OrderService {
             if (product.getPrice() < priceToUse) {
                 priceToUse = product.getPrice();
             }
-            if (product.getPrice_discount() > 0 && product.getPrice_discount() < priceToUse) {
-                priceToUse = product.getPrice_discount();
-            }
+
             if (product.getPrice_promotion() > 0 && product.getPrice_promotion() < priceToUse) {
                 priceToUse = product.getPrice_promotion();
             }

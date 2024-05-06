@@ -6,21 +6,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class CategoryValidator {
 
-    public static void validateCategory(Category category) {
-        validateName(category.getName());
-        validateDescription(category.getDescription());
-
+    public static boolean validateCategory(Category category) {
+        return validateName(category.getName()) && validateDescription(category.getDescription());
     }
-    private static void validateName(String name) {
+
+    private static boolean validateName(String name) {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Name must not be null or empty");
         }
-
+        return true;
     }
-    private static void validateDescription(String description) {
+
+    private static boolean validateDescription(String description) {
         if (description == null || description.isEmpty()) {
             throw new IllegalArgumentException("Description must not be null or empty");
         }
-
+        return true;
     }
 }

@@ -25,19 +25,15 @@ import java.util.stream.Collectors;
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
-    private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
+
     private final CartRepository cartRepository;
-    private final OrderItemRepository orderItemRepository;
+
     private final UserValidator userValidator;
 
     @Autowired
-    public UserService(UserRepository userRepository, ProductRepository productRepository, OrderRepository orderRepository, CartRepository cartRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
+    public UserService(UserRepository userRepository, CartRepository cartRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
-        this.productRepository = productRepository;
-        this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
-        this.orderItemRepository = orderItemRepository;
         this.userValidator = userValidator;
     }
 
@@ -130,19 +126,15 @@ public class UserService {
      */
     @Transactional
     public String insert(UserDTO userDTO) {
-        // Create a new user entity from the DTO
-        User user = UserMapper.fromUserDTO(userDTO);
 
+        User user = UserMapper.fromUserDTO(userDTO);
+        //aici folosesc validator
         UserValidator.isValid(user);
 
         Cart cart = new Cart();
-
         cart = cartRepository.save(cart);
-
         user.setCart(cart);
-
         user = userRepository.save(user);
-
         cart.setUser(user);
 
         cart = cartRepository.save(cart);

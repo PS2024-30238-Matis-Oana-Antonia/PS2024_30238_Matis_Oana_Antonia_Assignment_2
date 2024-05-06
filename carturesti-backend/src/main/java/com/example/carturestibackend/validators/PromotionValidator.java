@@ -19,6 +19,6 @@ public class PromotionValidator {
             throw new IllegalArgumentException("Description cannot be empty");
         }
 
-        return true; // Promotion is valid
+        return true;
     }
 }
