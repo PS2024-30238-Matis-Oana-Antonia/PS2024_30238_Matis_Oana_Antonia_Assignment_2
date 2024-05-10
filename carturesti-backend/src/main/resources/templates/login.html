@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Register</title>
+  <title>Login</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -17,7 +17,7 @@
       height: 100vh;
     }
 
-    .register-container {
+    .login-container {
       width: 350px;
       padding: 40px;
       border-radius: 8px;
@@ -25,7 +25,7 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
 
-    .register-container h2 {
+    .login-container h2 {
       text-align: center;
       margin-bottom: 30px;
       color: #333;
@@ -54,10 +54,10 @@
       outline: none;
     }
 
-    .btn-register {
-      width: 100%;
-      padding: 10px;
-      background-color: #8b4513;
+    .btn-login {
+      width: 50%;
+      padding: 6px 0; /* Adjusted padding for smaller size */
+      background-color: #d2b48c; /* Light brown */
       color: #fff;
       border: none;
       border-radius: 5px;
@@ -65,33 +65,95 @@
       transition: background-color 0.3s ease;
     }
 
-    .btn-register:hover {
-      background-color: #a52a2a;
+
+    .btn-login:hover {
+      background-color: #cdaa7d; /* Darker shade of brown on hover */
+    }
+
+    /* Center the button */
+    .btn-container {
+      text-align: center;
+    }
+
+    /* Style for popup message */
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      display: none; /* Initially hidden */
     }
   </style>
 </head>
 <body>
-<div class="register-container">
-  <h2>Register</h2>
-  <form action="/register" method="post">
+<div class="login-container">
+  <h2>Login</h2>
+  <form id="loginForm" action="/login" method="post" onsubmit="return validateLogin()">
     <div class="form-group">
       <label for="name">Username:</label>
       <input type="text" id="name" name="name" required>
     </div>
     <div class="form-group">
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email" required>
-    </div>
-    <div class="form-group">
       <label for="password">Password:</label>
       <input type="password" id="password" name="password" required>
     </div>
-    <div class="form-group">
-      <label for="confirm_password">Confirm Password:</label>
-      <input type="password" id="confirm_password" name="confirm_password" required>
+    <!-- Centered button container -->
+    <div class="btn-container">
+      <button type="submit" class="btn-login">Login</button>
     </div>
-    <button type="submit" class="btn-register">Register</button>
   </form>
+
+  <p>Don't have an account? <a href="/register">Register</a></p>
 </div>
+
+<!-- Popup message -->
+<div id="popup" class="popup"></div>
+
+<script>
+  function validateLogin() {
+    var username = document.getElementById("name").value;
+    var password = document.getElementById("password").value;
+
+    // Make an AJAX request to check if the user exists
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", "/checkuser?name=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password), true);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          // User exists, submit the form
+          document.getElementById("loginForm").submit();
+        } else {
+          // Handle the response based on status and text
+          if (xhr.responseText === "User not found") {
+            document.getElementById("popup").innerText = "User not found! Please register!";
+          } else if (xhr.responseText === "Invalid credentials") {
+            document.getElementById("popup").innerText = "Invalid credentials! Please try again!";
+          } else {
+            // Other unexpected responses
+            document.getElementById("popup").innerText = "An unexpected error occurred! Please try again later.";
+          }
+          document.getElementById("popup").style.display = "block";
+          setTimeout(function () {
+            document.getElementById("popup").style.display = "none";
+          }, 2000);
+        }
+      }
+    };
+    var data = JSON.stringify({ username: username, password: password });
+    xhr.send(data);
+
+    return false;
+  }
+
+  window.onload = function() {
+    document.getElementById("loginForm").reset();
+  };
+</script>
+
 </body>
 </html>

@@ -157,7 +157,7 @@ public class UserService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             if (user.getCart() != null) {
-                // Delete the associated cart
+
                 cartRepository.delete(user.getCart());
             }
             // Delete the user

@@ -1,36 +1,25 @@
 package com.example.carturestibackend.controllers;
 
-import com.example.carturestibackend.dtos.UserDTO;
-import com.example.carturestibackend.services.UserService;
+import com.example.carturestibackend.services.AuthService;
+import com.example.carturestibackend.entities.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-/**
- * Controller class for handling authentication-related requests and operations.
- */
 @Controller
 public class AuthController {
 
-    private UserService userService;
+    private final AuthService authService;
 
-    /**
-     * Constructor for AuthController.
-     * @param userService The UserService instance to be injected.
-     */
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
-    /**
-     * Handler method for GET requests to "/login".
-     * Displays the login form.
-     * @param error Error message indicating invalid credentials (optional).
-     * @param model Model to be populated with data.
-     * @return The name of the login view template.
-     */
     @GetMapping("/login")
     public String showLoginForm(@RequestParam(value = "error", required = false) String error, Model model) {
         if (error != null) {
@@ -39,46 +28,33 @@ public class AuthController {
         return "login";
     }
 
-    /**
-     * Handler method for POST requests to "/login".
-     * Authenticates the user and redirects based on role.
-     * @param name Username entered in the login form.
-     * @param password Password entered in the login form.
-     * @return Redirect URL based on user role or back to login page with error.
-     */
     @PostMapping("/login")
     public String login(@RequestParam("name") String name,
-                        @RequestParam("password") String password) {
+                        @RequestParam("password") String password,
+                        RedirectAttributes attributes) {
+        User user = authService.checkUser(name, password);
 
-        String role = authenticateUser(name, password);
-
-        if (role != null) {
-            if (role.equals("admin")) {
+        if (user != null) {
+            if ("admin".equals(user.getRole())) {
                 return "redirect:/admin";
-            } else if (role.equals("client")) {
+            } else if ("client".equals(user.getRole())) {
                 return "redirect:/client";
             }
         }
 
-        return "redirect:/login?error=true";
+        attributes.addFlashAttribute("error", "true");
+        return "redirect:/login";
     }
 
-    /**
-     * Authenticate the user based on username and password.
-     * @param name Username entered in the login form.
-     * @param password Password entered in the login form.
-     * @return Role of the authenticated user (admin or client), or null if authentication fails.
-     */
-    private String authenticateUser(String name, String password) {
+    @PostMapping("/checkuser")
+    public ResponseEntity<String> checkUser(@RequestParam String name, @RequestParam String password) {
+        User user = authService.checkUser(name, password);
+        if (user != null) {
+            return ResponseEntity.ok().body(user.getRole());
+        } else {
 
-        UserDTO user = userService.findUserByNameAndPassword(name, password);
-
-        // Check if user exists and has a valid role
-        if (user != null && user.getRole() != null) {
-            return user.getRole();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
-        return null;
     }
 
 }

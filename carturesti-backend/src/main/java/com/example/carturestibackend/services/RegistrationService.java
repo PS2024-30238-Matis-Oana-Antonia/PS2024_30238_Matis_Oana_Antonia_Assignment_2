@@ -1,96 +1,57 @@
 package com.example.carturestibackend.services;
 
-import com.example.carturestibackend.config.RabbitSender;
-import com.example.carturestibackend.dtos.MessageDTO;
-import com.example.carturestibackend.dtos.NotificationRequestDTO;
-import com.example.carturestibackend.dtos.UserDTO;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import com.example.carturestibackend.entities.User;
+import com.example.carturestibackend.entities.Cart;
+import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.repositories.CartRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.Collections;
-import java.util.regex.Pattern;
 
 @Service
 public class RegistrationService {
 
-    private final RestTemplate restTemplate;
-    private final RabbitSender rabbitSender;
+    private final UserRepository userRepository;
+    private final CartRepository cartRepository;
 
-    @Value("${authorization.token}") // Injectăm tokenul din fișierul de configurare (application.properties sau application.yml)
-    private String authorizationToken;
-
-    public RegistrationService(RestTemplate restTemplate, RabbitSender rabbitSender) {
-        this.restTemplate = restTemplate;
-        this.rabbitSender = rabbitSender;
+    public RegistrationService(UserRepository userRepository, CartRepository cartRepository) {
+        this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
     }
 
-    private boolean validateAuthorizationToken(String token) {
-
-        String regex = "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}";
-        return Pattern.matches(regex, token);
-    }
-
-    public ResponseEntity<String> register(UserDTO userDto) {
-        // Verificăm dacă toți parametrii necesari sunt prezenți în corpul cererii
-        if (userDto.getName() == null || userDto.getEmail() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Some required fields are missing in the payload!");
-        }
-
-        // Verificăm dacă tokenul de autorizare este valid
-        if (!validateAuthorizationToken(authorizationToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid authorization token!");
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + authorizationToken); // Setăm tokenul de autorizare în antet
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-        // Creăm entitatea HttpEntity cu datele utilizatorului pentru cererea HTTP
-        HttpEntity<UserDTO> entity = new HttpEntity<>(userDto, headers);
-
-        // Apelăm endpoint-ul de înregistrare pentru a trimite email-ul și obținem răspunsul
-        ResponseEntity<MessageDTO> response = restTemplate.exchange(
-                "URL", HttpMethod.POST, entity, MessageDTO.class
-        );
-
-        // Verificăm răspunsul și returnăm un răspuns corespunzător
-        if (response.getStatusCode() == HttpStatus.OK) {
-            // Apelăm metoda pentru trimiterea notificării în coadă
-            sendNotification(userDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully!");
+    @Transactional
+    public User registerUser(String name, String address, String email, String password, int age) {
+        // Check if the user already exists
+        User existingUser = userRepository.findByNameAndAddressAndEmail(name, address, email);
+        if (existingUser != null) {
+            // User already exists, return null
+            return null;
         } else {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to register user!");
+            // User does not exist, proceed with registration
+            User newUser = User.builder()
+                    .name(name)
+                    .address(address)
+                    .email(email)
+                    .password(password)
+                    .age(age)
+                    .role("client") // Set the role to "client" by default
+                    .build();
+            // Save the new user
+            newUser = userRepository.save(newUser);
+
+            // Create a new cart for the user
+            Cart newCart = new Cart();
+            newCart.setUser(newUser); // Associate the cart with the user
+            newCart = cartRepository.save(newCart);
+
+            // Associate the cart with the user and save the user again
+            newUser.setCart(newCart);
+            newUser = userRepository.save(newUser);
+
+            return newUser;
         }
     }
-
-    private void sendNotification(UserDTO userDto) {
-        NotificationRequestDTO notificationRequestDto = createNotificationRequestDto(userDto);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(authorizationToken); // Setăm tokenul de autorizare în antet
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<NotificationRequestDTO> entity = new HttpEntity<>(notificationRequestDto, headers);
-
-        ResponseEntity<MessageDTO> response = restTemplate.exchange(
-                "URL_FOR_NOTIFICATION_SERVICE", HttpMethod.POST, entity, MessageDTO.class
-        );
-
-        // Verificăm răspunsul (dacă este necesar)
-        if (response.getStatusCode() != HttpStatus.OK) {
-            System.out.println("Error sending notification: " + response.getStatusCodeValue());
-        }
-    }
-
-    private NotificationRequestDTO createNotificationRequestDto(UserDTO userDto) {
-        NotificationRequestDTO notificationRequestDto = new NotificationRequestDTO();
-        notificationRequestDto.setId(userDto.getId_user());
-        notificationRequestDto.setName(userDto.getName());
-        notificationRequestDto.setEmail(userDto.getEmail());
-        // Alte câmpuri necesare pot fi adăugate aici
-
-        return notificationRequestDto;
+    public boolean isUserExistsByEmail(String email) {
+        User existingUser = userRepository.findByEmail(email);
+        return existingUser != null;
     }
 }
