@@ -1,25 +1,23 @@
 package com.example.carturestibackend.config;
 
-import com.example.carturestibackend.config.AMQPConfig;
-import com.example.carturestibackend.dtos.UserDTO;
+import com.example.carturestibackend.dtos.NotificationRequestDTO;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+
+import static com.example.carturestibackend.config.AMQPConfig.EXCHANGE_NAME;
+import static com.example.carturestibackend.config.AMQPConfig.ROUTING_KEY;
+
 
 @Component
 public class RabbitSender {
 
-    private final RabbitTemplate rabbitTemplate;
-
-
     @Autowired
-    public RabbitSender(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
-    }
+    private RabbitTemplate rabbitTemplate;
 
-    public void send(UserDTO payload) {
-        rabbitTemplate.convertAndSend(AMQPConfig.QUEUE_NAME, payload);
+
+    public void send(NotificationRequestDTO payload) {
+        rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, payload);
     }
 }

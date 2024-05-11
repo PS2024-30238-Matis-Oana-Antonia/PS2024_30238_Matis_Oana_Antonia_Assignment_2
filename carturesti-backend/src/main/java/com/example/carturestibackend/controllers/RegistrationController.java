@@ -21,7 +21,7 @@ public class RegistrationController {
 
     @GetMapping("/register")
     public String showRegistrationForm() {
-        return "register"; // Assuming "register" is the name of your registration page template
+        return "register";
     }
 
     @PostMapping("/register")
@@ -34,11 +34,11 @@ public class RegistrationController {
         User registeredUser = registrationService.registerUser(name, address, email, password, age);
         if (registeredUser != null) {
             model.addAttribute("registeredUser", registeredUser);
-            return "redirect:/login"; // Redirect to the login page after successful registration
+            return "redirect:/login";
         } else {
-            // User already exists, add a message and return the registration form
+
             model.addAttribute("errorMessage", "User already exists");
-            return "register"; // Return to the registration form with an error message
+            return "register";
         }
     }
 
@@ -48,10 +48,8 @@ public class RegistrationController {
         String email = request.get("email");
         boolean userExists = registrationService.isUserExistsByEmail(email);
         if (userExists) {
-            // User already exists
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } else {
-            // User does not exist
             return ResponseEntity.ok().build();
         }
     }

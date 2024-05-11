@@ -1,7 +1,9 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.config.RabbitSender;
 import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.constants.OrderLogger;
+import com.example.carturestibackend.dtos.NotificationRequestDTO;
 import com.example.carturestibackend.dtos.OrderDTO;
 import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
@@ -121,6 +123,8 @@ public class OrderService {
      * @return The ID of the newly inserted order.
      */
 
+    @Autowired
+    private RabbitSender rabbitSender;
 
     @Transactional
     public String insert(OrderDTO orderDTO) {
@@ -186,12 +190,42 @@ public class OrderService {
         try {
             order = orderRepository.save(order);
             logger.info(OrderLogger.ORDER_INSERTED, order.getId_order());
+
+            sendNotificationEmail(user, order);
+
             return order.getId_order();
         } catch (Exception e) {
             logger.error("Failed to save order: {}", e.getMessage());
             throw new RuntimeException("Failed to save order: " + e.getMessage());
         }
     }
+
+    private void sendNotificationEmail(User user, Order order) {
+        NotificationRequestDTO notificationRequestDTO = new NotificationRequestDTO();
+        notificationRequestDTO.setSubject("Order Confirmation");
+        notificationRequestDTO.setBody(buildEmailMessage(user, order));
+        notificationRequestDTO.setEmail(user.getEmail());
+        rabbitSender.send(notificationRequestDTO);
+    }
+
+    private String buildEmailMessage(User user, Order order) {
+        StringBuilder body = new StringBuilder();
+        body.append("Hello, ").append(user.getName()).append("!<br><br>");
+        body.append("Your order has been successfully placed with the following details:<br><br>");
+
+        body.append("Products:<br>");
+        body.append("<ul>");
+        for (Product product : order.getProducts()) {
+            body.append("<li>").append(product.getName()).append(": ").append(product.getPrice()).append("</li>");
+        }
+        body.append("</ul>");
+
+        body.append("<br>Total price: ").append(order.getTotal_price()).append("<br><br>");
+        body.append("Thank you for shopping with us!<br>");
+        body.append("The Cărturești Team.");
+        return body.toString();
+    }
+
 
 
     /**

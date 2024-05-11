@@ -1,47 +1,40 @@
 package com.example.carturestibackend.controllers;
 
-import com.example.carturestibackend.dtos.UserDTO;
-import com.example.carturestibackend.services.UserService;
+import com.example.carturestibackend.services.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.List;
-
-/**
- * Controller class for handling admin-related requests and operations.
- */
 @Controller
 public class AdminController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
-    /**
-     * Constructor for AdminController.
-     * @param userService The UserService instance to be injected.
-     */
     @Autowired
-    public AdminController(UserService userService) {
-        this.userService = userService;
+    public AdminController(AuthService authService) {
+        this.authService = authService;
     }
 
-    /**
-     * Handler method for GET requests to "/admin".
-     * Retrieves a list of users and returns the admin page.
-     * @return ModelAndView representing the admin page.
-     */
     @GetMapping("/admin")
-    public ModelAndView adminPage() {
+    public ModelAndView adminPage(HttpServletRequest request) {
         ModelAndView modelAndView = new ModelAndView();
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("username") == null) {
+            return new ModelAndView("redirect:/login");
+        }
+
+        String username = (String) session.getAttribute("username");
+        String role = authService.getRole(username);
+
+        if (!"admin".equals(role)) {
+            return new ModelAndView("redirect:/client");
+        }
+
         modelAndView.setViewName("admin");
-
-        // Retrieve list of users
-        List<UserDTO> users = userService.findUsers();
-
-        // Add users to the model
-        modelAndView.addObject("_embedded", users);
-
         return modelAndView;
     }
 }

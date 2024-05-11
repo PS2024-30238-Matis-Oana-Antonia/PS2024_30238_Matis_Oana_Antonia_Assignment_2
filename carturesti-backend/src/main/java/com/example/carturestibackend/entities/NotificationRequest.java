@@ -1,5 +1,7 @@
-package com.example.carturestibackend.dtos;
+package com.example.carturestibackend.entities;
 
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +14,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class NotificationRequestDTO implements Serializable {
+public class NotificationRequest implements Serializable {
+    @Id
+    @GeneratedValue(generator = "uuid")
     private String id;
 
     @NotBlank

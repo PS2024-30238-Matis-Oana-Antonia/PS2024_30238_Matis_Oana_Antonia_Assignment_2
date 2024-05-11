@@ -1,9 +1,13 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.config.RabbitSender;
 import com.example.carturestibackend.constants.ReviewLogger;
+import com.example.carturestibackend.dtos.NotificationRequestDTO;
 import com.example.carturestibackend.dtos.ReviewDTO;
 import com.example.carturestibackend.dtos.mappers.ReviewMapper;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.Review;
+import com.example.carturestibackend.entities.User;
 import com.example.carturestibackend.repositories.ReviewRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
@@ -80,11 +84,49 @@ public class ReviewService {
      * @param reviewDTO The ReviewDTO object representing the review to insert.
      * @return The ID of the newly inserted review.
      */
+    @Autowired
+    private RabbitSender rabbitSender;
+
+    public String buildEmailMessage(User user, String productName, ReviewDTO reviewDTO) {
+        StringBuilder body = new StringBuilder();
+        body.append("Hello, ").append(user.getName()).append(",<br><br>")
+                .append("Your review has been added for the product '").append(productName).append("'.<br><br>")
+                .append("Review Details:<br>")
+                .append("&emsp;Rating: ").append(reviewDTO.getRating()).append("/5<br>")
+                .append("&emsp;Comment: ").append(reviewDTO.getComment()).append("<br><br>")
+                .append("Thank you for your dedication!<br>")
+                .append("The Cărturești Team.");
+
+        return body.toString();
+    }
+
+
     public String insert(ReviewDTO reviewDTO) {
         Review review = ReviewMapper.fromReviewDTO(reviewDTO);
         ReviewValidator.validateReview(review);
         review = reviewRepository.save(review);
         LOGGER.debug(ReviewLogger.REVIEW_INSERTED, review.getId());
+
+        Optional<User> userOptional = userRepository.findById(reviewDTO.getId_user());
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            Optional<Product> productOptional = productRepository.findById(reviewDTO.getId_product());
+            String productName = productOptional.map(Product::getName).orElse("Unknown Product");
+
+            NotificationRequestDTO notificationRequestDTO = new NotificationRequestDTO();
+            notificationRequestDTO.setSubject("New Review Added!");
+            notificationRequestDTO.setBody(buildEmailMessage(user, productName, reviewDTO));
+            notificationRequestDTO.setEmail(user.getEmail()); // Set email based on user details
+            rabbitSender.send(notificationRequestDTO);
+
+            LOGGER.debug("Email sent successfully to: {}", user.getEmail());
+        } else {
+            // Handle case where user is not found
+            LOGGER.error("User not found with ID: {}", reviewDTO.getId_user());
+            // You may want to throw an exception or handle this case appropriately
+        }
+
         return review.getId();
     }
 
@@ -115,8 +157,6 @@ public class ReviewService {
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
     }
-
-
 
     /**
      * Updates an existing review in the database.
