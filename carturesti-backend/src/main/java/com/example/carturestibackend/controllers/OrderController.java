@@ -5,10 +5,15 @@ import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.OrderDTO;
 import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.services.OrderService;
+import com.example.carturestibackend.strategy.CsvFileGenerationStrategy;
+import com.example.carturestibackend.strategy.FileGenerator;
+import com.example.carturestibackend.strategy.PdfFileGenerationStrategy;
+import com.example.carturestibackend.strategy.TxtFileGenerationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -69,6 +74,25 @@ public class OrderController {
         modelAndView.addObject("orderID", orderID);
         return new ModelAndView("redirect:/order");
     }
+
+    @PostMapping("/generateAndSendPdf")
+    public ResponseEntity<String> generateAndSendPdf(@RequestParam String orderId) {
+        orderService.generateAndSendPdf(orderId);
+        return ResponseEntity.ok("PDF generated and sent successfully");
+    }
+
+    @PostMapping("/generateAndSendTxt")
+    public ResponseEntity<String> generateAndSendTxt(@RequestParam String orderId) {
+        orderService.generateAndSendTxt(orderId);
+        return ResponseEntity.ok("TXT generated and sent successfully");
+    }
+
+    @PostMapping("/generateAndSendCsv")
+    public ResponseEntity<String> generateAndSendCsv(@RequestParam String orderId) {
+        orderService.generateAndSendCsv(orderId);
+        return ResponseEntity.ok("CSV generated and sent successfully");
+    }
+
     @PostMapping("/insert2")
     public ModelAndView insertOrderClient(@Valid @ModelAttribute OrderDTO orderDTO) {
         String orderID = orderService.insert(orderDTO);

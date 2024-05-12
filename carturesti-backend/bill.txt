@@ -1,0 +1,13 @@
+Bill
+-----------------------------------------------
+Order ID: c8b0c546-caf5-45ae-82a3-899482d1d028
+Customer Details:
+	Name: Matis Ramona
+	Address: str Principala, nr 98B
+	Email: matisramona@yahoo.com
+-----------------------------------------------
+Products:
+ - Aventurile lui Tom Sawyer: Mark Twain
+-----------------------------------------------
+Total Price: 45.0
+

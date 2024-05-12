@@ -1,27 +1,28 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.config.RabbitSender;
-import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.NotificationRequestDTO;
 import com.example.carturestibackend.dtos.OrderDTO;
-import com.example.carturestibackend.dtos.OrderItemDTO;
-import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
 import com.example.carturestibackend.dtos.mappers.OrderMapper;
 import com.example.carturestibackend.entities.Order;
-import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.User;
 import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.OrderRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.strategy.CsvFileGenerationStrategy;
+import com.example.carturestibackend.strategy.FileGenerator;
+import com.example.carturestibackend.strategy.PdfFileGenerationStrategy;
+import com.example.carturestibackend.strategy.TxtFileGenerationStrategy;
 import com.example.carturestibackend.validators.OrderValidator;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -76,28 +77,19 @@ public class OrderService {
     }
 
     private OrderDTO calculateOrderTotals(Order order) {
-        List<Product> products = order.getProducts(); // Assuming you have a method to retrieve products from the order
+        List<Product> products = order.getProducts();
 
         long totalQuantity = 0;
         double totalPrice = 0;
-
-        // Iterate through the products associated with the order
         for (Product product : products) {
-            // Calculate total quantity and total price based on the products
-            totalQuantity += 1;// Assuming there's a method to get quantity from Product entity
-            totalPrice += product.getPrice(); // Assuming there's a method to get price from Product entity
+            totalQuantity += 1;
+            totalPrice += product.getPrice();
         }
 
-        // Update order totals
         order.setTotal_quantity(totalQuantity);
         order.setTotal_price(totalPrice);
-
-        // Return OrderDTO
         return OrderMapper.toOrderDTO(order);
     }
-
-
-
 
     /**
      * Retrieves an order by its ID.
@@ -115,7 +107,6 @@ public class OrderService {
         return OrderMapper.toOrderDTO(orderOptional.get());
     }
 
-
     /**
      * Inserts a new order into the database.
      *
@@ -129,7 +120,6 @@ public class OrderService {
     @Transactional
     public String insert(OrderDTO orderDTO) {
         Logger logger = LoggerFactory.getLogger(getClass());
-
         User user = userRepository.findById(orderDTO.getId_user())
                 .orElseThrow(() -> {
                     String message = String.format(OrderLogger.ORDER_NOT_FOUND_BY_ID, orderDTO.getId_user());
@@ -138,16 +128,13 @@ public class OrderService {
                 });
 
         logger.info(OrderLogger.ORDER_RETRIEVED_BY_ID, user.getId_user());
-
         Order order = new Order();
         order.setOrder_date(orderDTO.getOrder_date());
         order.setUser(user);
 
-        // Initialize the list of products if null
         if (order.getProducts() == null) {
             order.setProducts(new ArrayList<>());
         }
-
         double totalPrice = 0.0;
 
         for (String productId : orderDTO.getId_products()) {
@@ -157,42 +144,32 @@ public class OrderService {
                         logger.error(message);
                         return new ResourceNotFoundException(message);
                     });
-
             if (product.getStock() <= 0) {
                 String message = "Insufficient stock for product with ID: " + productId;
                 logger.error(message);
                 throw new RuntimeException(message);
             }
 
-            // Choose the minimum price among original, discounted, and promotional price
-            double priceToUse = Double.MAX_VALUE; // Initialize with maximum value
+            double priceToUse = Double.MAX_VALUE;
             if (product.getPrice() < priceToUse) {
                 priceToUse = product.getPrice();
             }
-
             if (product.getPrice_promotion() > 0 && product.getPrice_promotion() < priceToUse) {
                 priceToUse = product.getPrice_promotion();
             }
-
             order.getProducts().add(product);
             totalPrice += priceToUse;
-
-            // Decrease the stock of the product
             product.setStock(product.getStock() - 1);
             productRepository.save(product);
-
             logger.info("Product with ID {} added to order. Price used: {}", product.getId_product(), priceToUse);
         }
-
         order.setTotal_price(totalPrice);
         logger.info("Total price calculated for order: {}", totalPrice);
-
         try {
             order = orderRepository.save(order);
             logger.info(OrderLogger.ORDER_INSERTED, order.getId_order());
 
             sendNotificationEmail(user, order);
-
             return order.getId_order();
         } catch (Exception e) {
             logger.error("Failed to save order: {}", e.getMessage());
@@ -212,21 +189,55 @@ public class OrderService {
         StringBuilder body = new StringBuilder();
         body.append("Hello, ").append(user.getName()).append("!<br><br>");
         body.append("Your order has been successfully placed with the following details:<br><br>");
-
         body.append("Products:<br>");
         body.append("<ul>");
         for (Product product : order.getProducts()) {
             body.append("<li>").append(product.getName()).append(": ").append(product.getPrice()).append("</li>");
         }
         body.append("</ul>");
-
         body.append("<br>Total price: ").append(order.getTotal_price()).append("<br><br>");
         body.append("Thank you for shopping with us!<br>");
         body.append("The Cărturești Team.");
         return body.toString();
     }
 
+    public void generateAndSendTxt(String id) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isEmpty()) {
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
+            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
+        }
+        Order order = orderOptional.get();
 
+        FileGenerator fileGenerator = new FileGenerator();
+        fileGenerator.setStrategy(new TxtFileGenerationStrategy());
+        fileGenerator.generateFile(Optional.of(order));
+    }
+
+    public void generateAndSendCsv(String id) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isEmpty()) {
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
+            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
+        }
+        Order order = orderOptional.get();
+        FileGenerator fileGenerator = new FileGenerator();
+        fileGenerator.setStrategy(new CsvFileGenerationStrategy());
+        fileGenerator.generateFile(Optional.of(order));
+    }
+
+
+    public void generateAndSendPdf(String id) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isEmpty()) {
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
+            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
+        }
+        Order order = orderOptional.get();
+        FileGenerator fileGenerator = new FileGenerator();
+        fileGenerator.setStrategy(new PdfFileGenerationStrategy());
+        fileGenerator.generateFile(Optional.of(order));
+    }
 
     /**
      * Deletes an order from the database by its ID.
@@ -239,27 +250,19 @@ public class OrderService {
         Optional<Order> orderOptional = orderRepository.findById(id_order);
         if (orderOptional.isPresent()) {
             Order order = orderOptional.get();
-
-            // Remove association with user without cascading deletion
             order.setUser(null);
-
             for (Product product : order.getProducts()) {
-                // Increase stock by 1 for each product in the order
                 product.setStock(product.getStock() + 1);
-                product.setOrders(null); // Remove association with the order
-                productRepository.save(product); // Save the updated product
+                product.setOrders(null);
+                productRepository.save(product);
             }
-
             orderRepository.delete(order);
-
             LOGGER.debug(OrderLogger.ORDER_DELETED, id_order);
         } else {
             LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id_order);
             throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id_order);
         }
     }
-
-
 
     /**
      * Updates an existing order in the database.
@@ -275,36 +278,21 @@ public class OrderService {
             LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
         }
-
         Order existingOrder = orderOptional.get();
         existingOrder.setOrder_date(orderDTO.getOrder_date());
         existingOrder.setTotal_quantity(orderDTO.getTotal_quantity());
         existingOrder.setTotal_price(orderDTO.getTotal_price());
-
         Order updatedOrder = orderRepository.save(existingOrder);
         LOGGER.debug(OrderLogger.ORDER_UPDATED, updatedOrder.getId_order());
-
         return OrderMapper.toOrderDTO(updatedOrder);
     }
 
     public List<OrderDTO> findOrdersByUserId(String userId) {
-        // Find the user by ID
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
-
-        // Retrieve orders associated with the user
         List<Order> orders = orderRepository.findByUser(user);
-
-        // Map orders to OrderDTOs and calculate totals for each order
         return orders.stream()
                 .map(this::calculateOrderTotals)
                 .collect(Collectors.toList());
     }
-
-
-    private void updateOrderTotal(Order order, OrderItem orderItem) {
-        order.setTotal_quantity(order.getTotal_quantity() + orderItem.getQuantity());
-        order.setTotal_price(order.getTotal_price() + (orderItem.getPrice_per_unit() * orderItem.getQuantity()));
-    }
-
 }

@@ -33,23 +33,23 @@
             border: none;
             border-radius: 20px;
             color: #fff;
-            height: 60px; /* Increased height */
-            width: 200px; /* Increased width */
+            height: 60px;
+            width: 200px;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            margin-bottom: 20px; /* Add margin to the bottom */
-            font-size: 1.2rem; /* Increased font size */
+            margin-bottom: 20px;
+            font-size: 1.2rem;
         }
 
         .button:hover {
-            background-color: #218838; /* Darker green on hover */
+            background-color: #218838;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            background-color: #fff; /* Setting background color to white */
+            background-color: #fff;
         }
 
         th, td {
@@ -72,7 +72,6 @@
             background-color: transparent;
         }
 
-        /* Updated title style */
         .title-container {
             background-color: #d2b48c; /* Light brown background */
             padding: 10px;
@@ -80,9 +79,9 @@
 
         h1.title {
             font-size: 2.5rem;
-            color: #8B4513; /* Dark brown color */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Adding a subtle shadow */
-            margin: 0; /* Remove default margin */
+            color: #8B4513;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin: 0;
         }
     </style>
 </head>
@@ -119,18 +118,34 @@
                             <td th:text="${order.id_user}"></td>
                             <td>
                                 <ul>
-                                    <!-- Iterate over order items for each order -->
                                     <li th:each="productId: ${order.id_products}" th:text="${productId}"></li>
-
                                 </ul>
                             </td>
-
                             <td>
                                 <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateOrderModal-' + ${order.id_order}">Edit</button>
                                 <form th:if="${order != null}" id="deleteForm-${order.id_order}" method="POST" th:action="@{/order/delete}">
                                     <input type="hidden" name="id_order" th:value="${order.id_order}">
                                     <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                                 </form>
+                                <div class="dropdown">
+                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="invoiceDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Generate Bill
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="invoiceDropdown">
+                                        <form th:action="@{/order/generateAndSendPdf}" method="post">
+                                            <input type="hidden" name="orderId" th:value="${order.id_order}"/>
+                                            <button type="submit" class="dropdown-item">PDF</button>
+                                        </form>
+                                        <form th:action="@{/order/generateAndSendTxt}" method="post">
+                                            <input type="hidden" name="orderId" th:value="${order.id_order}"/>
+                                            <button type="submit" class="dropdown-item">TXT</button>
+                                        </form>
+                                        <form th:action="@{/order/generateAndSendCsv}" method="post">
+                                            <input type="hidden" name="orderId" th:value="${order.id_order}"/>
+                                            <button type="submit" class="dropdown-item">CSV</button>
+                                        </form>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                         </tbody>
@@ -163,31 +178,23 @@
                         <input type="text" id="id_user" name="id_user" class="id_user" placeholder="Enter User ID" required>
                         <div class="invalid-feedback">User ID is required.</div>
                     </div>
-
-                    <!-- Order Items with Quantity -->
                     <div class="form-group">
                         <label for="id_products">Order Items:</label>
                         <div id="id_products">
-                            <!-- Fields for each order item -->
                             <div class="product">
                                 <input type="text" name="id_products" class="form-control product-id" placeholder="Enter Order Item ID" required>
                                 <div class="invalid-feedback">Order Item ID is required.</div>
                             </div>
                         </div>
                     </div>
-
                     <button type="submit" class="btn btn-primary">Add Order</button>
                 </form>
-
             </div>
         </div>
     </div>
 </div>
 
 
-
-
-<!-- Update Order Modal -->
 <div th:each="order: ${orders}" th:id="'updateOrderModal-' + ${order.id_order}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="updateOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -225,7 +232,6 @@
 
 
 <script>
-    // JavaScript code to dynamically add input fields for products
     document.addEventListener('DOMContentLoaded', function () {
         const addProductButton = document.getElementById('add_product_button');
         const orderItemsContainer = document.getElementById('order_items_container');
@@ -243,13 +249,10 @@
 </script>
 
 <script>
-    // JavaScript for form validation
     (function() {
         'use strict';
         window.addEventListener('load', function() {
-            // Fetch all the forms we want to apply custom Bootstrap validation styles to
             var forms = document.getElementsByClassName('needs-validation');
-            // Loop over them and prevent submission
             var validation = Array.prototype.filter.call(forms, function(form) {
                 form.addEventListener('submit', function(event) {
                     if (form.checkValidity() === false) {
@@ -264,19 +267,14 @@
 </script>
 
 <script>
-    // Set min date to current date for order_date input
     document.addEventListener('DOMContentLoaded', function () {
         const orderDateInput = document.getElementById('order_date');
         const currentDate = new Date();
         const year = currentDate.getFullYear();
         let month = currentDate.getMonth() + 1;
         let day = currentDate.getDate();
-
-        // Format month and day to ensure they have two digits
         month = month < 10 ? '0' + month : month;
         day = day < 10 ? '0' + day : day;
-
-        // Set the min attribute to the current date
         orderDateInput.min = `${year}-${month}-${day}`;
     });
 </script>
