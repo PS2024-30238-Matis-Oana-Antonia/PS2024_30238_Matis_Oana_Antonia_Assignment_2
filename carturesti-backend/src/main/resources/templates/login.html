@@ -119,8 +119,6 @@
   function validateLogin() {
     var username = document.getElementById("name").value;
     var password = document.getElementById("password").value;
-
-    // Make an AJAX request to check if the user exists
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/checkuser?name=" + encodeURIComponent(username) + "&password=" + encodeURIComponent(password), true);
     xhr.setRequestHeader("Content-Type", "application/json");

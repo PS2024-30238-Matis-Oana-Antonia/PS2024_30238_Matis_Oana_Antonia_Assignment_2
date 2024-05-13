@@ -1,13 +1,24 @@
 Bill
 -----------------------------------------------
-Order ID: c8b0c546-caf5-45ae-82a3-899482d1d028
+
+Order ID: 11b11b6f-dc94-4000-bb05-b0fccd0cca92
+Order Date2024-05-16
+
+-----------------------------------------------
+
 Customer Details:
-	Name: Matis Ramona
-	Address: str Principala, nr 98B
-	Email: matisramona@yahoo.com
+	Name: Tudor Bichile
+	Address: str Observatorului, nr 34
+	Email: tudorovidiub@gmail.com
+
 -----------------------------------------------
+
 Products:
+
  - Aventurile lui Tom Sawyer: Mark Twain
+ - Aventurile lui Tom Sawyer: Mark Twain
+
 -----------------------------------------------
-Total Price: 45.0
+
+Total Price: 90.0
 

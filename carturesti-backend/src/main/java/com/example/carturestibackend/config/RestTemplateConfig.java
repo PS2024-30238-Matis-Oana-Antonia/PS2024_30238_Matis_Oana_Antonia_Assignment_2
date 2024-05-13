@@ -36,7 +36,7 @@ public class RestTemplateConfig {
             HttpEntity<String> requestEntity = new HttpEntity<>(jsonPayload, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                    "http://localhost:8081/notification/email", // URL of the email notification service
+                    "http://localhost:8081/notification/email",
                     HttpMethod.POST,
                     requestEntity,
                     String.class

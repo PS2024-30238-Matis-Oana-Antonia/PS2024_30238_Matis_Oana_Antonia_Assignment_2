@@ -192,7 +192,7 @@ public class OrderService {
         body.append("Products:<br>");
         body.append("<ul>");
         for (Product product : order.getProducts()) {
-            body.append("<li>").append(product.getName()).append(": ").append(product.getPrice()).append("</li>");
+            body.append("<li>").append(product.getName()).append(": ").append(product.getAuthor()).append(", ").append(product.getPrice()).append(" lei").append("</li>");
         }
         body.append("</ul>");
         body.append("<br>Total price: ").append(order.getTotal_price()).append("<br><br>");
