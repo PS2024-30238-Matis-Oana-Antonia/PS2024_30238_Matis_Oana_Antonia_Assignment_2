@@ -17,25 +17,20 @@ public class CartMapper {
     }
 
     public static CartDTO toCartDTO(Cart cart) {
-
         return CartDTO.builder()
                 .id_cart(cart.getId_cart())
-                .id_user(Optional.ofNullable(cart.getUser()).map(User::getId_user).orElse(null))
-                .id_products(Optional.ofNullable(cart.getProducts())
-                        .map(items -> items.stream().map(Product::getId_product).collect(Collectors.toList()))
-                        .orElse(null))
+                .user(cart.getUser())
+                .orderItems(cart.getOrderItems())
+                .total_price(Optional.ofNullable(cart.getTotal_price()).orElse(0.0))
                 .build();
     }
-
     public static Cart fromCartDTO(CartDTO cartDTO) {
 
         return Cart.builder()
-                .user(User.builder()
-                        .id_user(cartDTO.getId_user())
-                        .build())
-                .products(Optional.ofNullable(cartDTO.getId_products())
-                        .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
-                        .orElse(Collections.emptyList())) // Default to empty list if null
+                .id_cart(cartDTO.getId_cart())
+                .user(cartDTO.getUser())
+                .orderItems(cartDTO.getOrderItems())
+                .total_price(cartDTO.getTotal_price())
                 .build();
     }
 }

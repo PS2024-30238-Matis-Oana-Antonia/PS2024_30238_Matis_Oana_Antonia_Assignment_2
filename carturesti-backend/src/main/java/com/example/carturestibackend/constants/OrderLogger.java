@@ -7,4 +7,5 @@ public class OrderLogger {
     public static final String ORDER_DELETED = "Order with id {} was deleted from the database";
     public static final String ORDER_UPDATED = "Order with id {} was updated in the database";
     public static final String ALL_ORDERS_RETRIEVED = "All orders retrieved successfully";
+    public static final String ORDER_PLACED = "Order placed successfully!";
 }

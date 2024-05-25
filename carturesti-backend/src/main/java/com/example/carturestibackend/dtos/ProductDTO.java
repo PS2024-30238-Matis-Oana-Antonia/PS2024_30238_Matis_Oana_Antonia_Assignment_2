@@ -22,6 +22,7 @@ public class ProductDTO {
     private List<String> id_reviews;
     private String id_category;
     private List<String> id_orders;
+    private List<String> id_order_items;
     private String id_promotion;
     private String id_sale;
 

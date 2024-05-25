@@ -1,5 +1,5 @@
 package com.example.carturestibackend.strategy;
 
 public interface FileGenerationStrategy {
-    void generateFile(String formattedOrder);
+    void generateFile(String data);
 }

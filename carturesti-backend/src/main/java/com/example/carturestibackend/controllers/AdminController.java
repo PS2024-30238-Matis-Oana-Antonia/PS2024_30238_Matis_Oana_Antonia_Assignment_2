@@ -37,4 +37,6 @@ public class AdminController {
         modelAndView.setViewName("admin");
         return modelAndView;
     }
+
+
 }

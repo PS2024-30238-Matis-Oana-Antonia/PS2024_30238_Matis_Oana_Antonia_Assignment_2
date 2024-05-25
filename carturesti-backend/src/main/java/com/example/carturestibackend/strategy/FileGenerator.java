@@ -62,7 +62,7 @@ public class FileGenerator {
         sb.append("Bill\n")
                 .append("-----------------------------------------------\n\n")
                 .append("Order ID: ").append(order.getId_order()).append("\n")
-                .append("Order Date").append(order.getOrder_date()).append("\n\n")
+                .append("Order Date: ").append(order.getOrder_date()).append("\n\n")
                 .append("-----------------------------------------------\n\n")
                 .append("Customer Details:\n")
                 .append("\tName: ").append(order.getUser().getName()).append("\n")

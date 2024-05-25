@@ -20,7 +20,7 @@ public class PaymentMapper {
                 .card_owner(payment.getCard_owner())
                 .card_number(payment.getCard_number())
                 .cvv(payment.getCvv())
-                .id_user(Optional.ofNullable(payment.getUser()).map(User::getId_user).orElse(null))
+                .id_user(payment.getUser().getId_user())
                 .build();
     }
 
@@ -29,7 +29,7 @@ public class PaymentMapper {
                 .card_owner(paymentDTO.getCard_owner())
                 .card_number(paymentDTO.getCard_number())
                 .cvv(paymentDTO.getCvv())
-                .user(Optional.ofNullable(paymentDTO.getId_user()).map(id -> User.builder().id_user(id).build()).orElse(null))
+                .user(User.builder().id_user(paymentDTO.getId_user()).build())
                 .build();
     }
 }

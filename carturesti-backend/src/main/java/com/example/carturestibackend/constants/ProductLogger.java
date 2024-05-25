@@ -11,4 +11,5 @@ public class ProductLogger {
     public static final String STOCK_DECREASED = "Stock decreased for product {} by {} units. New stock: {}";
     public static final String INSUFFICIENT_STOCK_TO_DECREASE = "Insufficient stock for product {} to decrease by {}. Stock: {}";
     public static final String STOCK_INCREASED = "Stock increased for product {} by {} units. New stock: {}";
+    public static final String PRODUCT_NOT_FOUND_IN_CART = "Product not found in cart!";
 }

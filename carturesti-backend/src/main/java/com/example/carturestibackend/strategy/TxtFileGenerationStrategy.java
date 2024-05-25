@@ -24,7 +24,6 @@ public class TxtFileGenerationStrategy implements FileGenerationStrategy {
         } catch (IOException e) {
             LOGGER.error("Error at generating TXT file: {}", e.getMessage());
         } finally {
-
             if (writer != null) {
                 writer.close();
             }

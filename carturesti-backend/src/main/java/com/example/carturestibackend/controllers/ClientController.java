@@ -12,9 +12,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
-/**
- * Controller class to handle HTTP requests related to the client page.
- */
 @Controller
 public class ClientController {
 
@@ -30,8 +27,6 @@ public class ClientController {
     @GetMapping("/client")
     public ModelAndView clientPage(HttpServletRequest request) {
         ModelAndView modelAndView = new ModelAndView();
-        List<ProductDTO> products = productService.findProducts();
-        modelAndView.addObject("products", products);
         HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("username") == null) {
@@ -39,14 +34,24 @@ public class ClientController {
         }
 
         String username = (String) session.getAttribute("username");
+        String userId = (String) session.getAttribute("userId"); // Retrieve user ID
         String role = authService.getRole(username);
 
         if (!"client".equals(role)) {
             return new ModelAndView("redirect:/admin");
         }
 
+        String cartId = (String) session.getAttribute("cartId");
+        modelAndView.addObject("cartId", cartId);
+
+        List<ProductDTO> products = productService.findProducts();
+        modelAndView.addObject("products", products);
+
+        // Add user ID to the model
+        modelAndView.addObject("userId", userId);
+
         modelAndView.setViewName("client");
         return modelAndView;
     }
-}
 
+}

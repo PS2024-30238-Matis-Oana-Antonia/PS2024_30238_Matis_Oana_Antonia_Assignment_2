@@ -1,9 +1,14 @@
 package com.example.carturestibackend.services;
 
 import com.example.carturestibackend.constants.CartLogger;
+import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.CartDTO;
+import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.CartMapper;
 import com.example.carturestibackend.entities.Cart;
+import com.example.carturestibackend.entities.OrderItem;
+import com.example.carturestibackend.entities.Product;
+import com.example.carturestibackend.entities.User;
 import com.example.carturestibackend.repositories.CartRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.CartValidator;
@@ -12,8 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +52,7 @@ public class CartService {
         this.productRepository = productRepository;
         this.cartValidator = cartValidator;
     }
+
 
     /**
      * Retrieves all carts.
@@ -118,7 +127,6 @@ public class CartService {
         Optional<Cart> cartOptional = cartRepository.findById(id_cart);
         if (cartOptional.isPresent()) {
             Cart existingCart = cartOptional.get();
-            // Update the cart properties here as needed
             Cart updatedCart = cartRepository.save(existingCart);
             LOGGER.debug(CartLogger.CART_UPDATED, id_cart);
             return CartMapper.toCartDTO(updatedCart);
@@ -129,24 +137,105 @@ public class CartService {
     }
 
     /**
+     * Retrieves the cart ID associated with a given user.
+     *
+     * @param user The user whose cart ID needs to be found.
+     * @return The ID of the cart associated with the user.
+     * @throws ResourceNotFoundException If no cart is found for the given user.
+     */
+    public String findCartIdByUser(User user) {
+        Optional<Cart> cartOptional = cartRepository.findByUser(user);
+        if (cartOptional.isPresent()) {
+            return cartOptional.get().getId_cart();
+        } else {
+            LOGGER.error("No cart found for user with ID: {}", user.getId_user());
+            throw new ResourceNotFoundException("Cart for user " + user.getId_user() + " not found.");
+        }
+    }
+
+    /**
      * Adds a product to the cart.
      *
-     * @param id_product The ID of the product to add to the cart.
+     * @param productId The ID of the product to add to the cart.
      */
     @Transactional
-    public void addProductToCart(String id_product) {
+    public void addProductToCart(String cartId, String productId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + cartId));
 
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + productId));
+
+        Optional<OrderItem> existingOrderItem = cart.getOrderItems().stream()
+                .filter(item -> item.getProduct().getId_product().equals(productId))
+                .findFirst();
+
+        if (existingOrderItem.isPresent()) {
+            OrderItem orderItem = existingOrderItem.get();
+            orderItem.setQuantity(orderItem.getQuantity() + 1);
+        } else {
+            OrderItem orderItem = OrderItem.builder()
+                    .cart(cart)
+                    .product(product)
+                    .quantity(1)
+                    .price_per_unit(product.getPrice())
+                    .build();
+            cart.getOrderItems().add(orderItem);
+        }
+
+        // Recalculate total price
+        double totalPrice = calculateTotalPrice(cart);
+        cart.setTotal_price(totalPrice);
+
+        cartRepository.save(cart);
+        LOGGER.debug(CartLogger.PRODUCT_ADDED_TO_CART, productId, cartId);
     }
+
+    @Transactional
+    public void removeProductFromCart(String cartId, String productId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + cartId));
+
+        Optional<OrderItem> orderItemOptional = cart.getOrderItems().stream()
+                .filter(item -> item.getProduct().getId_product().equals(productId))
+                .findFirst();
+
+        if (orderItemOptional.isPresent()) {
+            OrderItem orderItem = orderItemOptional.get();
+            if (orderItem.getQuantity() > 1) {
+                orderItem.setQuantity(orderItem.getQuantity() - 1);
+            } else {
+                cart.getOrderItems().remove(orderItem);
+            }
+
+            // Recalculate total price
+            double totalPrice = calculateTotalPrice(cart);
+            cart.setTotal_price(totalPrice);
+
+            cartRepository.save(cart);
+            LOGGER.debug(CartLogger.PRODUCT_REMOVED_FROM_CART, productId, cartId);
+        } else {
+            LOGGER.error("Order item with productId {} not found in cart {}", productId, cartId);
+            throw new ResourceNotFoundException("Order item not found in cart");
+        }
+    }
+
+    private double calculateTotalPrice(Cart cart) {
+        double totalPrice = cart.getOrderItems().stream()
+                .mapToDouble(item -> item.getPrice_per_unit() * item.getQuantity())
+                .sum();
+        cart.setTotal_price(totalPrice); // Set total_price in the Cart object
+        return totalPrice;
+    }
+
+
 
     /**
      * Removes a product from the cart.
      *
-     * @param id_product The ID of the product to remove from the cart.
+     * @param productId The ID of the product to remove from the cart.
      */
-    @Transactional
-    public void removeProductFromCart(String id_product) {
 
-    }
 
     private List<String> id_products;
 
@@ -155,7 +244,36 @@ public class CartService {
      *
      * @return A list of product IDs.
      */
-    public List<String> getProductsInCartIds() {
-        return Collections.unmodifiableList(id_products);
+    /**
+     * Retrieves the IDs of all products in the cart.
+     *
+     * @return A list of product IDs.
+     */
+    public List<ProductDTO> getProductsInCart(String cartId) {
+        Optional<Cart> cartOptional = cartRepository.findById(cartId);
+        if (cartOptional.isPresent()) {
+            Cart cart = cartOptional.get();
+            List<OrderItem> orderItems = cart.getOrderItems();
+            List<ProductDTO> productDTOs = new ArrayList<>();
+            for (OrderItem orderItem : orderItems) {
+                Product product = orderItem.getProduct();
+                ProductDTO productDTO = new ProductDTO();
+                productDTO.setId_product(product.getId_product());
+                productDTO.setName(product.getName());
+                productDTO.setPrice(product.getPrice());
+                // Set other properties if needed
+                // Set quantity for the product
+                productDTO.setStock(orderItem.getQuantity());
+                productDTOs.add(productDTO);
+            }
+            return productDTOs;
+        } else {
+            // Handle case when cart with given ID is not found
+            return new ArrayList<>();
+        }
     }
+
 }
+
+
+

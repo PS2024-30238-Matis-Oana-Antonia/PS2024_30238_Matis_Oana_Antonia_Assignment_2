@@ -56,8 +56,8 @@
 
     .btn-login {
       width: 50%;
-      padding: 6px 0; /* Adjusted padding for smaller size */
-      background-color: #d2b48c; /* Light brown */
+      padding: 10px 0;
+      background-color: #d2b48c;
       color: #fff;
       border: none;
       border-radius: 5px;
@@ -65,17 +65,14 @@
       transition: background-color 0.3s ease;
     }
 
-
     .btn-login:hover {
-      background-color: #cdaa7d; /* Darker shade of brown on hover */
+      background-color: #cdaa7d;
     }
 
-    /* Center the button */
     .btn-container {
       text-align: center;
     }
 
-    /* Style for popup message */
     .popup {
       position: fixed;
       top: 50%;
@@ -85,7 +82,7 @@
       color: #fff;
       padding: 20px;
       border-radius: 5px;
-      display: none; /* Initially hidden */
+      display: none;
     }
   </style>
 </head>
@@ -101,9 +98,7 @@
       <label for="password">Password:</label>
       <input type="password" id="password" name="password" required>
     </div>
-    <input type="hidden" name="redirect" value="/admin">
 
-    <!-- Centered button container -->
     <div class="btn-container">
       <button type="submit" class="btn-login">Login</button>
     </div>
@@ -112,7 +107,6 @@
   <p>Don't have an account? <a href="/register">Register</a></p>
 </div>
 
-<!-- Popup message -->
 <div id="popup" class="popup"></div>
 
 <script>
@@ -124,29 +118,25 @@
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.onreadystatechange = function () {
       if (xhr.readyState === XMLHttpRequest.DONE) {
+        var popup = document.getElementById("popup");
         if (xhr.status === 200) {
-          // User exists, submit the form
           document.getElementById("loginForm").submit();
         } else {
-          // Handle the response based on status and text
           if (xhr.responseText === "User not found") {
-            document.getElementById("popup").innerText = "User not found! Please register!";
+            popup.innerText = "User not found! Please register!";
           } else if (xhr.responseText === "Invalid credentials") {
-            document.getElementById("popup").innerText = "Invalid credentials! Please try again!";
+            popup.innerText = "Invalid credentials! Please try again!";
           } else {
-            // Other unexpected responses
-            document.getElementById("popup").innerText = "An unexpected error occurred! Please try again later.";
+            popup.innerText = "An unexpected error occurred! Please try again later.";
           }
-          document.getElementById("popup").style.display = "block";
+          popup.style.display = "block";
           setTimeout(function () {
-            document.getElementById("popup").style.display = "none";
+            popup.style.display = "none";
           }, 2000);
         }
       }
     };
-    var data = JSON.stringify({ username: username, password: password });
-    xhr.send(data);
-
+    xhr.send();
     return false;
   }
 

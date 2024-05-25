@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -74,6 +75,17 @@ public class OrderController {
         modelAndView.addObject("orderID", orderID);
         return new ModelAndView("redirect:/order");
     }
+
+    @PostMapping("/place")
+    public ModelAndView placeOrder(@RequestParam("userId") String userId, @Validated OrderDTO orderDTO) {
+        String orderID = orderService.placeOrder(userId, (orderDTO)); // Asumând că metoda placeOrder acceptă și user ID-ul
+        LOGGER.debug(OrderLogger.ORDER_PLACED, orderID);
+        ModelAndView modelAndView = new ModelAndView("/order");
+        modelAndView.addObject("orderID", orderID);
+        return modelAndView;
+    }
+
+
 
     @PostMapping("/generateAndSendPdf")
     public ResponseEntity<String> generateAndSendPdf(@RequestParam String orderId) {

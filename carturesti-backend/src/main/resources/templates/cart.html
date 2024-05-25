@@ -11,6 +11,7 @@
             font-family: Arial, sans-serif;
             background-color: #f5deb3; /* Light brown background color */
             color: #333; /* Dark text color */
+            position: relative; /* Set the body position to relative */
         }
 
         h1 {
@@ -20,82 +21,170 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2); /* Text shadow for effect */
         }
 
-        #cart-items {
+        #cart {
             margin: 20px auto;
-            max-width: 600px;
-            padding: 20px;
-            background-color: #fff; /* White background for cart items */
+            max-width: 800px;
+            background-color: #fff; /* White background for cart */
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Box shadow for card effect */
+            padding: 20px;
         }
 
-        #cart-total {
-            text-align: center;
-            margin-top: 20px;
+        #cart-details {
+            margin-bottom: 20px;
         }
 
-        #total-price {
-            color: #8B4513; /* Brown color for total price */
+        #order-items {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .order-item {
+            border-bottom: 1px solid #ccc;
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-name {
+            font-weight: bold;
         }
 
         button {
             display: block;
             margin: 20px auto;
-            padding: 10px 20px;
-            background-color: #8B4513; /* Brown background for button */
+            padding: 15px 30px; /* Increase padding for larger button */
+            background-color: #4d2600; /* Dark brown background for button */
             color: #fff; /* White text color */
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            font-size: 16px;
         }
 
         button:hover {
-            background-color: #A0522D; /* Darker brown background on hover */
+            background-color: #663300; /* Darker brown background on hover */
+        }
+
+        /* Style for the back link */
+        a.back-link {
+            position: absolute; /* Position the link absolutely */
+            top: 20px; /* Distance from the top */
+            left: 20px; /* Distance from the left */
+            font-size: 16px;
+            color: #4d2600; /* Dark brown color */
+            text-decoration: none;
+        }
+
+        a.back-link:hover {
+            text-decoration: underline; /* Underline on hover */
         }
     </style>
 </head>
 <body>
-<h1>Your Shopping Cart</h1>
+<a href="/client" class="back-link">Back to Client Page</a>
+<div id="cart">
+    <h1>Your Shopping Cart</h1>
 
-<div id="cart-items">
-    <!-- This is where your cart items will be displayed dynamically -->
+    <div id="cart-details">
+        <p>Cart ID: <span th:text="${cart.id_cart}"></span></p>
+        <p>User Name: <span th:text="${cart.user.name}"></span></p>
+        <p>Total Price: <span id="total-price" th:text="${cart.total_price}"></span></p>
+    </div>
+
+    <h2>Order Items</h2>
+    <ul id="order-items">
+        <!-- Iterate over each order item in the cart -->
+        <li th:each="orderItem : ${cart.orderItems}" class="order-item">
+            <!-- Display the product name, author, and price -->
+            <span class="product-name" th:text="${orderItem.product.name}"></span>
+            <span class="author" th:text="${orderItem.product.author}"></span>
+            <span class="price" th:text="${orderItem.price_per_unit}"></span>
+            <span class="quantity" th:text="${orderItem.quantity}"></span>
+
+            <!-- Form to remove product from cart -->
+            <form th:action="@{/cart/removeFromCart}" method="post">
+                <input type="hidden" name="id_product" th:value="${orderItem.product.id_product}">
+                <input type="hidden" name="cartId" th:value="${cart.id_cart}">
+                <button type="submit">Remove</button>
+            </form>
+        </li>
+    </ul>
+
+
+    <!-- Div pentru formularul comenzii, inițial ascuns -->
+    <div id="order-form" style="display: none;">
+        <h2>Complete Order Details</h2>
+        <form id="order-details-form" action="/order/place" method="POST">
+            <!-- Input pentru data comenzii -->
+            <label for="order-date">Order Date:</label>
+            <input type="date" id="order-date" name="order_date" required><br><br>
+
+            <!-- Input pentru numele utilizatorului -->
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" th:value="${cart.user.name}" readonly><br><br>
+
+            <!-- Input pentru fiecare produs din coș -->
+            <h3>Products in Cart:</h3>
+            <ul>
+                <!-- Iterăm prin fiecare obiect orderItem din coșul de cumpărături -->
+                <li th:each="orderItem : ${cart.orderItems}">
+                    <!-- Afisarea numelui produsului -->
+                    <span th:text="${orderItem.product.name}"></span>
+                    <!-- Afisarea cantitatii din coș a fiecarui produs -->
+                    <span>Quantity in Cart: <span th:text="${orderItem.quantity}"></span></span><br>
+                    <!-- Input pentru cantitatea produsului (pentru fiecare produs din coș) -->
+                    <label for="quantity-${orderItem.product.id}">Order Quantity:</label>
+                    <input type="number" id="quantity-${orderItem.product.id}" name="quantity-${orderItem.product.id}" min="1" max="999" required><br>
+                </li>
+            </ul>
+
+            <!-- Input-uri ascunse pentru ID-ul utilizatorului și ID-ul fiecărui produs -->
+            <input type="hidden" id="userId" name="userId" th:value="${cart.user.id_user}">
+            <th:block th:each="orderItem : ${cart.orderItems}">
+                <input type="hidden" id="productId-${orderItem.product.id}" name="productId-${orderItem.product.id}" th:value="${orderItem.product.id_product}">
+            </th:block>
+
+            <!-- Butonul pentru trimiterea comenzii -->
+            <button type="submit">Submit Order</button>
+        </form>
+    </div>
+
+    <!-- Butonul pentru deschiderea formularului comenzii -->
+    <button onclick="toggleOrderForm()">Place Order</button>
+
+    <!-- Buton pentru a anula comanda -->
+    <button onclick="cancelOrder()">Cancel Order</button>
+
+
 </div>
 
-<div id="cart-total">
-    <!-- Total price of items in the cart will be displayed here -->
-    <h3>Total: <span id="total-price"></span></h3>
-</div>
+
 
 <script>
-    // Fetch product IDs from the server and update the cart items
-    fetch('/cart/list')
-        .then(response => response.json())
-        .then(data => {
-            const cartItemsContainer = document.getElementById('cart-items');
-            const totalPriceElement = document.getElementById('total-price');
 
-            // Clear existing items
-            cartItemsContainer.innerHTML = '';
+    function cancelOrder() {
+        // Ascunde formularul de plată
+        document.getElementById("order-form").style.display = "none";
+        // Alte acțiuni de anulare comandă pot fi adăugate aici
+    }
 
-            // Populate cart items
-            data.productIds.forEach(productId => {
-                const itemPanel = document.createElement('div');
-                itemPanel.classList.add('product-panel'); // Add product panel class
-
-                // You can customize the content of each panel as per your requirement
-                itemPanel.textContent = productId;
-
-                // Append product panel to cart items container
-                cartItemsContainer.appendChild(itemPanel);
-            });
-
-            // Update total price if needed
-            if (data.total) {
-                totalPriceElement.textContent = data.total;
-            }
-        })
-        .catch(error => console.error('Error fetching cart items:', error));
 </script>
+
+    <script>
+        // Funcția pentru afișarea/ascunderea formularului comenzii
+        function toggleOrderForm() {
+            var orderForm = document.getElementById("order-form");
+            if (orderForm.style.display === "none") {
+                orderForm.style.display = "block";
+            } else {
+                orderForm.style.display = "none";
+            }
+        }
+    </script>
+
 </body>
 </html>

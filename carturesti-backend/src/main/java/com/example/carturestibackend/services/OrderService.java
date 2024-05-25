@@ -4,14 +4,10 @@ import com.example.carturestibackend.config.RabbitSender;
 import com.example.carturestibackend.constants.OrderLogger;
 import com.example.carturestibackend.dtos.NotificationRequestDTO;
 import com.example.carturestibackend.dtos.OrderDTO;
+import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.OrderMapper;
-import com.example.carturestibackend.entities.Order;
-import com.example.carturestibackend.entities.Product;
-import com.example.carturestibackend.entities.User;
-import com.example.carturestibackend.repositories.OrderItemRepository;
-import com.example.carturestibackend.repositories.OrderRepository;
-import com.example.carturestibackend.repositories.ProductRepository;
-import com.example.carturestibackend.repositories.UserRepository;
+import com.example.carturestibackend.entities.*;
+import com.example.carturestibackend.repositories.*;
 import com.example.carturestibackend.strategy.CsvFileGenerationStrategy;
 import com.example.carturestibackend.strategy.FileGenerator;
 import com.example.carturestibackend.strategy.PdfFileGenerationStrategy;
@@ -22,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,6 +38,8 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderValidator orderValidator;
+    private final CartService cartService;
+    private final CartRepository cartRepository;
 
     /**
      * Constructs a new OrderService with the specified OrderRepository.
@@ -51,17 +49,21 @@ public class OrderService {
      * @param userRepository
      * @param productRepository
      * @param orderValidator
-
+     * @param cartService
+     * @param cartRepository
      */
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator) {
+    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserRepository userRepository, ProductRepository productRepository, OrderValidator orderValidator, CartService cartService, CartRepository cartRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderValidator = orderValidator;
 
+        this.cartService = cartService;
+        this.cartRepository = cartRepository;
     }
+
 
     /**
      * Retrieves all orders from the database.
@@ -69,7 +71,7 @@ public class OrderService {
      * @return A list of OrderDTO objects representing the orders.
      */
     public List<OrderDTO> findOrders() {
-        LOGGER.error(OrderLogger.ALL_ORDERS_RETRIEVED);
+        LOGGER.info(OrderLogger.ALL_ORDERS_RETRIEVED); // Changed from error to info
         List<Order> orderList = orderRepository.findAll();
         return orderList.stream()
                 .map(this::calculateOrderTotals) // Calculate totals for each order
@@ -77,19 +79,23 @@ public class OrderService {
     }
 
     private OrderDTO calculateOrderTotals(Order order) {
-        List<Product> products = order.getProducts();
+        List<OrderItem> orderItems = order.getOrderItems(); // Obținem lista de order items
 
         long totalQuantity = 0;
         double totalPrice = 0;
-        for (Product product : products) {
-            totalQuantity += 1;
-            totalPrice += product.getPrice();
+
+        for (OrderItem orderItem : orderItems) { // Parcurgem fiecare OrderItem
+            Product product = orderItem.getProduct(); // Obținem produsul din OrderItem
+            totalQuantity += orderItem.getQuantity(); // Adăugăm cantitatea din OrderItem la totalQuantity
+            totalPrice += (product.getPrice() * orderItem.getQuantity()); // Calculăm prețul total pentru acest OrderItem și îl adăugăm la totalPrice
         }
 
-        order.setTotal_quantity(totalQuantity);
-        order.setTotal_price(totalPrice);
-        return OrderMapper.toOrderDTO(order);
+        order.setTotal_quantity(totalQuantity); // Setăm cantitatea totală în comanda
+        order.setTotal_price(totalPrice); // Setăm prețul total în comanda
+
+        return OrderMapper.toOrderDTO(order); // Returnăm comanda actualizată ca și OrderDTO
     }
+
 
     /**
      * Retrieves an order by its ID.
@@ -120,7 +126,9 @@ public class OrderService {
     @Transactional
     public String insert(OrderDTO orderDTO) {
         Logger logger = LoggerFactory.getLogger(getClass());
-        User user = userRepository.findById(orderDTO.getId_user())
+
+        // Retrieve user
+        User user = userRepository.findById(String.valueOf(orderDTO.getId_user()))
                 .orElseThrow(() -> {
                     String message = String.format(OrderLogger.ORDER_NOT_FOUND_BY_ID, orderDTO.getId_user());
                     logger.error(message);
@@ -128,15 +136,20 @@ public class OrderService {
                 });
 
         logger.info(OrderLogger.ORDER_RETRIEVED_BY_ID, user.getId_user());
+
+        // Create a new order
         Order order = new Order();
         order.setOrder_date(orderDTO.getOrder_date());
         order.setUser(user);
 
+        // Initialize products list if null
         if (order.getProducts() == null) {
             order.setProducts(new ArrayList<>());
         }
+
         double totalPrice = 0.0;
 
+        // Iterate over products in the order
         for (String productId : orderDTO.getId_products()) {
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> {
@@ -144,31 +157,146 @@ public class OrderService {
                         logger.error(message);
                         return new ResourceNotFoundException(message);
                     });
+
             if (product.getStock() <= 0) {
                 String message = "Insufficient stock for product with ID: " + productId;
                 logger.error(message);
                 throw new RuntimeException(message);
             }
 
-            double priceToUse = Double.MAX_VALUE;
-            if (product.getPrice() < priceToUse) {
-                priceToUse = product.getPrice();
-            }
-            if (product.getPrice_promotion() > 0 && product.getPrice_promotion() < priceToUse) {
-                priceToUse = product.getPrice_promotion();
-            }
+            // Determine the price to use
+            double priceToUse = Math.min(product.getPrice(), product.getPrice_promotion() > 0 ? product.getPrice_promotion() : Double.MAX_VALUE);
+
+            // Add product to order
             order.getProducts().add(product);
+
+            // Update total price
             totalPrice += priceToUse;
+
+            // Decrement stock
             product.setStock(product.getStock() - 1);
+
+            // Save updated product stock
             productRepository.save(product);
+
             logger.info("Product with ID {} added to order. Price used: {}", product.getId_product(), priceToUse);
         }
-        order.setTotal_price(totalPrice);
-        logger.info("Total price calculated for order: {}", totalPrice);
+
+        // Set total price of the order if there are products in the order
+        if (!order.getProducts().isEmpty()) {
+            order.setTotal_price(totalPrice);
+            logger.info("Total price calculated for order: {}", totalPrice);
+        }
+
+        // Save the order
         try {
             order = orderRepository.save(order);
             logger.info(OrderLogger.ORDER_INSERTED, order.getId_order());
 
+            // Send notification email
+            sendNotificationEmail(user, order);
+
+            return order.getId_order();
+        } catch (Exception e) {
+            logger.error("Failed to save order: {}", e.getMessage());
+            throw new RuntimeException("Failed to save order: " + e.getMessage());
+        }
+    }
+
+
+    public String findCartIdByUser(User user) {
+        Optional<Cart> cartOptional = cartRepository.findByUser(user);
+        if (cartOptional.isPresent()) {
+            return cartOptional.get().getId_cart();
+        } else {
+            LOGGER.error("No cart found for user with ID: {}", user.getId_user());
+            throw new ResourceNotFoundException("Cart for user " + user.getId_user() + " not found.");
+        }
+    }
+    @Transactional
+    public String placeOrder(String userId, OrderDTO orderDTO) {
+        Logger logger = LoggerFactory.getLogger(getClass());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    String message = String.format("User not found with ID: %s", userId);
+                    logger.error(message);
+                    throw new ResourceNotFoundException(message);
+                });
+
+        logger.info("User {} retrieved", userId);
+        String cartId = findCartIdByUser(user);
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> {
+                    String message = String.format("Cart not found with ID: %s", cartId);
+                    logger.error(message);
+                    throw new ResourceNotFoundException(message);
+                });
+
+        logger.info("Cart {} retrieved", cartId);
+        List<ProductDTO> cartProducts = cartService.getProductsInCart(cartId);
+
+        Order order = new Order();
+        order.setUser(user);
+
+        LocalDate orderDate = orderDTO.getOrder_date();
+        if (orderDate == null) {
+            throw new IllegalArgumentException("Order date is required");
+        }
+        order.setOrder_date(orderDate);
+        order.setProducts(new ArrayList<>());
+        double totalPrice = 0.0;
+
+        long totalQuantity = 0; // Variabila pentru stocarea cantitatii totale din cos
+        for (ProductDTO productDTO : cartProducts) {
+            String productId = productDTO.getId_product();
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> {
+                        String message = String.format("Product not found with ID: %s", productId);
+                        logger.error(message);
+                        throw new ResourceNotFoundException(message);
+                    });
+
+            double priceToUse = Math.min(product.getPrice(), product.getPrice_promotion() > 0 ? product.getPrice_promotion() : Double.MAX_VALUE);
+            long quantityInCart = productDTO.getStock();
+
+            if (quantityInCart <= 0) {
+                throw new IllegalArgumentException("Quantity in cart must be greater than 0");
+            }
+
+            if (quantityInCart > product.getStock()) {
+                throw new IllegalArgumentException("Insufficient stock for product: " + productId);
+            }
+
+            // Create OrderItem and set quantity
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProduct(product);
+            orderItem.setQuantity(quantityInCart);
+            orderItem.setPrice_per_unit(priceToUse);
+            orderItem.setCart(cart);
+
+            // Add OrderItem to Order
+            order.getProducts().add(orderItem.getProduct());
+
+            // Update total price
+            totalPrice += priceToUse * quantityInCart;
+
+            // Increment total quantity with quantity from the current order item
+            totalQuantity += quantityInCart;
+
+            logger.info("Product with ID {} added to order. Price used: {}", productId, priceToUse);
+        }
+
+        // Set total price and total quantity of the order if there are products in the order
+        if (!order.getProducts().isEmpty()) {
+            order.setTotal_price(totalPrice);
+            order.setTotal_quantity(totalQuantity);
+            logger.info("Total price calculated for order: {}", totalPrice);
+        }
+
+        // Save the order
+        try {
+            order = orderRepository.save(order);
+            logger.info(OrderLogger.ORDER_INSERTED, order.getId_order());
             sendNotificationEmail(user, order);
             return order.getId_order();
         } catch (Exception e) {
@@ -176,6 +304,7 @@ public class OrderService {
             throw new RuntimeException("Failed to save order: " + e.getMessage());
         }
     }
+
 
     private void sendNotificationEmail(User user, Order order) {
         NotificationRequestDTO notificationRequestDTO = new NotificationRequestDTO();

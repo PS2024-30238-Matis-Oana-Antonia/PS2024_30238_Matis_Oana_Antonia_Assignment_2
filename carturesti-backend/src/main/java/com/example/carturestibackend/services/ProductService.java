@@ -139,6 +139,7 @@ public class ProductService {
      * @param productDTO The ProductDTO object representing the product to insert.
      * @return The ID of the newly inserted product.
      */
+    @Transactional
     public String insert(ProductDTO productDTO) {
         // Create a new product entity from the DTO
         Product product = ProductMapper.fromProductDTO(productDTO);
@@ -167,30 +168,43 @@ public class ProductService {
      * @param id_product The ID of the product to delete.
      * @throws ResourceNotFoundException if the product with the specified ID is not found.
      */
+
+
     @Transactional
     public void deleteProductById(String id_product) {
         Optional<Product> productOptional = productRepository.findById(id_product);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
+
+            // Remove the product from its category
             Category category = product.getCategory();
-
             if (category != null) {
-
                 category.getProducts().remove(product);
                 categoryRepository.save(category);
             }
 
-            product.setPromotion(null);
-            product.setReviews(null);
-            productRepository.save(product);
-            productRepository.delete(product);
+            // Handle reviews associated with the product
+            List<Review> reviews = product.getReviews();
+            if (reviews != null && !reviews.isEmpty()) {
+                for (Review review : reviews) {
+                    review.setUser(null);
+                    review.setProduct(null);
+                    reviewRepository.delete(review);
+                }
+            }
 
+            // Clear the reviews list in the product
+            product.setReviews(new ArrayList<>());
+
+            // Delete the product itself
+            productRepository.delete(product);
             LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);
         } else {
             LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
             throw new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + id_product);
         }
     }
+
 
 
     /**

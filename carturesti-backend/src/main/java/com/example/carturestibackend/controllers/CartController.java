@@ -1,10 +1,9 @@
 package com.example.carturestibackend.controllers;
 
-import ch.qos.logback.core.model.Model;
 import com.example.carturestibackend.constants.CartLogger;
 import com.example.carturestibackend.dtos.CartDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
-import com.example.carturestibackend.entities.Product;
+import com.example.carturestibackend.services.AuthService;
 import com.example.carturestibackend.services.CartService;
 import com.example.carturestibackend.services.ProductService;
 import org.slf4j.Logger;
@@ -29,16 +28,20 @@ public class CartController {
 
     private final CartService cartService;
     private final ProductService productService;
+    private final AuthService authService;
 
     /**
      * Constructor for CartController.
-     * @param cartService The CartService instance to be injected.
+     *
+     * @param cartService    The CartService instance to be injected.
      * @param productService The ProductService instance to be injected.
+     * @param authService
      */
     @Autowired
-    public CartController(CartService cartService, ProductService productService) {
+    public CartController(CartService cartService, ProductService productService, AuthService authService) {
         this.cartService = cartService;
         this.productService = productService;
+        this.authService = authService;
     }
 
     /**
@@ -79,11 +82,17 @@ public class CartController {
     @GetMapping(value = "/{id_cart}")
     public ModelAndView getCart(@PathVariable("id_cart") String cartID) {
         LOGGER.info(CartLogger.CART_RETRIEVED_BY_ID, cartID);
-        CartDTO dto = cartService.findCartById(cartID);
-        ModelAndView modelAndView = new ModelAndView("/cart");
-        modelAndView.addObject("cart", dto);
+        CartDTO cartDto = cartService.findCartById(cartID);
+        List<ProductDTO> productsInCart = cartService.getProductsInCart(cartID);
+        double totalPrice = productsInCart.stream().mapToDouble(ProductDTO::getPrice).sum();
+
+        ModelAndView modelAndView = new ModelAndView("cart");
+        modelAndView.addObject("cart", cartDto);
+        modelAndView.addObject("productsInCart", productsInCart);
+        modelAndView.addObject("totalPrice", totalPrice); // Add total price to the model
         return modelAndView;
     }
+
 
     /**
      * Handler method for DELETE requests to "/cart/{id_cart}".
@@ -119,45 +128,28 @@ public class CartController {
     /**
      * Handler method for POST requests to "/cart/addProduct/{id_product}".
      * Adds a product to the cart.
-     * @param id_product The ID of the product to add to the cart.
+     * @param productId The ID of the product to add to the cart.
      * @return ModelAndView containing the view name, product details, and success message.
      */
-    @PostMapping("/addProduct/{id_product}")
-    public ModelAndView addProductToCart(@PathVariable("id_product") String id_product) {
-        ProductDTO product = productService.findProductById(id_product);
-        if (product == null) {
-            return new ModelAndView("error"); // Redirect to an error page
-        }
-        cartService.addProductToCart(String.valueOf(product));
-        ModelAndView modelAndView = new ModelAndView("/cart");
-        modelAndView.addObject("product", product); // Add product details to the model
-        modelAndView.addObject("message", "Product added to cart successfully");
-        return modelAndView;
+    @PostMapping("/addToCart")
+    public String addToCart(@RequestParam("cartId") String cartId, @RequestParam("productId") String productId) {
+        cartService.addProductToCart(cartId, productId);
+        // Redirect the user to a relevant page, for example, the cart page
+        return "redirect:/cart/" + cartId;
     }
+
 
     /**
      * Handler method for POST requests to "/cart/shoppingCart/removeProduct/{id_product}".
      * Removes a product from the cart.
+     *
      * @param id_product The ID of the product to remove from the cart.
      * @return ModelAndView containing the view name and success message.
      */
-    @PostMapping("/shoppingCart/removeProduct/{id_product}")
-    public ModelAndView removeProductFromCart(@PathVariable("id_product") String id_product) {
-        cartService.removeProductFromCart(id_product);
-        ModelAndView modelAndView = new ModelAndView("/cart");
-        modelAndView.addObject("message", "Product removed from cart successfully");
-        return modelAndView;
+    @PostMapping("/removeFromCart")
+    public String removeProductFromCart(@RequestParam("id_product") String id_product, @SessionAttribute("cartId") String cartId) {
+        cartService.removeProductFromCart(cartId, id_product);
+        return "redirect:/cart/" + cartId;
     }
 
-    /**
-     * Handler method for GET requests to "/cart/list".
-     * Displays the shopping cart.
-     * @return ModelAndView containing the view name and product IDs in the cart.
-     */
-    @GetMapping("/list")
-    public ModelAndView shoppingCart() {
-        ModelAndView modelAndView = new ModelAndView("/cart");
-        modelAndView.addObject("productIds", cartService.getProductsInCartIds());
-        return modelAndView;
-    }
 }

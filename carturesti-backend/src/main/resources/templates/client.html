@@ -106,6 +106,12 @@
             position: absolute;
             top: 20px;
             right: 20px;
+            color: #ffffff; /* Setăm culoarea textului la alb */
+            background-color: #008000; /* Setăm culoarea fundalului la verde */
+            border-radius: 50%; /* Rotunjim colțurile pentru a forma un cerc */
+            padding: 10px; /* Adăugăm puțin spațiu în jurul iconiței */
+            font-size: 20px; /* Mărim puțin dimensiunea iconiței */
+            text-decoration: none; /* Înlăturăm orice subliniere care ar putea apărea */
         }
 
         .container-fluid {
@@ -196,7 +202,8 @@
 <div class="title-container">
     <h1 class="title">Welcome to Cărturești Online Library!</h1>
     <div class="button-container">
-        <button class="add-to-cart cart-icon" onclick="goToCart()">🛒</button>
+        <a th:href="@{'/cart/' + ${cartId}}" class="cart-icon">🛒</a>
+
         <button class="place-order button" onclick="placeOrder()">Place Order</button>
         <button class="search-product button" data-toggle="modal" data-target="#searchProductModal">Search Product</button>
     </div>
@@ -216,9 +223,13 @@
                 <p class="card-text">Author: <span th:text="${product.author}"></span></p>
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group mt-2">
-                        <form th:action="@{'/cart/addProduct/' + ${product.id_product}}" method="post">
+                        <form th:action="@{/cart/addToCart}" method="post">
+                            <input type="hidden" name="cartId" th:value="${cartId}" />
+                            <input type="hidden" name="productId" th:value="${product.id_product}" />
                             <button type="submit" class="btn btn-primary">Add to Cart</button>
                         </form>
+
+
                         <button type="button" class="btn btn-sm btn-primary" style="background-color: #d2b48c;" data-toggle="modal" data-target="#addReviewModal">Add New Review</button>
                     </div>
                     <small class="text-muted">Price: <span th:text="${product.price}"></span></small>
@@ -303,29 +314,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-<script>
-    function addToCart(productId) {
-        $.ajax({
-            type: "POST",
-            url: "/shoppingCart/addProduct/" + productId, // Update the URL with the correct endpoint
-            success: function(response) {
-                alert("Product added to cart successfully");
-                // Redirect to the cart page
-                window.location.href = "/cart";
-            },
-            error: function(xhr, status, error) {
-                console.error(xhr.responseText);
-            }
-        });
-    }
-
-</script>
-
-<script>
-    function goToCart() {
-        window.location.href = "/cart";
-    }
-</script>
 
 <script>
     function placeOrder() {

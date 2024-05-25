@@ -1,12 +1,16 @@
 package com.example.carturestibackend.services;
 
+import com.example.carturestibackend.constants.CategoryLogger;
 import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
+import com.example.carturestibackend.dtos.mappers.CategoryMapper;
 import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
+import com.example.carturestibackend.entities.Category;
 import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
+import com.example.carturestibackend.validators.CategoryValidator;
 import com.example.carturestibackend.validators.OrderItemValidator;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -82,40 +86,12 @@ public class OrderItemService {
     @Transactional
     public String insert(OrderItemDTO orderItemDTO) {
         OrderItem orderItem = OrderItemMapper.fromOrderItemDTO(orderItemDTO);
-
-        // Initialize the list of products if null
-        if (orderItem.getProducts() == null) {
-            orderItem.setProducts(new ArrayList<>());
-        }
-
-        // Initialize total price and quantity
-        double totalPrice = 0;
-        long totalQuantity = 0;
-        // Update product prices and calculate total price and quantity
-        for (Product product : orderItem.getProducts()) {
-            // Update the product price from the database
-            Optional<Product> optionalProduct = productRepository.findById(product.getId_product());
-            if (optionalProduct.isPresent()) {
-                Product updatedProduct = optionalProduct.get();
-                product.setPrice(updatedProduct.getPrice()); // Update the product price
-
-                totalPrice += product.getPrice(); // Accumulate individual product prices to total price
-                totalQuantity++; // Increment total quantity by 1 for each product
-
-                // Decrease the stock of the product
-                updatedProduct.setStock(updatedProduct.getStock() - 1); // Decrease stock by 1
-                productRepository.save(updatedProduct);
-            }
-        }
-
-        orderItem.setQuantity(totalQuantity);
-        double pricePerUnit = totalQuantity != 0 ? totalPrice / totalQuantity : 0.0;
-        orderItem.setPrice_per_unit(pricePerUnit);
-
+        OrderItemValidator.validateOrderItem(orderItem);
         orderItem = orderItemRepository.save(orderItem);
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_INSERTED, orderItem.getId_order_item());
         return orderItem.getId_order_item();
     }
+
 
     /**
      * Deletes an order item from the database by its ID.
@@ -129,17 +105,6 @@ public class OrderItemService {
         if (orderItemOptional.isPresent()) {
             OrderItem orderItem = orderItemOptional.get();
 
-            // Remove products from stock
-            for (Product product : orderItem.getProducts()) {
-                Optional<Product> optionalProduct = productRepository.findById(product.getId_product());
-                if (optionalProduct.isPresent()) {
-                    Product updatedProduct = optionalProduct.get();
-                    updatedProduct.setStock(updatedProduct.getStock() + orderItem.getQuantity());
-                    productRepository.save(updatedProduct);
-                }
-            }
-
-            // Delete order item from repository
             orderItemRepository.delete(orderItem);
             LOGGER.debug(OrderItemLogger.ORDER_ITEM_DELETED, orderId);
         } else {

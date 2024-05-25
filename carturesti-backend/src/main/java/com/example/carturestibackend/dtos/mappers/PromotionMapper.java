@@ -31,9 +31,8 @@ public class PromotionMapper {
                 .description(promotionDTO.getDescription())
                 .percentage(promotionDTO.getPercentage())
                 .products(Optional.ofNullable(promotionDTO.getId_products())
-                .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
-                .orElse(null))
+                        .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
+                        .orElse(null))
                 .build();
     }
 }
-

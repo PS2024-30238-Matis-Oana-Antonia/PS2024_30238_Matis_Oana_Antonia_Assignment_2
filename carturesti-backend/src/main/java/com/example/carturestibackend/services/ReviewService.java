@@ -142,21 +142,26 @@ public class ReviewService {
         Optional<Review> reviewOptional = reviewRepository.findById(id);
         if (reviewOptional.isPresent()) {
             Review review = reviewOptional.get();
-            if (review.getUser() != null) {
-                review.setUser(null); // Set user id to null
-            }
-            if (review.getProduct() != null) {
-                review.setProduct(null); // Set product id to null
-            }
-            reviewRepository.save(review); // Save the changes
-            reviewRepository.delete(review); // Delete the review
 
+            User user = review.getUser();
+            if (user != null) {
+                user.getReviews().remove(review);
+            }
+
+            Product product = review.getProduct();
+            if (product != null) {
+                product.getReviews().remove(review);
+            }
+
+            reviewRepository.deleteById(id); // Delete the review
             LOGGER.debug(ReviewLogger.REVIEW_DELETED, id);
         } else {
             LOGGER.error(ReviewLogger.REVIEW_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
     }
+
+
 
     /**
      * Updates an existing review in the database.
@@ -172,17 +177,11 @@ public class ReviewService {
             LOGGER.error(ReviewLogger.REVIEW_NOT_FOUND_BY_ID, id);
             throw new ResourceNotFoundException(Review.class.getSimpleName() + " with id: " + id);
         }
-
         Review existingReview = reviewOptional.get();
         existingReview.setRating(reviewDTO.getRating());
         existingReview.setComment(reviewDTO.getComment());
-
         Review updatedReview = reviewRepository.save(existingReview);
         LOGGER.debug(ReviewLogger.REVIEW_UPDATED, updatedReview.getId());
-
         return ReviewMapper.toReviewDTO(updatedReview);
     }
-
-
-
 }

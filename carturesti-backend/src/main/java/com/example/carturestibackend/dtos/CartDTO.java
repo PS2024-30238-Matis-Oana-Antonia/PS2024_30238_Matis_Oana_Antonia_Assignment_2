@@ -13,6 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 public class CartDTO {
     private String id_cart;
-    private String id_user;
-    private List<String> id_products;
+    private User user;
+    private List<OrderItem> orderItems;
+    private double total_price;
+
 }

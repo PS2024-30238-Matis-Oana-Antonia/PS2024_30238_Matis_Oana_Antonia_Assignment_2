@@ -97,13 +97,11 @@ public class CategoryService {
             Category category = categoryOptional.get();
 
             List<Product> products = category.getProducts();
-
             for (Product product : products) {
-                productRepository.delete(product);
+                productRepository.deleteById(product.getId_product());
             }
 
-            // Delete the category
-            categoryRepository.delete(category);
+            categoryRepository.deleteById(id_category);
 
             LOGGER.debug(CategoryLogger.CATEGORY_DELETED, id_category);
         } else {

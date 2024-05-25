@@ -108,9 +108,8 @@
                         <th>Author</th>
                         <th>Stock</th>
                         <th>Category</th>
-                        <th>Promotion</th>
-                        <th>Sale</th>
                         <th>Review</th>
+                        <th>Promotion</th>
                         <th>Price Promotion</th>
                         <th>Actions</th>
                     </tr>
@@ -126,23 +125,17 @@
                         <td th:text="${product.stock}"></td>
                         <td th:text="${product.id_category}"></td>
                         <td>
-                            <span th:if="${product.id_promotion != null}" th:text="${product.id_promotion}"></span>
-                            <span th:unless="${product.id_promotion != null}">No Promotion</span>
-                        </td>
-                        <td>
-                            <span th:if="${product.id_sale != null}" th:text="${product.id_sale}"></span>
-                            <span th:unless="${product.id_sale != null}">No Sale</span>
-                        </td>
-                        <!-- Add the id_orderItems field -->
-
-
-                        <td>
                             <span th:if="${product.id_reviews == null or product.id_reviews.isEmpty()}">No Review</span>
                             <ul th:if="${product.id_reviews != null and not product.id_reviews.isEmpty()}">
                                 <!-- Loop through review IDs and display them -->
                                 <li th:each="reviewId : ${product.id_reviews}" th:text="${reviewId}"></li>
                             </ul>
                         </td>
+                        <td>
+                            <span th:if="${product.id_promotion != null}" th:text="${product.id_promotion}"></span>
+                            <span th:unless="${product.id_promotion != null}">No Promotion</span>
+                        </td>
+                        <!-- Add the id_orderItems field -->
                         <td th:text="${product.price_promotion}"></td>
                         <td>
                             <button type="button" class="btn btn-success btn-sm" data-toggle="modal" th:data-target="'#updateProductModal-' + ${product != null ? product.id_product : ''}">Edit</button>

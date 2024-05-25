@@ -11,13 +11,12 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name="orderitemdb")
+@Table(name = "orderitemdb")
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class OrderItem {
 
     @Id
@@ -31,17 +30,18 @@ public class OrderItem {
     @Column(name = "price_per_unit", nullable = false)
     private double price_per_unit;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne
+    @JoinColumn(name = "cart_id", nullable = false)
+    @JsonIgnore
+    private Cart cart;
+
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "order_item_product",
-            joinColumns = @JoinColumn(name = "id_order_item"),
-            inverseJoinColumns = @JoinColumn(name = "id_product"))
-    private List<Product> products;
-
-
 }
 

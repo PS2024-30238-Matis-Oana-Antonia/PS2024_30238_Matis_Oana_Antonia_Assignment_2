@@ -25,7 +25,7 @@ public class Payment {
     private String card_number;
     private String cvv;
 
-    @ManyToOne(cascade = CascadeType.MERGE)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_user")
     private User user;
 

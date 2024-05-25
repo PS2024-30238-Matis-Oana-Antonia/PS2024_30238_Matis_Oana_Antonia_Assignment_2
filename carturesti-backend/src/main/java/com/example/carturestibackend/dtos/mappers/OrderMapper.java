@@ -23,6 +23,7 @@ public class OrderMapper {
                 .id_products(Optional.ofNullable(order.getProducts())
                         .map(items -> items.stream().map(Product::getId_product).collect(Collectors.toList()))
                         .orElse(null)) // Map only IDs if order items not null
+                .orderItems(order.getOrderItems())
                 .build();
     }
 
@@ -35,6 +36,7 @@ public class OrderMapper {
                 .products(Optional.ofNullable(orderDTO.getId_products())
                         .map(ids -> ids.stream().map(id -> Product.builder().id_product(id).build()).collect(Collectors.toList()))
                         .orElse(null))
+                .orderItems(orderDTO.getOrderItems())
                 .build();
     }
 

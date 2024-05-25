@@ -109,15 +109,6 @@ public class ProductController {
     }
 
 
-    @GetMapping("/getByName")
-    public ModelAndView getProductByName(@RequestParam("name") String name) {
-        LOGGER.info(ProductLogger.PRODUCT_NOT_FOUND_BY_NAME, name);
-        List<ProductDTO> dtos = productService.findProductsByName(name);
-        ModelAndView modelAndView = new ModelAndView("/product2");
-        modelAndView.addObject("products", dtos);
-        return modelAndView;
-    }
-
 
     /**
      * Deletes a product by its ID.

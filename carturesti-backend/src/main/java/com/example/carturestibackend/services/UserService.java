@@ -22,18 +22,27 @@ import java.util.stream.Collectors;
  * Service class to handle business logic related to users.
  */
 @Service
+@Transactional
 public class UserService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
 
     private final CartRepository cartRepository;
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
 
     private final UserValidator userValidator;
 
     @Autowired
-    public UserService(UserRepository userRepository, CartRepository cartRepository, UserValidator userValidator) {
+    public UserService(UserRepository userRepository, ReviewRepository reviewRepository, CartRepository cartRepository, PaymentRepository paymentRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
+        this.reviewRepository = reviewRepository;
         this.cartRepository = cartRepository;
+        this.paymentRepository = paymentRepository;
+        this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.userValidator = userValidator;
     }
 
@@ -156,11 +165,46 @@ public class UserService {
         Optional<User> userOptional = userRepository.findById(id_user);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            if (user.getCart() != null) {
 
-                cartRepository.delete(user.getCart());
+            // Handling reviews
+            List<Review> reviews = user.getReviews();
+            if (reviews != null && !reviews.isEmpty()) {
+                for (Review review : reviews) {
+                    review.setUser(null);
+                    reviewRepository.save(review); // Update the review to nullify the user reference
+                    reviewRepository.delete(review);
+                }
             }
-            // Delete the user
+
+            // Handling orders
+            List<Order> orders = user.getOrders();
+            if (orders != null && !orders.isEmpty()) {
+                for (Order order : orders) {
+                    orderRepository.delete(order);
+                }
+            }
+
+            // Handling cart
+            if (user.getCart() != null) {
+                Cart cart = user.getCart();
+                List<OrderItem> orderItems = cart.getOrderItems();
+                if (orderItems != null && !orderItems.isEmpty()) {
+                    for (OrderItem orderItem : orderItems) {
+                        orderItemRepository.delete(orderItem);
+                    }
+                }
+                cartRepository.delete(cart);
+            }
+
+            // Handling payments
+            List<Payment> payments = user.getPayments();
+            if (payments != null && !payments.isEmpty()) {
+                for (Payment payment : payments) {
+                    paymentRepository.delete(payment);
+                }
+            }
+
+            // Finally, delete the user
             userRepository.delete(user);
             LOGGER.debug(UserLogger.USER_DELETED, id_user);
         } else {
@@ -168,7 +212,6 @@ public class UserService {
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
         }
     }
-
 
     /**
      * Updates an existing user in the database.
@@ -201,4 +244,3 @@ public class UserService {
 
 
 }
-
