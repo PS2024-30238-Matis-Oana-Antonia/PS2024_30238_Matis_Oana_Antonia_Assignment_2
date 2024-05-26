@@ -1,12 +1,7 @@
 package com.example.carturestibackend.dtos;
 
-import com.example.carturestibackend.entities.Cart;
-import com.example.carturestibackend.entities.Order;
-import com.example.carturestibackend.entities.Payment;
-import com.example.carturestibackend.entities.Review;
 import lombok.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter

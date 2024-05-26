@@ -3,6 +3,7 @@ package com.example.carturestibackend.services;
 import com.example.carturestibackend.constants.CartLogger;
 import com.example.carturestibackend.constants.ProductLogger;
 import com.example.carturestibackend.dtos.CartDTO;
+import com.example.carturestibackend.dtos.OrderItemDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.mappers.CartMapper;
 import com.example.carturestibackend.entities.Cart;
@@ -116,27 +117,6 @@ public class CartService {
     }
 
     /**
-     * Updates a cart.
-     *
-     * @param id_cart  The ID of the cart to update.
-     * @param cartDTO The updated CartDTO object representing the new state of the cart.
-     * @return The updated CartDTO object.
-     * @throws ResourceNotFoundException If the cart with the specified ID is not found.
-     */
-    public CartDTO updateCart(String id_cart, CartDTO cartDTO) {
-        Optional<Cart> cartOptional = cartRepository.findById(id_cart);
-        if (cartOptional.isPresent()) {
-            Cart existingCart = cartOptional.get();
-            Cart updatedCart = cartRepository.save(existingCart);
-            LOGGER.debug(CartLogger.CART_UPDATED, id_cart);
-            return CartMapper.toCartDTO(updatedCart);
-        } else {
-            LOGGER.error(CartLogger.CART_NOT_FOUND_BY_ID, id_cart);
-            throw new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + id_cart);
-        }
-    }
-
-    /**
      * Retrieves the cart ID associated with a given user.
      *
      * @param user The user whose cart ID needs to be found.
@@ -228,6 +208,63 @@ public class CartService {
         return totalPrice;
     }
 
+    /**
+     * Updates a cart.
+     *
+     * @param id_cart  The ID of the cart to update.
+     * @param cartDTO The updated CartDTO object representing the new state of the cart.
+     * @return The updated CartDTO object.
+     * @throws ResourceNotFoundException If the cart with the specified ID is not found.
+     */
+    public CartDTO updateCart(String id_cart, CartDTO cartDTO) {
+        LOGGER.debug("Updating cart with ID: {}", id_cart);
+
+        // Retrieve the existing cart from the database
+        Cart existingCart = cartRepository.findById(id_cart)
+                .orElseThrow(() -> {
+                    LOGGER.error("Cart with ID {} not found in the database", id_cart);
+                    return new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + id_cart);
+                });
+
+        // Update the cart properties based on the provided CartDTO
+        if (cartDTO.getOrderItems() != null) {
+            for (OrderItem orderItemDTO : cartDTO.getOrderItems()) {
+                // Find the corresponding orderItem in the existing cart
+                Optional<OrderItem> optionalOrderItem = existingCart.getOrderItems().stream()
+                        .filter(orderItem -> orderItem.getId_order_item().equals(orderItemDTO.getId_order_item()))
+                        .findFirst();
+
+                // Update the quantity if the orderItem exists
+                optionalOrderItem.ifPresent(orderItem -> {
+                    LOGGER.debug("Updating quantity for order item with ID: {}", orderItem.getId_order_item());
+
+                    orderItem.setQuantity(orderItemDTO.getQuantity());
+
+                    // Recalculate the total price for the updated orderItem
+                    double pricePerUnit = orderItem.getProduct().getPrice();
+                    double totalPrice = pricePerUnit * orderItem.getQuantity();
+                    orderItem.setPrice_per_unit(totalPrice);
+
+                    LOGGER.debug("Quantity updated to {} for order item with ID: {}", orderItem.getQuantity(), orderItem.getId_order_item());
+                });
+            }
+        }
+
+        // Recalculate and update the total price for the cart
+        double totalPrice = calculateTotalPrice(existingCart);
+        existingCart.setTotal_price(totalPrice);
+
+        // Save the updated cart to the database
+        existingCart = cartRepository.save(existingCart);
+
+        LOGGER.debug("Cart updated successfully for cart ID: {}", id_cart);
+
+        // Return the updated CartDTO
+        return CartMapper.toCartDTO(existingCart);
+    }
+
+
+
 
 
     /**
@@ -271,6 +308,28 @@ public class CartService {
             // Handle case when cart with given ID is not found
             return new ArrayList<>();
         }
+    }
+    /**
+     * Removes all products from the cart.
+     *
+     * @param cartId The ID of the cart from which to remove all products.
+     */
+    @Transactional
+    public void removeAllProductsFromCart(String cartId) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new ResourceNotFoundException(Cart.class.getSimpleName() + " with id: " + cartId));
+
+        // Clear the list of order items in the cart
+        cart.getOrderItems().clear();
+
+        // Recalculate and update the total price for the cart
+        double totalPrice = calculateTotalPrice(cart);
+        cart.setTotal_price(totalPrice);
+
+        // Save the updated cart to the database
+        cartRepository.save(cart);
+
+        LOGGER.debug("All products removed from cart with ID: {}", cartId);
     }
 
 }

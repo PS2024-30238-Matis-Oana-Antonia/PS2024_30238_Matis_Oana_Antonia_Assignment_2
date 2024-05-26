@@ -65,6 +65,27 @@ public class OrderService {
     }
 
 
+    private OrderDTO calculateOrderTotals(Order order) {
+        List<OrderItem> orderItems = order.getOrderItems(); // Obtain the list of order items
+
+        long totalQuantity = 0;
+        double totalPrice = 0;
+
+        if (orderItems != null && !orderItems.isEmpty()) {
+            for (OrderItem orderItem : orderItems) {
+                Product product = orderItem.getProduct();
+                totalQuantity += orderItem.getQuantity();
+                totalPrice += (product.getPrice() * orderItem.getQuantity());
+            }
+        }
+
+        order.setTotal_quantity(totalQuantity);
+        order.setTotal_price(totalPrice);
+
+        return OrderMapper.toOrderDTO(order);
+    }
+
+
     /**
      * Retrieves all orders from the database.
      *
@@ -77,25 +98,6 @@ public class OrderService {
                 .map(this::calculateOrderTotals) // Calculate totals for each order
                 .collect(Collectors.toList());
     }
-
-    private OrderDTO calculateOrderTotals(Order order) {
-        List<OrderItem> orderItems = order.getOrderItems(); // Obținem lista de order items
-
-        long totalQuantity = 0;
-        double totalPrice = 0;
-
-        for (OrderItem orderItem : orderItems) { // Parcurgem fiecare OrderItem
-            Product product = orderItem.getProduct(); // Obținem produsul din OrderItem
-            totalQuantity += orderItem.getQuantity(); // Adăugăm cantitatea din OrderItem la totalQuantity
-            totalPrice += (product.getPrice() * orderItem.getQuantity()); // Calculăm prețul total pentru acest OrderItem și îl adăugăm la totalPrice
-        }
-
-        order.setTotal_quantity(totalQuantity); // Setăm cantitatea totală în comanda
-        order.setTotal_price(totalPrice); // Setăm prețul total în comanda
-
-        return OrderMapper.toOrderDTO(order); // Returnăm comanda actualizată ca și OrderDTO
-    }
-
 
     /**
      * Retrieves an order by its ID.
@@ -286,14 +288,13 @@ public class OrderService {
             logger.info("Product with ID {} added to order. Price used: {}", productId, priceToUse);
         }
 
-        // Set total price and total quantity of the order if there are products in the order
         if (!order.getProducts().isEmpty()) {
             order.setTotal_price(totalPrice);
             order.setTotal_quantity(totalQuantity);
+            order.setStatus("PENDING");
             logger.info("Total price calculated for order: {}", totalPrice);
         }
 
-        // Save the order
         try {
             order = orderRepository.save(order);
             logger.info(OrderLogger.ORDER_INSERTED, order.getId_order());
@@ -401,6 +402,7 @@ public class OrderService {
      * @return The updated OrderDTO object.
      * @throws ResourceNotFoundException if the order with the specified ID is not found.
      */
+    @Transactional
     public OrderDTO updateOrder(String id, OrderDTO orderDTO) {
         Optional<Order> orderOptional = orderRepository.findById(id);
         if (!orderOptional.isPresent()) {
@@ -409,12 +411,12 @@ public class OrderService {
         }
         Order existingOrder = orderOptional.get();
         existingOrder.setOrder_date(orderDTO.getOrder_date());
-        existingOrder.setTotal_quantity(orderDTO.getTotal_quantity());
-        existingOrder.setTotal_price(orderDTO.getTotal_price());
+        existingOrder.setStatus(orderDTO.getStatus());
         Order updatedOrder = orderRepository.save(existingOrder);
         LOGGER.debug(OrderLogger.ORDER_UPDATED, updatedOrder.getId_order());
         return OrderMapper.toOrderDTO(updatedOrder);
     }
+
 
     public List<OrderDTO> findOrdersByUserId(String userId) {
         User user = userRepository.findById(userId)

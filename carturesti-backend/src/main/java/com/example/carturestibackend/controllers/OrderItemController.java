@@ -110,14 +110,17 @@ public class OrderItemController {
      */
     @PostMapping("/update")
     public ModelAndView updateOrderItem(@RequestParam("id_order_item") String orderItemID, @Valid @ModelAttribute OrderItemDTO orderItemDTO, RedirectAttributes redirectAttributes) {
-        ModelAndView mav = new ModelAndView("redirect:/orderitem");
+        ModelAndView mav = new ModelAndView();
         try {
             OrderItemDTO updatedOrderItem = orderItemService.updateOrderItem(orderItemID, orderItemDTO);
-            mav.addObject("successMessage", "Order item updated successfully!");
+            mav.setViewName("redirect:/cart/" + updatedOrderItem.getId_cart());
+            redirectAttributes.addFlashAttribute("successMessage", "Order item updated successfully!");
         } catch (Exception e) {
-            mav.addObject("errorMessage", "Failed to update order item. Please try again.");
+            mav.setViewName("redirect:/cart/{id_cart}");
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update order item. Please try again.");
         }
         return mav;
     }
+
 
 }

@@ -111,11 +111,23 @@
                 <input type="hidden" name="cartId" th:value="${cart.id_cart}">
                 <button type="submit">Remove</button>
             </form>
+
+            <!-- Form to update product quantity -->
+            <form th:action="@{/orderitem/update}" method="post">
+                <input type="hidden" name="id_order_item" th:value="${orderItem.id_order_item}">
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" min="1" max="999" th:value="${orderItem.quantity}" class="form-control" required>
+                    <div class="invalid-feedback">Quantity must be between 1 and 999.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update</button>
+            </form>
+
+
+
         </li>
+
     </ul>
-
-
-    <!-- Div pentru formularul comenzii, inițial ascuns -->
     <div id="order-form" style="display: none;">
         <h2>Complete Order Details</h2>
         <form id="order-details-form" action="/order/place" method="POST">
@@ -135,10 +147,9 @@
                     <!-- Afisarea numelui produsului -->
                     <span th:text="${orderItem.product.name}"></span>
                     <!-- Afisarea cantitatii din coș a fiecarui produs -->
-                    <span>Quantity in Cart: <span th:text="${orderItem.quantity}"></span></span><br>
+                    <span>quantity in Cart: <span th:text="${orderItem.quantity}"></span></span><br>
                     <!-- Input pentru cantitatea produsului (pentru fiecare produs din coș) -->
-                    <label for="quantity-${orderItem.product.id}">Order Quantity:</label>
-                    <input type="number" id="quantity-${orderItem.product.id}" name="quantity-${orderItem.product.id}" min="1" max="999" required><br>
+
                 </li>
             </ul>
 
@@ -158,33 +169,29 @@
 
     <!-- Buton pentru a anula comanda -->
     <button onclick="cancelOrder()">Cancel Order</button>
-
-
 </div>
 
-
-
 <script>
-
     function cancelOrder() {
         // Ascunde formularul de plată
         document.getElementById("order-form").style.display = "none";
         // Alte acțiuni de anulare comandă pot fi adăugate aici
     }
 
-</script>
-
-    <script>
-        // Funcția pentru afișarea/ascunderea formularului comenzii
-        function toggleOrderForm() {
-            var orderForm = document.getElementById("order-form");
-            if (orderForm.style.display === "none") {
-                orderForm.style.display = "block";
-            } else {
-                orderForm.style.display = "none";
-            }
+    // Funcția pentru afișarea/ascunderea formularului comenzii
+    function toggleOrderForm() {
+        var orderForm = document.getElementById("order-form");
+        if (orderForm.style.display === "none") {
+            orderForm.style.display = "block";
+        } else {
+            orderForm.style.display = "none";
         }
-    </script>
+    }
+</script>
+<form th:action="@{/cart/remove/{cartId}}" th:method="post">
+    <input type="hidden" name="cartId" th:value="${cart.id_cart}">
+    <button type="submit">Delete Cart</button>
+</form>
 
 </body>
 </html>

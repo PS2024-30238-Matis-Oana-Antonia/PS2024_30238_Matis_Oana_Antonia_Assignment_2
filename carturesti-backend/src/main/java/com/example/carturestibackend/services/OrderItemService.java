@@ -1,16 +1,13 @@
 package com.example.carturestibackend.services;
 
-import com.example.carturestibackend.constants.CategoryLogger;
 import com.example.carturestibackend.constants.OrderItemLogger;
 import com.example.carturestibackend.dtos.OrderItemDTO;
-import com.example.carturestibackend.dtos.mappers.CategoryMapper;
 import com.example.carturestibackend.dtos.mappers.OrderItemMapper;
-import com.example.carturestibackend.entities.Category;
+import com.example.carturestibackend.entities.Cart;
 import com.example.carturestibackend.entities.OrderItem;
-import com.example.carturestibackend.entities.Product;
+import com.example.carturestibackend.repositories.CartRepository;
 import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
-import com.example.carturestibackend.validators.CategoryValidator;
 import com.example.carturestibackend.validators.OrderItemValidator;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -19,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +29,7 @@ public class OrderItemService {
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemService.class);
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final CartRepository cartRepository;
     private OrderItemValidator orderItemValidator;
 
     /**
@@ -40,11 +37,13 @@ public class OrderItemService {
      *
      * @param orderItemRepository The OrderItemRepository used to interact with order item data in the database.
      * @param productRepository   The ProductRepository used to interact with product data in the database.
+     * @param cartRepository
      */
     @Autowired
-    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, OrderItemValidator orderItemValidator) {
+    public OrderItemService(OrderItemRepository orderItemRepository, ProductRepository productRepository, CartRepository cartRepository, OrderItemValidator orderItemValidator) {
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
+        this.cartRepository = cartRepository;
         this.orderItemValidator = orderItemValidator;
     }
 
@@ -121,6 +120,7 @@ public class OrderItemService {
      * @return The updated OrderItemDTO object.
      * @throws ResourceNotFoundException if the order item with the specified ID is not found.
      */
+    @Transactional
     public OrderItemDTO updateOrderItem(String id, OrderItemDTO orderItemDTO) {
         Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
         if (!orderItemOptional.isPresent()) {
@@ -129,12 +129,30 @@ public class OrderItemService {
         }
 
         OrderItem existingOrderItem = orderItemOptional.get();
-        existingOrderItem.setQuantity(orderItemDTO.getQuantity());
-        existingOrderItem.setPrice_per_unit(orderItemDTO.getPrice_per_unit());
+        int oldQuantity = (int) existingOrderItem.getQuantity();
+        int newQuantity = (int) orderItemDTO.getQuantity();
+        existingOrderItem.setQuantity(newQuantity);
+
+        // Recalculate the price per unit and total price based on the new quantity
+        double pricePerUnit = existingOrderItem.getProduct().getPrice();
+        double totalPrice = pricePerUnit * newQuantity;
+        existingOrderItem.setPrice_per_unit(pricePerUnit);
+        existingOrderItem.setPrice_per_unit(totalPrice);
 
         OrderItem updatedOrderItem = orderItemRepository.save(existingOrderItem);
         LOGGER.debug(OrderItemLogger.ORDER_ITEM_UPDATED, updatedOrderItem.getId_order_item());
 
+        // Update the total price of the cart
+        Cart cart = updatedOrderItem.getCart();
+        double totalCartPrice = calculateTotalCartPrice(cart);
+        cart.setTotal_price(totalCartPrice);
+        cartRepository.save(cart);
+
         return OrderItemMapper.toOrderItemDTO(updatedOrderItem);
+    }
+    private double calculateTotalCartPrice(Cart cart) {
+        return cart.getOrderItems().stream()
+                .mapToDouble(orderItem -> orderItem.getPrice_per_unit())
+                .sum();
     }
 }

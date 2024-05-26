@@ -29,6 +29,8 @@ public class Order {
 
     @Column(name = "order_date", nullable = false)
     private LocalDate order_date;
+    @Column(name = "status")
+    private String status;
 
     @Column(name = "total_quantity", nullable = false)
     private long total_quantity;

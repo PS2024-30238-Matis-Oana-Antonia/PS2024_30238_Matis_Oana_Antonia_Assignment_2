@@ -17,6 +17,7 @@ public class OrderDTO {
     private LocalDate order_date;
     private double total_price;
     private long total_quantity;
+    private String status;
     private String id_user;
     private List<String> id_products;
     private List<OrderItem> orderItems;

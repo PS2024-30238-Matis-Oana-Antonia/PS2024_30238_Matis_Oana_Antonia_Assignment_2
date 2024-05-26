@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Placed</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-size: cover;
+      background-position: center;
+      background-image: url("/images/background.jpg");
+      font-family: Arial, sans-serif;
+      text-align: center;
+      color: #333;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .message-container {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .message {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .button-container {
+      margin-top: 20px;
+    }
+
+    .button {
+      background-color: #28a745;
+      border: none;
+      border-radius: 20px;
+      color: #fff;
+      height: 60px;
+      width: 200px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+
+    .button:hover {
+      background-color: #218838;
+    }
+
+    .back-container {
+      background-color: #d2b48c; /* Light brown background */
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .back-button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #5C4033; /* Light brown background */
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .back-button:hover {
+      background-color: #b39b77; /* Darker brown on hover */
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="message-container">
+    <div class="message">Order placed successfully!</div>
+    <div class="button-container">
+      <button class="button" onclick="redirectToClient()">Go to Client Page</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="back-container">
+    <button class="back-button" onclick="window.location.href='/'">Back to Home</button>
+  </div>
+</div>
+
+<script>
+  function redirectToClient() {
+    window.location.href = "/client";
+  }
+</script>
+
+</body>
+</html>

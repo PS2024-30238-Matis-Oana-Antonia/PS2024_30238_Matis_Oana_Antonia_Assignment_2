@@ -56,10 +56,18 @@ public class OrderController {
     public ModelAndView getOrders() {
         LOGGER.info(OrderLogger.ALL_ORDERS_RETRIEVED);
         List<OrderDTO> dtos = orderService.findOrders();
+
+        for (OrderDTO orderDTO : dtos) {
+            LOGGER.debug("Order ID: {}", orderDTO.getId_order());
+            LOGGER.debug("Total quantity: {}", orderDTO.getTotal_quantity());
+            LOGGER.debug("Total price: {}", orderDTO.getTotal_price());
+        }
+
         ModelAndView modelAndView = new ModelAndView("/order");
         modelAndView.addObject("orders", dtos);
         return modelAndView;
     }
+
 
     /**
      * Inserts a new order.
@@ -80,12 +88,10 @@ public class OrderController {
     public ModelAndView placeOrder(@RequestParam("userId") String userId, @Validated OrderDTO orderDTO) {
         String orderID = orderService.placeOrder(userId, (orderDTO)); // Asumând că metoda placeOrder acceptă și user ID-ul
         LOGGER.debug(OrderLogger.ORDER_PLACED, orderID);
-        ModelAndView modelAndView = new ModelAndView("/order");
+        ModelAndView modelAndView = new ModelAndView("/orderplaced");
         modelAndView.addObject("orderID", orderID);
         return modelAndView;
     }
-
-
 
     @PostMapping("/generateAndSendPdf")
     public ResponseEntity<String> generateAndSendPdf(@RequestParam String orderId) {

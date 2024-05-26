@@ -29,18 +29,17 @@ public class UserService {
     private final ReviewRepository reviewRepository;
 
     private final CartRepository cartRepository;
-    private final PaymentRepository paymentRepository;
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
     private final UserValidator userValidator;
 
     @Autowired
-    public UserService(UserRepository userRepository, ReviewRepository reviewRepository, CartRepository cartRepository, PaymentRepository paymentRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
+    public UserService(UserRepository userRepository, ReviewRepository reviewRepository, CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
         this.reviewRepository = reviewRepository;
         this.cartRepository = cartRepository;
-        this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userValidator = userValidator;
@@ -194,14 +193,6 @@ public class UserService {
                     }
                 }
                 cartRepository.delete(cart);
-            }
-
-            // Handling payments
-            List<Payment> payments = user.getPayments();
-            if (payments != null && !payments.isEmpty()) {
-                for (Payment payment : payments) {
-                    paymentRepository.delete(payment);
-                }
             }
 
             // Finally, delete the user

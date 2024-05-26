@@ -9,11 +9,15 @@ import com.example.carturestibackend.services.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
+
 import java.util.List;
 
 /**
@@ -110,20 +114,34 @@ public class CartController {
     }
 
     /**
-     * Handler method for PUT requests to "/cart/{id_cart}".
+     * Handler method for POST requests to "/cart/{id_cart}/updateCart".
      * Updates a cart.
      * @param cartID The ID of the cart to update.
      * @param cartDTO The updated CartDTO object.
      * @return ModelAndView containing the view name and updated cart.
      */
-    @PutMapping(value = "/{id_cart}")
-    public ModelAndView updateCart(@PathVariable("id_cart") String cartID, @Valid @RequestBody CartDTO cartDTO) {
-        LOGGER.debug(CartLogger.CART_UPDATED, cartID);
-        CartDTO updatedCart = cartService.updateCart(cartID, cartDTO);
-        ModelAndView modelAndView = new ModelAndView("/cart");
-        modelAndView.addObject("cart", updatedCart);
-        return modelAndView;
+    @PostMapping("/updateCart")
+    public ModelAndView updateCart(@RequestParam("id_cart") String cartID, @Valid @ModelAttribute CartDTO cartDTO, RedirectAttributes redirectAttributes) {
+        ModelAndView mav = new ModelAndView("redirect:/cart/{id_cart}");
+        try {
+            CartDTO updatedCart = cartService.updateCart(cartID, cartDTO);
+            redirectAttributes.addFlashAttribute("successMessage", "Cart updated successfully!");
+            // Jurnalizare pentru mesajul de succes
+            LOGGER.info("Cart updated successfully for cart ID: {}", cartID);
+        } catch (ResourceNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Cart not found. Please try again.");
+            // Jurnalizare pentru excepția ResourceNotFoundException
+            LOGGER.error("Cart not found for cart ID: {}", cartID, e);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update cart. Please try again.");
+            // Jurnalizare pentru alte excepții
+            LOGGER.error("Failed to update cart for cart ID: {}", cartID, e);
+        }
+        // Adăugare cartID ca variabilă de cale
+        mav.addObject("id_cart", cartID);
+        return mav;
     }
+
 
     /**
      * Handler method for POST requests to "/cart/addProduct/{id_product}".
@@ -150,6 +168,16 @@ public class CartController {
     public String removeProductFromCart(@RequestParam("id_product") String id_product, @SessionAttribute("cartId") String cartId) {
         cartService.removeProductFromCart(cartId, id_product);
         return "redirect:/cart/" + cartId;
+    }
+    @PostMapping("/remove/{cartId}")
+    public ModelAndView removeAllProductsFromCart(@RequestParam("cartId") String cartId, RedirectAttributes redirectAttributes) {
+        cartService.removeAllProductsFromCart(cartId);
+
+        // Redirect to the cart page after removing products
+        ModelAndView mav = new ModelAndView("redirect:/cart/{cartId}");
+        mav.addObject("cartId", cartId);
+        redirectAttributes.addFlashAttribute("successMessage", "All products removed from cart.");
+        return mav;
     }
 
 }
