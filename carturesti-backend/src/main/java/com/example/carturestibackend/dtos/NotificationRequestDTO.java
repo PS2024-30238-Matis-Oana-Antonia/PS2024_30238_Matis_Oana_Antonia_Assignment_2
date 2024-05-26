@@ -28,4 +28,6 @@ public class NotificationRequestDTO implements Serializable {
     @NotBlank
     private String body;
 
+    private String attachmentPath;
+
 }

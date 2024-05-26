@@ -10,12 +10,15 @@ public class CsvFileGenerationStrategy implements FileGenerationStrategy {
     private static final Logger LOGGER = LoggerFactory.getLogger(CsvFileGenerationStrategy.class);
 
     @Override
-    public void generateFile(String data) {
+    public String generateFile(String data) {
         try (FileWriter writer = new FileWriter("bill.csv")) {
             writer.write(data);
             LOGGER.info("CSV file generated successfully!");
+            return "bill.csv"; // Return the file path
         } catch (IOException e) {
             LOGGER.error("Error at generating CSV file: {}", e.getMessage());
+            return null;
         }
     }
 }
+

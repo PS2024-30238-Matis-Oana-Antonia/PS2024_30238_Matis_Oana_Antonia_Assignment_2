@@ -1,21 +1,21 @@
 Bill
 -----------------------------------------------
 
-Order ID: 0ce564fe-87aa-4e8b-8692-ca554c704fa7
-Order Date2024-05-22
+Order ID: 0429a2db-10b1-44e7-aa81-5e829d63b5d3
+Order Date: 2024-05-29
 
 -----------------------------------------------
 
 Customer Details:
 	Name: Matis Ramona
-	Address: str Observatorului, nr 34
+	Address: str Principala, nr 98B
 	Email: matisramona@yahoo.com
 
 -----------------------------------------------
 
 Products:
 
- - cv2: cv2
+ - cv: cv
 
 -----------------------------------------------
 

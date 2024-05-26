@@ -29,17 +29,18 @@ public class UserService {
     private final ReviewRepository reviewRepository;
 
     private final CartRepository cartRepository;
-
+    private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
     private final UserValidator userValidator;
 
     @Autowired
-    public UserService(UserRepository userRepository, ReviewRepository reviewRepository, CartRepository cartRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
+    public UserService(UserRepository userRepository, ReviewRepository reviewRepository, CartRepository cartRepository, ProductRepository productRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
         this.reviewRepository = reviewRepository;
         this.cartRepository = cartRepository;
+        this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.userValidator = userValidator;
@@ -165,14 +166,32 @@ public class UserService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
-            // Handling reviews
-            List<Review> reviews = user.getReviews();
-            if (reviews != null && !reviews.isEmpty()) {
-                for (Review review : reviews) {
-                    review.setUser(null);
-                    reviewRepository.save(review); // Update the review to nullify the user reference
-                    reviewRepository.delete(review);
+            // Handling cart
+            if (user.getCart() != null) {
+                Cart cart = user.getCart();
+
+                // Dissociate the cart from the user
+                user.setCart(null);
+                userRepository.save(user); // Persist the change to the database
+
+                // Dissociate and delete order items
+                List<OrderItem> orderItems = cart.getOrderItems();
+                if (orderItems != null && !orderItems.isEmpty()) {
+                    for (OrderItem orderItem : orderItems) {
+                        // Dissociate product first
+                        orderItem.setProduct(null);
+
+                        // Set cart reference to null
+                        orderItem.setCart(null);
+                        orderItemRepository.save(orderItem);
+
+                        // Now delete the order item
+                        orderItemRepository.delete(orderItem);
+                    }
                 }
+
+                // Now delete the cart itself
+                cartRepository.delete(cart);
             }
 
             // Handling orders
@@ -183,16 +202,14 @@ public class UserService {
                 }
             }
 
-            // Handling cart
-            if (user.getCart() != null) {
-                Cart cart = user.getCart();
-                List<OrderItem> orderItems = cart.getOrderItems();
-                if (orderItems != null && !orderItems.isEmpty()) {
-                    for (OrderItem orderItem : orderItems) {
-                        orderItemRepository.delete(orderItem);
-                    }
+            // Handling reviews
+            List<Review> reviews = user.getReviews();
+            if (reviews != null && !reviews.isEmpty()) {
+                for (Review review : reviews) {
+                    review.setUser(null);
+                    reviewRepository.save(review);
+                    reviewRepository.delete(review);
                 }
-                cartRepository.delete(cart);
             }
 
             // Finally, delete the user
@@ -203,6 +220,8 @@ public class UserService {
             throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
         }
     }
+
+
 
     /**
      * Updates an existing user in the database.

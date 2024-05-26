@@ -79,10 +79,11 @@ public class OrderService {
             }
         }
 
-        order.setTotal_quantity(totalQuantity);
-        order.setTotal_price(totalPrice);
+        OrderDTO orderDTO = OrderMapper.toOrderDTO(order);
+        orderDTO.setTotal_quantity(totalQuantity);
+        orderDTO.setTotal_price(totalPrice);
 
-        return OrderMapper.toOrderDTO(order);
+        return orderDTO;
     }
 
 
@@ -95,7 +96,7 @@ public class OrderService {
         LOGGER.info(OrderLogger.ALL_ORDERS_RETRIEVED); // Changed from error to info
         List<Order> orderList = orderRepository.findAll();
         return orderList.stream()
-                .map(this::calculateOrderTotals) // Calculate totals for each order
+                .map(OrderMapper::toOrderDTO) // Calculate totals for each order
                 .collect(Collectors.toList());
     }
 
@@ -315,45 +316,14 @@ public class OrderService {
         rabbitSender.send(notificationRequestDTO);
     }
 
-    private String buildEmailMessage(User user, Order order) {
-        StringBuilder body = new StringBuilder();
-        body.append("Hello, ").append(user.getName()).append("!<br><br>");
-        body.append("Your order has been successfully placed with the following details:<br><br>");
-        body.append("Products:<br>");
-        body.append("<ul>");
-        for (Product product : order.getProducts()) {
-            body.append("<li>").append(product.getName()).append(": ").append(product.getAuthor()).append(", ").append(product.getPrice()).append(" lei").append("</li>");
-        }
-        body.append("</ul>");
-        body.append("<br>Total price: ").append(order.getTotal_price()).append("<br><br>");
-        body.append("Thank you for shopping with us!<br>");
-        body.append("The Cărturești Team.");
-        return body.toString();
-    }
+    private void sendNotificationEmail2(User user, String filePath) {
+        NotificationRequestDTO notificationRequestDTO = new NotificationRequestDTO();
+        notificationRequestDTO.setSubject("Order bill");
+        notificationRequestDTO.setBody(buildEmailMessage2(user,filePath)); // Actualizare aici pentru a utiliza noua metodă
+        notificationRequestDTO.setEmail(user.getEmail());
+        notificationRequestDTO.setAttachmentPath(filePath);
 
-    public void generateAndSendTxt(String id) {
-        Optional<Order> orderOptional = orderRepository.findById(id);
-        if (orderOptional.isEmpty()) {
-            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
-            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
-        }
-        Order order = orderOptional.get();
-
-        FileGenerator fileGenerator = new FileGenerator();
-        fileGenerator.setStrategy(new TxtFileGenerationStrategy());
-        fileGenerator.generateFile(Optional.of(order));
-    }
-
-    public void generateAndSendCsv(String id) {
-        Optional<Order> orderOptional = orderRepository.findById(id);
-        if (orderOptional.isEmpty()) {
-            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
-            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
-        }
-        Order order = orderOptional.get();
-        FileGenerator fileGenerator = new FileGenerator();
-        fileGenerator.setStrategy(new CsvFileGenerationStrategy());
-        fileGenerator.generateFile(Optional.of(order));
+        rabbitSender.send(notificationRequestDTO);
     }
 
 
@@ -366,7 +336,34 @@ public class OrderService {
         Order order = orderOptional.get();
         FileGenerator fileGenerator = new FileGenerator();
         fileGenerator.setStrategy(new PdfFileGenerationStrategy());
-        fileGenerator.generateFile(Optional.of(order));
+        String filePath = fileGenerator.generateFile(order); // Generate the PDF file
+        sendNotificationEmail2(order.getUser(), filePath); // Send email with attachment
+    }
+
+    public void generateAndSendTxt(String id) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isEmpty()) {
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
+            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
+        }
+        Order order = orderOptional.get();
+        FileGenerator fileGenerator = new FileGenerator();
+        fileGenerator.setStrategy(new TxtFileGenerationStrategy());
+        String filePath = fileGenerator.generateFile(order); // Generate the TXT file
+        sendNotificationEmail2(order.getUser(), filePath); // Send email with attachment
+    }
+
+    public void generateAndSendCsv(String id) {
+        Optional<Order> orderOptional = orderRepository.findById(id);
+        if (orderOptional.isEmpty()) {
+            LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id);
+            throw new ResourceNotFoundException(Order.class.getSimpleName() + " with id: " + id);
+        }
+        Order order = orderOptional.get();
+        FileGenerator fileGenerator = new FileGenerator();
+        fileGenerator.setStrategy(new CsvFileGenerationStrategy());
+        String filePath = fileGenerator.generateFile(order); // Generate the CSV file
+        sendNotificationEmail2(order.getUser(), filePath); // Send email with attachment
     }
 
     /**
@@ -426,4 +423,41 @@ public class OrderService {
                 .map(this::calculateOrderTotals)
                 .collect(Collectors.toList());
     }
+
+    private String buildEmailMessage(User user, Order order) {
+        StringBuilder body = new StringBuilder();
+        body.append("Hello, ").append(user.getName()).append("!<br><br>");
+        body.append("Your order has been successfully placed with the following details:<br><br>");
+        body.append("Products:<br>");
+        body.append("<ul>");
+        for (Product product : order.getProducts()) {
+            body.append("<li>").append(product.getName()).append(": ").append(product.getAuthor()).append(", ").append(product.getPrice()).append(" lei").append("</li>");
+        }
+        body.append("</ul>");
+        body.append("<br>Total price: ").append(order.getTotal_price()).append("<br><br>");
+        body.append("Thank you for shopping with us!<br>");
+        body.append("The Cărturești Team.");
+        return body.toString();
+    }
+
+    private String buildEmailMessage2(User user, String attachmentPath) {
+        StringBuilder body = new StringBuilder();
+        body.append("Hello, ").append(user.getName()).append("!<br><br>");
+
+        if (attachmentPath.endsWith(".txt")) {
+            body.append("Please find attached the text file containing the details of your order.<br>");
+        } else if (attachmentPath.endsWith(".pdf")) {
+            body.append("Please find attached the PDF file containing the details of your order.<br>");
+        } else if (attachmentPath.endsWith(".csv")) {
+            body.append("Please find attached the CSV file containing the details of your order.<br>");
+        } else {
+            body.append("Please find attached the file containing the details of your order.<br>");
+        }
+
+        body.append("Thank you for shopping with us!<br>");
+        body.append("The Cărturești Team.");
+
+        return body.toString();
+    }
+
 }

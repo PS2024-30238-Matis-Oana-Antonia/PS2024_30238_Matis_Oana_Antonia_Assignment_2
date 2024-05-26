@@ -12,25 +12,21 @@ public class FileGenerator {
         this.strategy = strategy;
     }
 
-    public void generateFile(Optional<Order> orderOptional) {
-        if (orderOptional.isPresent()) {
-            Order order = orderOptional.get();
-            String formattedOrder;
-            if (strategy instanceof PdfFileGenerationStrategy) {
-                formattedOrder = formatOrderForPDF(order);
-            } else if (strategy instanceof TxtFileGenerationStrategy) {
-                formattedOrder = formatOrderForTXT(order);
-            } else if (strategy instanceof CsvFileGenerationStrategy) {
-                formattedOrder = formatOrderForCSV(order);
-            } else {
-                System.out.println("Unsupported file generation strategy");
-                return;
-            }
-            strategy.generateFile(formattedOrder);
+    public String generateFile(Order order) {
+        String formattedOrder;
+        if (strategy instanceof PdfFileGenerationStrategy) {
+            formattedOrder = formatOrderForPDF(order);
+        } else if (strategy instanceof TxtFileGenerationStrategy) {
+            formattedOrder = formatOrderForTXT(order);
+        } else if (strategy instanceof CsvFileGenerationStrategy) {
+            formattedOrder = formatOrderForCSV(order);
         } else {
-            System.out.println("Order not found");
+            System.out.println("Unsupported file generation strategy");
+            return null; // Return null if the strategy is unsupported
         }
+        return strategy.generateFile(formattedOrder); // Return the generated file path
     }
+
 
     private String formatOrderForPDF(Order order) {
         StringBuilder sb = new StringBuilder();

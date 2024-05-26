@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  * Service class to handle business logic related to promotions.
  */
 @Service
+@Transactional
 public class PromotionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PromotionService.class);

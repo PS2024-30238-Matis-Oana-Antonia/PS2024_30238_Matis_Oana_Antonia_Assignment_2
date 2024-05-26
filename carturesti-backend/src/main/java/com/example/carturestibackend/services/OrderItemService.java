@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  * Service class to handle business logic related to order items.
  */
 @Service
+@Transactional
 public class OrderItemService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderItemService.class);

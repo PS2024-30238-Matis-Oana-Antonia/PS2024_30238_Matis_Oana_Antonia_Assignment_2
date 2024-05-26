@@ -14,20 +14,17 @@ public class TxtFileGenerationStrategy implements FileGenerationStrategy {
     private static final Logger LOGGER = LoggerFactory.getLogger(TxtFileGenerationStrategy.class);
 
     @Override
-    public void generateFile(String data) {
-        PrintWriter writer = null;
+    public String generateFile(String data) {
         try {
             String fileName = "bill.txt";
-            writer = new PrintWriter(new FileWriter(fileName));
+            PrintWriter writer = new PrintWriter(new FileWriter(fileName));
             writer.println(data);
+            writer.close();
             LOGGER.info("TXT file generated successfully: {}", fileName);
+            return fileName; // Return the file path
         } catch (IOException e) {
             LOGGER.error("Error at generating TXT file: {}", e.getMessage());
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
+            return null;
         }
     }
-
 }

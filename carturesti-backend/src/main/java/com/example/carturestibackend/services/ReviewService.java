@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  * Service class to handle business logic related to reviews.
  */
 @Service
+@Transactional
 public class ReviewService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReviewService.class);
     private final ReviewRepository reviewRepository;

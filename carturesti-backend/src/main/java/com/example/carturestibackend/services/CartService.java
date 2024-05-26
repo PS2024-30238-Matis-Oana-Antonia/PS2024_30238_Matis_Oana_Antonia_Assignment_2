@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
  * Service class to handle business logic related to carts.
  */
 @Service
+@Transactional
 public class CartService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CartService.class);

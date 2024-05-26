@@ -32,4 +32,6 @@ public class NotificationRequest implements Serializable {
     @NotBlank
     private String body;
 
+    private String attachmentPath;
+
 }

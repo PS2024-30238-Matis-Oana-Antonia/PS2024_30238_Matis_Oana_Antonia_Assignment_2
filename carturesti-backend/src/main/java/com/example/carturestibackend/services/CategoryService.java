@@ -8,6 +8,7 @@ import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.repositories.CategoryRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.CategoryValidator;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
  * Service class to handle business logic related to categories.
  */
 @Service
+@Transactional
 public class CategoryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryService.class);
     private final CategoryRepository categoryRepository;
