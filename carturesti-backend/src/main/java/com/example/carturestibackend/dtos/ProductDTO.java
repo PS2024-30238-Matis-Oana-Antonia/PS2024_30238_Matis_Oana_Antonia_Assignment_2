@@ -1,7 +1,7 @@
 package com.example.carturestibackend.dtos;
 
-import com.example.carturestibackend.entities.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 

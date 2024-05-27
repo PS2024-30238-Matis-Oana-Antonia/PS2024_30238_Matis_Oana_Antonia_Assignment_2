@@ -9,6 +9,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+/**
+ * Controller class for handling user registration-related operations.
+ */
 
 @Controller
 public class RegistrationController {
@@ -18,11 +21,28 @@ public class RegistrationController {
     public RegistrationController(RegistrationService registrationService) {
         this.registrationService = registrationService;
     }
+    /**
+     * Displays the registration form.
+     *
+     * @return The name of the HTML template to render.
+     */
 
     @GetMapping("/register")
     public String showRegistrationForm() {
         return "register";
     }
+
+    /**
+     * Registers a new user.
+     *
+     * @param name     The name of the user.
+     * @param address  The address of the user.
+     * @param email    The email of the user.
+     * @param password The password of the user.
+     * @param age      The age of the user.
+     * @param model    The Model object to add attributes.
+     * @return The name of the HTML template to render.
+     */
 
     @PostMapping("/register")
     public String registerUser(@RequestParam("name") String name,
@@ -41,6 +61,13 @@ public class RegistrationController {
             return "register";
         }
     }
+
+    /**
+     * Checks if a user exists by email.
+     *
+     * @param request The request body containing the email.
+     * @return ResponseEntity with status CONFLICT if user exists, otherwise OK.
+     */
 
     @PostMapping("/checkuser2")
     @ResponseBody

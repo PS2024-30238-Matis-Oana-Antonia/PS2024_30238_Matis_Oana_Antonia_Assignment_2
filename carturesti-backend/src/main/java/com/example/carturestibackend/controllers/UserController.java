@@ -166,7 +166,6 @@ public class UserController {
     }
 
 
-
     /**
      * Updates a user by their ID.
      *

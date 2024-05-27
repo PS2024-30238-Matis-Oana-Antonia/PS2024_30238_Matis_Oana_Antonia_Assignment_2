@@ -3,11 +3,9 @@ package com.example.carturestibackend.dtos.mappers;
 
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.entities.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ProductMapper {

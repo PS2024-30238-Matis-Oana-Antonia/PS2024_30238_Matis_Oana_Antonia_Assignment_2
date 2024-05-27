@@ -79,12 +79,6 @@ public class ReviewService {
         return ReviewMapper.toReviewDTO(reviewOptional.get());
     }
 
-    /**
-     * Inserts a new review into the database.
-     *
-     * @param reviewDTO The ReviewDTO object representing the review to insert.
-     * @return The ID of the newly inserted review.
-     */
     @Autowired
     private RabbitSender rabbitSender;
 
@@ -102,6 +96,12 @@ public class ReviewService {
     }
 
 
+    /**
+     * Inserts a new review into the database.
+     *
+     * @param reviewDTO The ReviewDTO object representing the review to insert.
+     * @return The ID of the newly inserted review.
+     */
     public String insert(ReviewDTO reviewDTO) {
         Review review = ReviewMapper.fromReviewDTO(reviewDTO);
         ReviewValidator.validateReview(review);

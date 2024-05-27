@@ -5,19 +5,25 @@ import com.example.carturestibackend.constants.UserLogger;
 import com.example.carturestibackend.dtos.CategoryDTO;
 import com.example.carturestibackend.dtos.ProductDTO;
 import com.example.carturestibackend.dtos.UserDTO;
+import com.example.carturestibackend.entities.Category;
+import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.Review;
 import com.example.carturestibackend.services.CategoryService;
 import com.example.carturestibackend.services.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import jakarta.validation.Valid;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -59,6 +65,38 @@ public class ProductController {
         return modelAndView;
     }
 
+    @GetMapping("/categoryname")
+    public ModelAndView getProductsByCategoryName(@RequestParam String categoryName) {
+        List<Product> products = productService.getProductsByCategoryName(categoryName);
+        ModelAndView modelAndView = new ModelAndView("/client");
+        modelAndView.addObject("products", products);
+        return modelAndView;
+    }
+
+
+    @GetMapping("/search")
+    public ModelAndView searchProducts(@RequestParam String keyword) {
+        List<Product> products = productService.searchProducts(keyword);
+        ModelAndView modelAndView = new ModelAndView("/client");
+        modelAndView.addObject("products", products);
+        return modelAndView;
+    }
+
+    @GetMapping("/sortprice")
+    public ModelAndView getProductsSortedByPrice(@RequestParam(defaultValue = "true") boolean ascending) {
+        List<Product> products = productService.getProductsSortedByPrice(ascending);
+        ModelAndView modelAndView = new ModelAndView("/client");
+        modelAndView.addObject("products", products);
+        return modelAndView;
+    }
+
+    @GetMapping("/sortname")
+    public ModelAndView getProductsSortedByName(@RequestParam(defaultValue = "true") boolean ascending) {
+        List<Product> products = productService.getProductsSortedByName(ascending);
+        ModelAndView modelAndView = new ModelAndView("/client");
+        modelAndView.addObject("products", products);
+        return modelAndView;
+    }
 
     /**
      * Inserts a new product.
@@ -68,10 +106,11 @@ public class ProductController {
      */
     @PostMapping("/insertProduct")
     public ModelAndView insertProduct(@ModelAttribute ProductDTO productDTO) {
+
         String categoryId = productDTO.getId_category();
 
         if (categoryId != null) {
-
+            // Verify if the category is valid
             CategoryDTO categoryDTO = categoryService.findCategoryById(categoryId);
             if (categoryDTO == null) {
                 // Handle the case where the provided category ID is invalid
@@ -80,18 +119,17 @@ public class ProductController {
                 errorModelAndView.addObject("errorMessage", "Invalid category ID provided");
                 return errorModelAndView;
             }
+            // Set the category ID in DTO
             productDTO.setId_category(categoryId);
         }
-        String productID = productService.insert(productDTO);
-        LOGGER.debug(ProductLogger.PRODUCT_INSERTED, productID);
 
-        ModelAndView modelAndView = new ModelAndView("/product");
-        modelAndView.addObject("productID", productID);
+        // Call the service to insert the product, including the image
+        String productId = productService.insert(productDTO);
+        LOGGER.debug(ProductLogger.PRODUCT_INSERTED, productId);
+
+        // Redirect to the product page after successful insertion
         return new ModelAndView("redirect:/product");
     }
-
-
-
 
     /**
      * Retrieves a product by its ID.

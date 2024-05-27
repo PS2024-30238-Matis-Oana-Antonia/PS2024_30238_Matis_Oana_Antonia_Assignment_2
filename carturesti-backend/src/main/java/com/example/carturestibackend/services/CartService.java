@@ -11,6 +11,7 @@ import com.example.carturestibackend.entities.OrderItem;
 import com.example.carturestibackend.entities.Product;
 import com.example.carturestibackend.entities.User;
 import com.example.carturestibackend.repositories.CartRepository;
+import com.example.carturestibackend.repositories.OrderItemRepository;
 import com.example.carturestibackend.repositories.ProductRepository;
 import com.example.carturestibackend.validators.CartValidator;
 import jakarta.transaction.Transactional;
@@ -40,6 +41,7 @@ public class CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;
     private final CartValidator cartValidator;
+    private OrderItemRepository orderItemRepository;
 
     /**
      * Constructs a new CartService with the specified CartRepository and CartValidator.
@@ -106,10 +108,24 @@ public class CartService {
      * @param id_cart The ID of the cart to delete.
      * @throws ResourceNotFoundException If the cart with the specified ID is not found.
      */
+    @Transactional
     public void deleteCartById(String id_cart) {
         Optional<Cart> cartOptional = cartRepository.findById(id_cart);
         if (cartOptional.isPresent()) {
-            cartRepository.delete(cartOptional.get());
+            Cart cart = cartOptional.get();
+
+            // Get the list of order items associated with the cart
+            List<OrderItem> orderItems = cart.getOrderItems();
+
+            // Delete each order item associated with the cart
+            if (orderItems != null && !orderItems.isEmpty()) {
+                for (OrderItem orderItem : orderItems) {
+                    orderItemRepository.delete(orderItem);
+                }
+            }
+
+            // Now delete the cart itself
+            cartRepository.delete(cart);
             LOGGER.debug(CartLogger.CART_DELETED, id_cart);
         } else {
             LOGGER.error(CartLogger.CART_NOT_FOUND_BY_ID, id_cart);
@@ -263,8 +279,6 @@ public class CartService {
         // Return the updated CartDTO
         return CartMapper.toCartDTO(existingCart);
     }
-
-
 
 
 

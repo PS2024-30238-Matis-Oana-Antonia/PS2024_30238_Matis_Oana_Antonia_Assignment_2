@@ -108,7 +108,6 @@
             <th>Author</th>
             <th>Category</th>
             <th>Promotion</th>
-            <th>Sale</th>
             <th>Review</th>
             <th>Price Promotion</th>
 
@@ -127,10 +126,6 @@
               <span th:if="${product.id_promotion != null}" th:text="${product.id_promotion}"></span>
               <span th:unless="${product.id_promotion != null}">No Promotion</span>
             </td>
-
-            <!-- Add the id_orderItems field -->
-
-
             <td>
               <span th:if="${product.id_reviews == null or product.id_reviews.isEmpty()}">No Review</span>
               <ul th:if="${product.id_reviews != null and not product.id_reviews.isEmpty()}">

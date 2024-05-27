@@ -109,24 +109,28 @@ public class PromotionService {
      * @param promotionDTO The PromotionDTO object representing the promotion to insert.
      * @return The ID of the newly inserted promotion.
      */
+
+    @Transactional
     public String insert(PromotionDTO promotionDTO) {
+        // Convertim DTO-ul în entitate
         Promotion promotion = PromotionMapper.fromPromotionDTO(promotionDTO);
 
-        // Validate the promotion and get error messages if invalid
+        // Validăm promoția
         boolean isValidPromotion = promotionValidator.validatePromotion(promotion);
         if (isValidPromotion) {
+            // Salvăm promoția
             promotion = promotionRepository.save(promotion);
             LOGGER.debug(PromotionLogger.PROMOTION_INSERTED, promotion.getId_promotion());
 
-            // Check if product IDs are not null
+            // Verificăm dacă lista de ID-uri de produse nu este null
             List<String> productIds = promotionDTO.getId_products();
-            if (productIds != null) {
-                // Iterate over each product ID and associate it with the promotion
+            if (productIds != null && !productIds.isEmpty()) {
+                // Iterăm prin fiecare ID de produs și îl asociem cu promoția
                 for (String productId : productIds) {
                     Product product = productRepository.findById(productId)
                             .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));
 
-                    // Apply the promotion percentage to the product price
+                    // Aplicăm procentul promoției la prețul produsului
                     double promotionPercentage = promotion.getPercentage();
                     double originalPrice = product.getPrice();
                     double discountedPrice = originalPrice;
@@ -135,26 +139,32 @@ public class PromotionService {
                         discountedPrice = originalPrice * (1 - promotionPercentage / 100);
                     }
 
-                    // Update the product price with the discounted price
+                    // Actualizăm prețul produsului cu prețul redus
                     product.setPrice(discountedPrice);
 
-                    // Associate the product with the promotion
+                    // Asociem produsul cu promoția
                     product.setPromotion(promotion);
 
-                    // Save the product with the updated association and price
+                    // Salvăm produsul cu asocierea și prețul actualizat
                     productRepository.save(product);
                 }
             }
 
             return promotion.getId_promotion();
         } else {
-            // Log validation errors and throw exception with error messages
+            // Logăm erorile de validare și aruncăm o excepție cu mesajele de eroare
             LOGGER.error(PromotionLogger.PROMOTION_INSERT_FAILED_INVALID_DATA);
             throw new IllegalArgumentException("Invalid promotion data");
         }
     }
 
 
+    /**
+     * Deletes a promotion from the database by its ID.
+     *
+     * @param id The ID of the promotion to delete.
+     * @throws ResourceNotFoundException if the promotion with the specified ID is not found.
+     */
     /**
      * Deletes a promotion from the database by its ID.
      *
@@ -169,7 +179,14 @@ public class PromotionService {
 
             List<Product> products = promotion.getProducts();
             for (Product product : products) {
+                // Calculate the original price using the formula
+                double promotionPercentage = promotion.getPercentage();
+                double discountedPrice = product.getPrice();
+                double originalPrice = discountedPrice / (1 - promotionPercentage / 100);
+
+                // Set the product's price to the original price
                 product.setPromotion(null);
+                product.setPrice(originalPrice);
                 product.setPrice_promotion(0.0);
                 productRepository.save(product);
             }
@@ -180,6 +197,7 @@ public class PromotionService {
             throw new ResourceNotFoundException(Promotion.class.getSimpleName() + " with id: " + id);
         }
     }
+
 
     /**
      * Updates an existing promotion in the database.

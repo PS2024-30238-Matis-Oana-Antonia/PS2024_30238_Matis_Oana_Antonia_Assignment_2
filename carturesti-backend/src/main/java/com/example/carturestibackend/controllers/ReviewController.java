@@ -7,6 +7,8 @@ import com.example.carturestibackend.dtos.UserDTO;
 import com.example.carturestibackend.services.ProductService;
 import com.example.carturestibackend.services.ReviewService;
 import com.example.carturestibackend.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,13 +80,19 @@ public class ReviewController {
     }
 
     @PostMapping("/insertReview2")
-    public ModelAndView insert2(@Valid @ModelAttribute ReviewDTO reviewDTO) {
+    public ModelAndView insert2(@Valid @ModelAttribute ReviewDTO reviewDTO, HttpServletRequest request) {
         String reviewID = reviewService.insert(reviewDTO);
         LOGGER.debug(ReviewLogger.REVIEW_INSERTED, reviewID);
-        ModelAndView modelAndView = new ModelAndView("/client");
+
+        // Obțineți ID-ul utilizatorului din sesiune
+        HttpSession session = request.getSession(false);
+        String userId = (String) session.getAttribute("userId");
+
+        ModelAndView modelAndView = new ModelAndView("redirect:/client/" + userId);
         modelAndView.addObject("reviewID", reviewID);
-        return new ModelAndView("redirect:/client");
+        return modelAndView;
     }
+
 
     /**
      * Retrieves a review by its ID.

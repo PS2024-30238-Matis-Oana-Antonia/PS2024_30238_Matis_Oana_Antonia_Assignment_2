@@ -140,8 +140,6 @@
   </div>
 </div>
 
-<!-- Add Promotion Modal -->
-<!-- Add Promotion Modal -->
 <div class="modal fade" id="addPromotionModal" tabindex="-1" role="dialog" aria-labelledby="addPromotionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -170,7 +168,15 @@
             <input type="number" id="percentage" name="percentage" class="form-control" min="0" max="100" required>
             <div class="invalid-feedback">Percentage must be between 0 and 100.</div>
           </div>
-          <!-- Add more fields as needed for the promotion entity -->
+          <div class="form-group">
+            <label for="id_products">Products:</label>
+            <div id="id_products">
+              <div class="product">
+                <input type="text" name="id_products" class="form-control product-id" placeholder="Enter Promotion Item ID" required>
+                <div class="invalid-feedback">Promotion Item ID is required.</div>
+              </div>
+            </div>
+          </div>
           <button type="submit" class="btn btn-primary">Add Promotion</button>
         </form>
       </div>

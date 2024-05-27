@@ -10,13 +10,20 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Base64;
 
 /**
  * Service class to handle business logic related to products.
@@ -31,6 +38,7 @@ public class ProductService {
     private final PromotionRepository promotionRepository;
     private final ReviewRepository reviewRepository;
     private final OrderItemRepository orderItemRepository ;
+
     /**
      * Constructs a new ProductService with the specified ProductRepository.
      *
@@ -64,9 +72,7 @@ public class ProductService {
         for (Product product : productList) {
             ProductDTO productDTO = ProductMapper.toProductDTO(product);
 
-
             double originalPrice = product.getPrice();
-
 
             Promotion promotion = product.getPromotion();
             if (promotion != null) {
@@ -80,12 +86,12 @@ public class ProductService {
                 productDTO.setPrice_promotion(promotionPrice); // Set promotion price in DTO
             }
 
-
             productDTOs.add(productDTO);
         }
 
         return productDTOs;
     }
+
 
     /**
      * Retrieves a product by its ID.
@@ -102,34 +108,48 @@ public class ProductService {
         }
         return ProductMapper.toProductDTO(productOptional.get());
     }
-
-
-    public List<ProductDTO> findProductsByName(String name) {
-
-        List<Product> products = productRepository.findByName(name);
-
-        List<ProductDTO> dtos = new ArrayList<>();
-        for (Product product : products) {
-            ProductDTO dto = new ProductDTO();
-            dto.setId_product(product.getId_product());
-            dto.setName(product.getName());
-            dto.setDescription(product.getDescription());
-            dto.setId_category(product.getCategory() != null ? product.getCategory().getId_category() : null);
-            dto.setAuthor(product.getAuthor());
-            dto.setPrice(product.getPrice());
-            dto.setPrice_promotion(product.getPrice_promotion());
-            dto.setId_promotion(product.getPromotion() != null ? product.getPromotion().getId_promotion() : null);
-            List<String> reviewIds = new ArrayList<>();
-            if (product.getReviews() != null) {
-                for (Review review : product.getReviews()) {
-                    reviewIds.add(review.getId());
-                }
-            }
-            dto.setId_reviews(reviewIds);
-
-            dtos.add(dto);
+    /**
+     * Retrieves products from the database by category name.
+     *
+     * @param categoryName The name of the category to filter products.
+     * @return A list of Product objects belonging to the specified category.
+     */
+    public List<Product> getProductsByCategoryName(String categoryName) {
+        Category category = categoryRepository.findByName(categoryName);
+        if (category != null) {
+            return productRepository.findProductByCategory(category);
+        } else {
+            return Collections.emptyList();
         }
-        return dtos;
+    }
+
+    /**
+     * Searches products by keyword.
+     *
+     * @param keyword The keyword to search for in product names and descriptions.
+     * @return A list of Product objects matching the search keyword.
+     */
+    public List<Product> searchProducts(String keyword) {
+        return productRepository.searchProducts(keyword);
+    }
+    /**
+     * Retrieves products from the database sorted by price.
+     *
+     * @param ascending True for ascending order, false for descending order.
+     * @return A list of Product objects sorted by price.
+     */
+    public List<Product> getProductsSortedByPrice(boolean ascending) {
+        return ascending ? productRepository.findAllByOrderByPriceAsc() : productRepository.findAllByOrderByPriceDesc();
+    }
+
+    /**
+     * Retrieves products from the database sorted by name.
+     *
+     * @param ascending True for ascending order, false for descending order.
+     * @return A list of Product objects sorted by name.
+     */
+    public List<Product> getProductsSortedByName(boolean ascending) {
+        return ascending ? productRepository.findAllByOrderByNameAsc() : productRepository.findAllByOrderByNameDesc();
     }
 
 
@@ -139,10 +159,11 @@ public class ProductService {
      * @param productDTO The ProductDTO object representing the product to insert.
      * @return The ID of the newly inserted product.
      */
+
     @Transactional
     public String insert(ProductDTO productDTO) {
-        // Create a new product entity from the DTO
         Product product = ProductMapper.fromProductDTO(productDTO);
+
         if (productDTO.getId_promotion() == null || productDTO.getId_promotion().isEmpty()) {
             product.setPromotion(null);
         }
@@ -152,15 +173,13 @@ public class ProductService {
         }
 
         ProductValidator.validateProduct(product);
+
+        // Save the image file to the server and set the image path in the product
         product = productRepository.save(product);
         LOGGER.debug(ProductLogger.PRODUCT_INSERTED, product.getId_product());
 
-        List<Product> productList = new ArrayList<>();
-        productList.add(product);
-
         return product.getId_product();
     }
-
 
     /**
      * Deletes a product from the database by its ID.
@@ -168,7 +187,6 @@ public class ProductService {
      * @param id_product The ID of the product to delete.
      * @throws ResourceNotFoundException if the product with the specified ID is not found.
      */
-
 
     @Transactional
     public void deleteProductById(String id_product) {
@@ -197,15 +215,13 @@ public class ProductService {
             product.setReviews(new ArrayList<>());
 
             // Delete the product itself
-            productRepository.delete(product);
+            productRepository.deleteById(id_product);
             LOGGER.debug(ProductLogger.PRODUCT_DELETED, id_product);
         } else {
             LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, id_product);
             throw new ResourceNotFoundException(Product.class.getSimpleName() + " with id: " + id_product);
         }
     }
-
-
 
     /**
      * Updates an existing product in the database.
@@ -247,41 +263,12 @@ public class ProductService {
     }
 
 
-    public void decreaseProductStock(String productId, long quantity) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            long newStock = product.getStock() - quantity;
-            if (newStock >= 0) {
-                product.setStock(newStock);
-                productRepository.save(product);
-                LOGGER.info(ProductLogger.STOCK_DECREASED, product.getName(), quantity, newStock);
-            } else {
-                LOGGER.error(ProductLogger.INSUFFICIENT_STOCK_TO_DECREASE, product.getName(), quantity, product.getStock());
-                throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
-            }
-        } else {
-            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, productId);
-            throw new ResourceNotFoundException("Product not found with ID: " + productId);
-        }
-    }
-
-    public void increaseProductStock(String productId, long quantity) {
-        Optional<Product> productOptional = productRepository.findById(productId);
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            long newStock = product.getStock() + quantity;
-            product.setStock(newStock);
-            productRepository.save(product);
-            LOGGER.info(ProductLogger.STOCK_INCREASED, product.getName(), quantity, newStock);
-        } else {
-            LOGGER.error(ProductLogger.PRODUCT_NOT_FOUND_BY_ID, productId);
-            throw new ResourceNotFoundException("Product not found with ID: " + productId);
-        }
-    }
-
-
-
+    /**
+     * Adds a review to a product.
+     *
+     * @param productId The ID of the product.
+     * @param review    The review to add.
+     */
     public void addReviewToProduct(String productId, Review review) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + productId));

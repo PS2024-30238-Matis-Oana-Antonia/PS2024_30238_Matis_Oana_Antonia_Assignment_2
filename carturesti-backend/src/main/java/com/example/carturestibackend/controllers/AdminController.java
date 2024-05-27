@@ -8,6 +8,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+/**
+ * Controller class for handling admin-related requests and rendering admin pages.
+ */
+
 @Controller
 public class AdminController {
 
@@ -17,6 +21,14 @@ public class AdminController {
     public AdminController(AuthService authService) {
         this.authService = authService;
     }
+
+    /**
+     * Renders the admin page if the user is authenticated as an admin.
+     *
+     * @param request The HttpServletRequest object representing the client request.
+     * @return A ModelAndView object representing the admin page view if authentication is successful,
+     *         or redirects to the login page if the user is not authenticated or not an admin.
+     */
 
     @GetMapping("/admin")
     public ModelAndView adminPage(HttpServletRequest request) {

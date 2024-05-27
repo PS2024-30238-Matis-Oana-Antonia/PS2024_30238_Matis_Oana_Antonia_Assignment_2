@@ -12,6 +12,9 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Service class for authentication-related operations.
+ */
 @Service
 public class AuthService {
 
@@ -28,6 +31,13 @@ public class AuthService {
         validRoles.add("admin");
         validRoles.add("client");
     }
+    /**
+     * Retrieves the role of a user by their name.
+     *
+     * @param name The name of the user.
+     * @return The role of the user.
+     * @throws IllegalStateException if the role is invalid.
+     */
 
     public String getRole(String name) {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByName(name));
@@ -43,13 +53,20 @@ public class AuthService {
         return null;
     }
 
+    /**
+     * Checks if a user with the given name and password exists.
+     *
+     * @param name     The name of the user.
+     * @param password The password of the user.
+     * @return The UserDTO object representing the user if found, otherwise null.
+     */
+
     public UserDTO checkUser(String name, String password) {
         User user = userRepository.findByNameAndPassword(name, password);
         if (user != null) {
-            // Fetch the cart ID for the user and set it
             String cartId = cartService.findCartIdByUser(user);
-            UserDTO userDTO = UserMapper.toUserDTO(user); // Convert User to UserDTO
-            userDTO.setId_cart(cartId); // Set cartId in UserDTO
+            UserDTO userDTO = UserMapper.toUserDTO(user);
+            userDTO.setId_cart(cartId);
             return userDTO;
         }
         return null;

@@ -8,10 +8,14 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 
+/**
+ * Controller class for handling client-related requests and rendering client pages.
+ */
 @Controller
 public class ClientController {
 
@@ -23,9 +27,16 @@ public class ClientController {
         this.authService = authService;
         this.productService = productService;
     }
+    /**
+     * Renders the client page with user-specific information and products.
+     *
+     * @param userId  The ID of the logged-in user.
+     * @param request The HttpServletRequest object representing the client request.
+     * @return ModelAndView object representing the view and model for the client page.
+     */
 
-    @GetMapping("/client")
-    public ModelAndView clientPage(HttpServletRequest request) {
+    @GetMapping("/client/{userId}")
+    public ModelAndView clientPage(@PathVariable String userId, HttpServletRequest request) {
         ModelAndView modelAndView = new ModelAndView();
         HttpSession session = request.getSession(false);
 
@@ -34,7 +45,6 @@ public class ClientController {
         }
 
         String username = (String) session.getAttribute("username");
-        String userId = (String) session.getAttribute("userId"); // Retrieve user ID
         String role = authService.getRole(username);
 
         if (!"client".equals(role)) {
@@ -53,5 +63,6 @@ public class ClientController {
         modelAndView.setViewName("client");
         return modelAndView;
     }
+
 
 }

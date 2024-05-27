@@ -205,7 +205,32 @@
         <a th:href="@{'/cart/' + ${cartId}}" class="cart-icon">🛒</a>
 
         <button class="place-order button" onclick="placeOrder()">Place Order</button>
-        <button class="search-product button" data-toggle="modal" data-target="#searchProductModal">Search Product</button>
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Sort Products
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a th:href="@{'/product/sortprice?ascending=true'}" class="dropdown-item">Sort by Price (ASC)</a>
+                <a th:href="@{'/product/sortprice?ascending=false'}" class="dropdown-item">Sort by Price (DESC)</a>
+                <a th:href="@{'/product/sortname?ascending=true'}" class="dropdown-item">Sort by Name (ASC)</a>
+                <a th:href="@{'/product/sortname?ascending=false'}" class="dropdown-item">Sort by Name (DESC)</a>
+            </div>
+            <!-- Category ID input field -->
+            <!-- Category Name input field -->
+            <form th:action="@{/product/categoryname}" method="get">
+                <input type="text" id="categoryNameInput" name="categoryName" placeholder="Enter category name">
+                <button type="submit">Get Products by Category</button>
+            </form>
+
+
+            <form th:action="@{/product/search}" method="get">
+                <input type="text" id="searchKeywordInput" name="keyword" placeholder="Enter search keyword">
+                <button type="submit">Search Products</button>
+            </form>
+
+
+        </div>
+
     </div>
 </div>
 
@@ -221,6 +246,9 @@
                 <p class="card-text">Id: <span th:text="${product.id_product}"></span></p>
                 <p class="card-text">About: <span th:text="${product.description}"></span></p>
                 <p class="card-text">Author: <span th:text="${product.author}"></span></p>
+                <!-- Add the image tag here -->
+                <!-- Check if product.image is not null before rendering the img tag -->
+
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group mt-2">
                         <form th:action="@{/cart/addToCart}" method="post">
@@ -228,8 +256,6 @@
                             <input type="hidden" name="productId" th:value="${product.id_product}" />
                             <button type="submit" class="btn btn-primary">Add to Cart</button>
                         </form>
-
-
                         <button type="button" class="btn btn-sm btn-primary" style="background-color: #d2b48c;" data-toggle="modal" data-target="#addReviewModal">Add New Review</button>
                     </div>
                     <small class="text-muted">Price: <span th:text="${product.price}"></span></small>
@@ -319,6 +345,7 @@
     function placeOrder() {
         window.location.href = "/orderclient";
     }
+
 </script>
 
 <script>
@@ -348,6 +375,8 @@
         }, false);
     })();
 </script>
+
+
 
 </body>
 </html>

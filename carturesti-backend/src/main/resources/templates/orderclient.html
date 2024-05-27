@@ -236,9 +236,6 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 
-<div class="container-fluid text-center mt-4">
-  <a href="/client" class="btn btn-primary btn-lg" style="background-color: #d2b48c;">Back to Client Page</a>
-</div>
 
 <script>
   // JavaScript for form validation
@@ -260,6 +257,19 @@
     }, false);
   })();
 </script>
+
+<!-- JavaScript pentru verificarea existenței elementului cu ID-ul specificat -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Verifică dacă elementul cu ID-ul 'id_user' există în DOM
+    var userIdInput = document.getElementById('userIdInput');
+    if (!userIdInput) {
+      // Dacă elementul nu există, afișează un mesaj de avertizare
+      console.warn("Element with ID 'userIdInput' does not exist.");
+    }
+  });
+</script>
+
 
 </body>
 </html>

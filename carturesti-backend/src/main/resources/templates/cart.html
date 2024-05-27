@@ -85,7 +85,8 @@
     </style>
 </head>
 <body>
-<a href="/client" class="back-link">Back to Client Page</a>
+<a th:href="'/client/' + ${userId}" class="back-link">Back to Client Page</a>
+
 <div id="cart">
     <h1>Your Shopping Cart</h1>
 
@@ -117,11 +118,14 @@
                 <input type="hidden" name="id_order_item" th:value="${orderItem.id_order_item}">
                 <div class="form-group">
                     <label for="quantity">Quantity:</label>
+                    <!-- Adaugă atributul required pentru a face câmpul obligatoriu -->
                     <input type="number" id="quantity" name="quantity" min="1" max="999" th:value="${orderItem.quantity}" class="form-control" required>
+                    <!-- Mesaj de eroare pentru validarea cantității -->
                     <div class="invalid-feedback">Quantity must be between 1 and 999.</div>
                 </div>
                 <button type="submit" class="btn btn-primary">Update</button>
             </form>
+
 
 
 
@@ -133,11 +137,23 @@
         <form id="order-details-form" action="/order/place" method="POST">
             <!-- Input pentru data comenzii -->
             <label for="order-date">Order Date:</label>
-            <input type="date" id="order-date" name="order_date" required><br><br>
+            <!-- Adaugă atributul required pentru a face câmpul obligatoriu -->
+            <input type="date" id="order-date" name="order_date" required>
+            <!-- Adaugă atributul readonly pentru a face câmpul doar pentru citire, astfel încât utilizatorul să nu-l poată edita -->
+            <!-- Adaugă un script JavaScript care să seteze data minimă la data curentă -->
+            <script>
+                // Obține data curentă în format ISO (YYYY-MM-DD)
+                var currentDate = new Date().toISOString().split('T')[0];
+                // Setează valoarea atributului min pentru câmpul de dată la data curentă
+                document.getElementById('order-date').setAttribute('min', currentDate);
+            </script>
+
 
             <!-- Input pentru numele utilizatorului -->
             <label for="username">Username:</label>
-            <input type="text" id="username" name="username" th:value="${cart.user.name}" readonly><br><br>
+            <!-- Adaugă atributul readonly pentru a face câmpul doar pentru citire, astfel încât utilizatorul să nu-l poată edita -->
+            <input type="text" id="username" name="username" th:value="${cart.user.name}" readonly required><br><br>
+
 
             <!-- Input pentru fiecare produs din coș -->
             <h3>Products in Cart:</h3>

@@ -377,13 +377,14 @@ public class OrderService {
         Optional<Order> orderOptional = orderRepository.findById(id_order);
         if (orderOptional.isPresent()) {
             Order order = orderOptional.get();
-            order.setUser(null);
+
             for (Product product : order.getProducts()) {
                 product.setStock(product.getStock() + 1);
                 product.setOrders(null);
                 productRepository.save(product);
             }
-            orderRepository.delete(order);
+
+            orderRepository.deleteById(id_order);
             LOGGER.debug(OrderLogger.ORDER_DELETED, id_order);
         } else {
             LOGGER.error(OrderLogger.ORDER_NOT_FOUND_BY_ID, id_order);

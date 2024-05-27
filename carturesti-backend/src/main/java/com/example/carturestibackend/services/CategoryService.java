@@ -73,6 +73,7 @@ public class CategoryService {
         return CategoryMapper.toCategoryDTO(categoryOptional.get());
     }
 
+
     /**
      * Inserts a new category into the database.
      *

@@ -165,7 +165,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form method="POST" th:action="@{/product/insertProduct}" class="needs-validation" novalidate>
+                <form method="POST" th:action="@{/product/insertProduct}" class="needs-validation" novalidate enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="name">Name:</label>
                         <input type="text" id="name" name="name" class="form-control" required>
@@ -201,15 +201,16 @@
                     <div class="form-group">
                         <label for="id_promotion">Promotion:</label>
                         <input type="text" id="id_promotion" name="id_promotion" class="form-control">
-
                     </div>
 
-                    <button type="submit" class="btn btn-primary" onclick="validateForm()">Add Product</button>
+                    <button type="submit" class="btn btn-primary">Add Product</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+
 
 
 <div class="modal fade" th:each="product: ${products}" th:id="'updateProductModal-' + ${product.id_product}" tabindex="-1" role="dialog" aria-labelledby="updateProductModalLabel" aria-hidden="true">
@@ -286,6 +287,7 @@
         }, false);
     })();
 </script>
+
 
 </body>
 </html>

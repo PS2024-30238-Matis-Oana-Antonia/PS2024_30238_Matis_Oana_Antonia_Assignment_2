@@ -35,6 +35,17 @@ public class UserService {
 
     private final UserValidator userValidator;
 
+    /**
+     * Constructor for UserService.
+     *
+     * @param userRepository       The repository for User entities.
+     * @param reviewRepository    The repository for Review entities.
+     * @param cartRepository      The repository for Cart entities.
+     * @param productRepository   The repository for Product entities.
+     * @param orderRepository     The repository for Order entities.
+     * @param orderItemRepository The repository for OrderItem entities.
+     * @param userValidator       The validator for User entities.
+     */
     @Autowired
     public UserService(UserRepository userRepository, ReviewRepository reviewRepository, CartRepository cartRepository, ProductRepository productRepository, OrderRepository orderRepository, OrderItemRepository orderItemRepository, UserValidator userValidator) {
         this.userRepository = userRepository;
@@ -45,6 +56,7 @@ public class UserService {
         this.orderItemRepository = orderItemRepository;
         this.userValidator = userValidator;
     }
+
 
     /**
      * Retrieves all users from the database.
@@ -90,7 +102,13 @@ public class UserService {
         }
         return UserMapper.toUserDTO(userOptional.get());
     }
-
+    /**
+     * Retrieves a user by their name.
+     *
+     * @param role The name of the user to retrieve.
+     * @return The UserDTO object representing the retrieved user.
+     * @throws ResourceNotFoundException if the user with the specified name is not found.
+     */
     public UserDTO findUserByRole(String role) {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByRole(role));
         if (!userOptional.isPresent()) {
@@ -99,7 +117,13 @@ public class UserService {
         }
         return UserMapper.toUserDTO(userOptional.get());
     }
-
+    /**
+     * Retrieves a user by their name and password.
+     *
+     * @param name and password The name of the user to retrieve.
+     * @return The UserDTO object representing the retrieved user.
+     * @throws ResourceNotFoundException if the user with the specified name is not found.
+     */
     public UserDTO findUserByNameAndPassword(String name, String password) {
         Optional<User> userOptional = Optional.ofNullable(userRepository.findByNameAndPassword(name, password));
         if (!userOptional.isPresent()) {
@@ -108,7 +132,6 @@ public class UserService {
         }
         return UserMapper.toUserDTO(userOptional.get());
     }
-
 
 
     /**
@@ -157,70 +180,32 @@ public class UserService {
     /**
      * Deletes a user from the database by their ID.
      *
-     * @param id_user The ID of the user to delete.
+     * @param id The ID of the user to delete.
      * @throws ResourceNotFoundException if the user with the specified ID is not found.
      */
     @Transactional
-    public void deleteUserById(String id_user) {
-        Optional<User> userOptional = userRepository.findById(id_user);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
+    public void deleteUserById(String id) throws Exception {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
 
-            // Handling cart
-            if (user.getCart() != null) {
-                Cart cart = user.getCart();
-
-                // Dissociate the cart from the user
-                user.setCart(null);
-                userRepository.save(user); // Persist the change to the database
-
-                // Dissociate and delete order items
-                List<OrderItem> orderItems = cart.getOrderItems();
-                if (orderItems != null && !orderItems.isEmpty()) {
-                    for (OrderItem orderItem : orderItems) {
-                        // Dissociate product first
-                        orderItem.setProduct(null);
-
-                        // Set cart reference to null
-                        orderItem.setCart(null);
-                        orderItemRepository.save(orderItem);
-
-                        // Now delete the order item
-                        orderItemRepository.delete(orderItem);
-                    }
-                }
-
-                // Now delete the cart itself
-                cartRepository.delete(cart);
-            }
-
-            // Handling orders
+            // Verifică și șterge comenzile asociate utilizatorului
             List<Order> orders = user.getOrders();
             if (orders != null && !orders.isEmpty()) {
                 for (Order order : orders) {
-                    orderRepository.delete(order);
+                    order.setUser(null);
+                    orderRepository.save(order); // Salvează modificările în baza de date
+                    orderRepository.deleteById(order.getId_order());
+                    orderRepository.delete(order);// Șterge comanda
                 }
             }
-
-            // Handling reviews
-            List<Review> reviews = user.getReviews();
-            if (reviews != null && !reviews.isEmpty()) {
-                for (Review review : reviews) {
-                    review.setUser(null);
-                    reviewRepository.save(review);
-                    reviewRepository.delete(review);
-                }
-            }
-
-            // Finally, delete the user
-            userRepository.delete(user);
-            LOGGER.debug(UserLogger.USER_DELETED, id_user);
+            userRepository.deleteById(id);
+            LOGGER.info(UserLogger.USER_DELETED, id);
         } else {
-            LOGGER.error(UserLogger.USER_NOT_FOUND_BY_ID, id_user);
-            throw new ResourceNotFoundException(User.class.getSimpleName() + " with id: " + id_user);
+            LOGGER.info(UserLogger.USER_NOT_FOUND_BY_ID, id);
+            throw new Exception("User with id " + id + " was not found in the database.");
         }
     }
-
 
 
     /**
@@ -251,6 +236,5 @@ public class UserService {
 
         return UserMapper.toUserDTO(updatedUser);
     }
-
 
 }
